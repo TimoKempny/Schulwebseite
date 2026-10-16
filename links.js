@@ -30,14 +30,21 @@ const EINTRAEGE = [
     titel: "Struktogramme erstellen",
     beschreibung: "Tool um per Drap&Drop Struktogramme zu erstellen.",
     url: "struktogramm.html",
-    fach: "Allgemein"
+    fach: "Informatik"
   },
   {
     typ: "tool",
     titel: "RGB & Hex Colorpicker",
     beschreibung: "Farbe raussuchen und Hexcode und RGB bekommen",
     url: "farbwaehler.html",
-    fach: "Allgemein"
+    fach: "Informatik"
+  },
+  {
+    typ: "tool",
+    titel: "C-Compiler",
+    beschreibung: "C Programme im Browser schreiben und compilieren",
+    url: "c-editor.html",
+    fach: "Prog"
   },
   {
     typ: "tool",
@@ -59,7 +66,7 @@ const EINTRAEGE = [
     beschreibung: "Allgemeine Informationen der Schule",
     url: "https://www.steinbeis.schule/de/home.html",
     fach: "Allgemein"
-  },
+  }, 
 	{
     typ: "link",
     titel: "CSS-Validator",

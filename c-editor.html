@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C-Editor · Unterricht</title>
+  <meta name="description" content="C-Programme im Browser schreiben und ausführen – mit verständlichen Fehlermeldungen.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ---------- Farben der Syntax-Hervorhebung ---------- */
+    :root {
+      --syn-kw: #0f766e; --syn-ty: #6d28d9; --syn-str: #a16207; --syn-num: #c2410c;
+      --syn-com: #7b8a87; --syn-pp: #be185d; --syn-fn: #1d4ed8;
+      --mark-err: rgba(185, 28, 28, .12); --mark-warn: rgba(180, 83, 9, .12);
+      --console-bg: #0f1716; --console-fg: #dfe9e7; --console-muted: #8aa09b;
+      --sel: rgba(15, 118, 110, .22);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --syn-kw: #2dd4bf; --syn-ty: #c4b5fd; --syn-str: #fbbf24; --syn-num: #fb923c;
+        --syn-com: #6b7f7b; --syn-pp: #f472b6; --syn-fn: #93c5fd;
+        --mark-err: rgba(248, 113, 113, .14); --mark-warn: rgba(251, 191, 36, .12);
+        --console-bg: #0a100f; --sel: rgba(45, 212, 191, .25);
+      }
+    }
+    :root[data-theme="dark"] {
+      --syn-kw: #2dd4bf; --syn-ty: #c4b5fd; --syn-str: #fbbf24; --syn-num: #fb923c;
+      --syn-com: #6b7f7b; --syn-pp: #f472b6; --syn-fn: #93c5fd;
+      --mark-err: rgba(248, 113, 113, .14); --mark-warn: rgba(251, 191, 36, .12);
+      --console-bg: #0a100f; --sel: rgba(45, 212, 191, .25);
+    }
+
+    main.ide-main { padding-bottom: 24px; }
+    .ide-wrap { padding-top: 14px; }
+
+    /* ---------- Werkzeugleiste ---------- */
+    .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .bar .spacer { flex: 1; }
+    .fname {
+      display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding-left: 10px; min-width: 0;
+    }
+    .fname:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .fname span { font-family: var(--font-mono); font-size: .8rem; color: var(--accent); }
+    .fname input { border: 0; background: transparent; width: 150px; padding: 8px 10px 8px 6px; box-shadow: none; }
+    .btn-run { min-width: 128px; font-size: .9rem; padding: 9px 16px; }
+    .btn-run.stop { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+    .zoom { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--surface); }
+    .zoom button { border: 0; background: transparent; color: var(--muted); font-family: var(--font-mono); font-size: .8rem; padding: 7px 11px; cursor: pointer; }
+    .zoom button:hover { color: var(--text); background: var(--accent-soft); }
+    .zoom span { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); padding: 7px 4px; }
+
+    /* ---------- Arbeitsbereich ---------- */
+    .ide {
+      display: grid; gap: 14px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    @media (min-width: 960px) {
+      .ide { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); height: calc(100vh - 175px); min-height: 460px; }
+    }
+    .pane {
+      display: flex; flex-direction: column; min-height: 0; min-width: 0;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+    }
+    .pane-head {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: .8rem; color: var(--muted); background: var(--surface-2);
+    }
+    .pane-head b { color: var(--text); font-weight: 600; }
+    .pane-head .grow { flex: 1; }
+    .linkish { border: 0; background: none; font: inherit; color: var(--muted); cursor: pointer; padding: 2px 4px; border-radius: 6px; }
+    .linkish:hover { color: var(--accent); }
+
+    /* ---------- Editor ---------- */
+    .ed-scroll { position: relative; flex: 1; overflow: auto; min-height: 360px; background: var(--surface); }
+    @media (min-width: 960px) { .ed-scroll { min-height: 0; } }
+    .ed-inner { display: grid; grid-template-columns: auto minmax(0, 1fr); min-width: max-content; min-height: 100%; }
+    .gutter {
+      position: sticky; left: 0; z-index: 2; background: var(--surface-2); color: var(--muted);
+      text-align: right; padding: var(--ed-pad) 10px var(--ed-pad) 12px; user-select: none; border-right: 1px solid var(--border);
+    }
+    .gutter div { height: var(--ed-lh); }
+    .gutter .e { color: var(--bad); font-weight: 700; }
+    .gutter .w { color: var(--new); font-weight: 700; }
+    .code { position: relative; min-width: max-content; }
+    .ed, .code pre, .code textarea, .gutter {
+      font-family: var(--font-mono); font-size: var(--ed-fs); line-height: var(--ed-lh); tab-size: 4; -moz-tab-size: 4;
+    }
+    .ide { --ed-fs: 14px; --ed-lh: 22px; --ed-pad: 12px; }
+    .code pre {
+      margin: 0; padding: var(--ed-pad) 24px var(--ed-pad) 14px; white-space: pre; color: var(--text);
+      min-height: 100%; pointer-events: none; position: relative; z-index: 1;
+    }
+    .code textarea {
+      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2;
+      margin: 0; border: 0; outline: none; resize: none; overflow: hidden;
+      padding: var(--ed-pad) 24px var(--ed-pad) 14px; white-space: pre; overflow-wrap: normal;
+      background: transparent; color: transparent; caret-color: var(--text);
+    }
+    .code textarea::selection { background: var(--sel); color: transparent; }
+    .marks { position: absolute; left: 0; right: 0; top: 0; z-index: 0; pointer-events: none; }
+    .marks div { position: absolute; left: 0; right: 0; height: var(--ed-lh); }
+    .marks .e { background: var(--mark-err); }
+    .marks .w { background: var(--mark-warn); }
+    .marks .cur { background: var(--accent-soft); opacity: .55; }
+    .t-kw { color: var(--syn-kw); font-weight: 600; }
+    .t-ty { color: var(--syn-ty); }
+    .t-str, .t-chr { color: var(--syn-str); }
+    .t-num { color: var(--syn-num); }
+    .t-com { color: var(--syn-com); font-style: italic; }
+    .t-pp { color: var(--syn-pp); }
+    .t-fn { color: var(--syn-fn); }
+    .ed-foot { padding: 6px 12px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: .72rem; color: var(--muted); display: flex; gap: 4px 14px; flex-wrap: wrap; }
+    .ed-foot kbd { font-family: var(--font-mono); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--text); background: var(--surface); }
+
+    /* ---------- Konsole ---------- */
+    .console { background: var(--console-bg); }
+    .console .pane-head { background: rgba(255, 255, 255, .04); border-bottom-color: rgba(255, 255, 255, .08); color: var(--console-muted); }
+    .console .pane-head b { color: var(--console-fg); }
+    .console .linkish { color: var(--console-muted); }
+    .console .linkish:hover { color: #2dd4bf; }
+    .status {
+      font-family: var(--font-mono); font-size: .72rem; border-radius: 999px; padding: 2px 9px;
+      border: 1px solid rgba(255, 255, 255, .15); color: var(--console-muted);
+    }
+    .status.run { color: #2dd4bf; border-color: #2dd4bf; }
+    .status.wait { color: #fbbf24; border-color: #fbbf24; animation: blink 1.2s ease-in-out infinite; }
+    .status.err { color: #f87171; border-color: #f87171; }
+    .status.ok { color: #4ade80; border-color: #4ade80; }
+    @keyframes blink { 50% { opacity: .45; } }
+    .out {
+      flex: 1; overflow: auto; margin: 0; padding: 12px 14px; min-height: 260px;
+      font-family: var(--font-mono); font-size: var(--ed-fs); line-height: 1.5; color: var(--console-fg);
+      white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    @media (min-width: 960px) { .out { min-height: 0; } }
+    .out .o-err { color: #fca5a5; }
+    .out .o-in { color: #2dd4bf; }
+    .out .o-sys { color: var(--console-muted); font-size: .85em; }
+    .out .o-placeholder { color: var(--console-muted); }
+    .diag {
+      display: block; white-space: normal; margin: 0 0 8px; padding: 7px 10px; border-radius: 8px;
+      border-left: 3px solid var(--console-muted); background: rgba(255, 255, 255, .05); cursor: pointer; font-size: .9em;
+    }
+    .diag:hover { background: rgba(255, 255, 255, .09); }
+    .diag .d-pos { color: var(--console-muted); }
+    .diag .d-sev { font-weight: 700; }
+    .diag .d-hint { display: block; color: var(--console-muted); margin-top: 3px; }
+    .diag.error { border-left-color: #f87171; } .diag.error .d-sev { color: #f87171; }
+    .diag.warning { border-left-color: #fbbf24; } .diag.warning .d-sev { color: #fbbf24; }
+    .diag.hint { border-left-color: #60a5fa; } .diag.hint .d-sev { color: #93c5fd; }
+    .in-row {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid rgba(255, 255, 255, .08);
+      font-family: var(--font-mono); color: var(--console-muted);
+    }
+    .in-row input {
+      flex: 1; min-width: 0; font: inherit; font-size: var(--ed-fs); color: var(--console-fg); background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .12); border-radius: 8px; padding: 7px 10px;
+    }
+    .in-row input:focus { outline: none; border-color: #2dd4bf; box-shadow: 0 0 0 3px rgba(45, 212, 191, .2); }
+    .in-row.wait input { border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251, 191, 36, .2); }
+    .in-row input:disabled { opacity: .45; }
+    .in-row .btn-ghost { background: transparent; border-color: rgba(255, 255, 255, .15); color: var(--console-muted); }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+      transition: opacity .18s, transform .18s; background: #142120; color: #e4eeec; font: .82rem/1.4 var(--font-mono);
+      padding: 9px 14px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0, 0, 0, .2); z-index: 50; max-width: calc(100% - 32px);
+    }
+    .toast::before { content: "> "; color: #2dd4bf; }
+    .toast.on { opacity: 1; transform: translate(-50%, 0); }
+    @media (prefers-reduced-motion: reduce) { .toast { transition: none; } .status.wait { animation: none; } }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">c-editor</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+  </header>
+
+  <main class="ide-main">
+    <div class="container ide-wrap">
+      <div class="bar">
+        <button class="btn btn-run" id="runBtn" type="button" title="Strg + Enter">▶ Ausführen</button>
+        <label class="fname" title="Dateiname">
+          <span>datei</span>
+          <input class="inp" id="fileName" value="programm.c" spellcheck="false" autocomplete="off" aria-label="Dateiname">
+        </label>
+        <button class="btn btn-ghost" id="newBtn" type="button" title="Leeres Grundgerüst (Strg+Z holt den alten Code zurück)">Neu</button>
+        <button class="btn btn-ghost" id="openBtn" type="button" title=".c-Datei öffnen">Öffnen</button>
+        <button class="btn btn-ghost" id="saveBtn" type="button" title="Als .c-Datei herunterladen (Strg + S)">Speichern</button>
+        <input type="file" id="fileIn" accept=".c,.h,.txt,text/plain" hidden>
+        <span class="spacer"></span>
+        <span class="zoom" role="group" aria-label="Schriftgröße">
+          <button type="button" id="fsDown" aria-label="Schrift kleiner">A−</button>
+          <span id="fsVal">14</span>
+          <button type="button" id="fsUp" aria-label="Schrift größer">A+</button>
+        </span>
+      </div>
+
+      <div class="ide" id="ide">
+        <section class="pane" aria-label="Quelltext">
+          <div class="pane-head"><b>// quelltext</b><span class="grow"></span><span id="caretPos">Z 1, S 1</span></div>
+          <div class="ed-scroll" id="edScroll">
+            <div class="ed-inner">
+              <div class="gutter" id="gutter" aria-hidden="true"></div>
+              <div class="code">
+                <div class="marks" id="marks" aria-hidden="true"></div>
+                <pre id="hl" aria-hidden="true"></pre>
+                <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="C-Quelltext"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="ed-foot">
+            <span><kbd>Strg</kbd>+<kbd>Enter</kbd> ausführen</span>
+            <span><kbd>Strg</kbd>+<kbd>S</kbd> speichern</span>
+            <span><kbd>Tab</kbd> einrücken</span>
+            <span><kbd>Strg</kbd>+<kbd>/</kbd> Kommentar</span>
+          </div>
+        </section>
+
+        <section class="pane console" aria-label="Konsole">
+          <div class="pane-head"><b>// konsole</b><span class="status" id="status">bereit</span><span class="grow"></span><button class="linkish" id="clearBtn" type="button">leeren</button></div>
+          <pre class="out" id="out" role="log" aria-live="polite"><span class="o-placeholder">Ausgabe erscheint hier. Programm mit ▶ Ausführen starten.</span></pre>
+          <form class="in-row" id="inForm" autocomplete="off">
+            <span>&gt;</span>
+            <input id="inLine" disabled placeholder="Eingabe für das Programm, dann Enter" spellcheck="false" aria-label="Eingabe für das Programm">
+            <button class="btn btn-ghost" type="button" id="eofBtn" disabled title="Eingabe beenden (EOF, wie Strg+D)">EOF</button>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="../impressum.html">Impressum</a>
+        <a href="../datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="../app.js"></script>
+  <script src="c/cinterp.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var $ = function (id) { return document.getElementById(id); };
+    var ta = $("src"), hl = $("hl"), gutter = $("gutter"), marks = $("marks"), scroller = $("edScroll");
+    var out = $("out"), statusEl = $("status"), runBtn = $("runBtn"), inForm = $("inForm"), inLine = $("inLine"), eofBtn = $("eofBtn");
+    var fileName = $("fileName");
+    var STORE = "c-editor";
+    var TEMPLATE = "#include <stdio.h>\n\nint main(void)\n{\n    printf(\"Hallo Welt!\\n\");\n    return 0;\n}\n";
+
+    /* ---------- Hilfen ---------- */
+    function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    var toastT;
+    function toast(msg) { var t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("on"); }, 2400); }
+    function load(key, def) { try { var v = localStorage.getItem(STORE + "." + key); return v === null ? def : v; } catch (e) { return def; } }
+    function save(key, v) { try { localStorage.setItem(STORE + "." + key, v); } catch (e) {} }
+
+    /* ---------- Syntax-Hervorhebung ---------- */
+    var TYPES = CInterp.HL_TYPES, KW = CInterp.HL_KW, LIBN = {};
+    CInterp.LIB_NAMES.forEach(function (n) { LIBN[n] = true; });
+    var TOK = /(\/\/[^\n]*)|(\/\*[\s\S]*?(?:\*\/|$))|("(?:[^"\\\n]|\\.)*"?)|('(?:[^'\\\n]|\\.)*'?)|(\b(?:0[xX][0-9a-fA-F]+|\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+(?:[eE][+-]?\d+)?)[uUlLfF]*\b)|([A-Za-z_]\w*)/g;
+    function highlight(code) {
+      var html = "", last = 0, m, lines = code.split("\n");
+      // Präprozessor-Zeilen komplett einfärben (Kommentare darin trotzdem grau)
+      var ppLine = {};
+      lines.forEach(function (l, i) { if (/^\s*#/.test(l)) ppLine[i] = true; });
+      var lineStarts = [0];
+      for (var i = 0; i < code.length; i++) if (code.charCodeAt(i) === 10) lineStarts.push(i + 1);
+      function lineOf(pos) { var lo = 0, hi = lineStarts.length - 1; while (lo < hi) { var mid = (lo + hi + 1) >> 1; if (lineStarts[mid] <= pos) lo = mid; else hi = mid - 1; } return lo; }
+      function plain(s, from) {
+        if (!s) return "";
+        // Teile in Präprozessor-Zeilen rosa
+        var res = "", p = from, parts = s.split("\n");
+        parts.forEach(function (part, k) {
+          if (k) { res += "\n"; p++; }
+          if (part) res += ppLine[lineOf(p)] ? '<span class="t-pp">' + esc(part) + "</span>" : esc(part);
+          p += part.length;
+        });
+        return res;
+      }
+      TOK.lastIndex = 0;
+      while ((m = TOK.exec(code))) {
+        html += plain(code.slice(last, m.index), last);
+        var t = m[0], cls = null;
+        var inPP = ppLine[lineOf(m.index)];
+        if (m[1] || m[2]) cls = "t-com";
+        else if (m[3]) cls = inPP ? "t-pp" : "t-str";
+        else if (m[4]) cls = "t-chr";
+        else if (m[5]) cls = inPP ? "t-pp" : "t-num";
+        else if (m[6]) {
+          if (inPP) cls = "t-pp";
+          else if (KW[t]) cls = "t-kw";
+          else if (TYPES[t]) cls = "t-ty";
+          else if (/^\s*\(/.test(code.slice(m.index + t.length, m.index + t.length + 20))) cls = "t-fn";
+          else if (t === "NULL" || t === "EOF" || t === "true" || t === "false" || /^[A-Z][A-Z0-9_]+$/.test(t)) cls = "t-num";
+        }
+        if (cls) {
+          // Token über mehrere Zeilen: Spans pro Zeile schließen
+          html += t.split("\n").map(function (p) { return p ? '<span class="' + cls + '">' + esc(p) + "</span>" : ""; }).join("\n");
+        } else html += esc(t);
+        last = m.index + t.length;
+      }
+      html += plain(code.slice(last), last);
+      return html;
+    }
+
+    /* ---------- Editor ---------- */
+    var lineCount = 0, diagMarks = [];
+    function lineHeight() { return parseFloat(getComputedStyle($("ide")).getPropertyValue("--ed-lh")) || 22; }
+    function pad() { return parseFloat(getComputedStyle($("ide")).getPropertyValue("--ed-pad")) || 12; }
+    function render() {
+      var code = ta.value;
+      hl.innerHTML = highlight(code) + "\n ";
+      var n = code.split("\n").length;
+      if (n !== lineCount) {
+        var g = "";
+        for (var i = 1; i <= n; i++) g += '<div data-l="' + i + '">' + i + "</div>";
+        gutter.innerHTML = g;
+        lineCount = n;
+        paintMarks();
+      }
+    }
+    function paintMarks() {
+      var lh = lineHeight(), p = pad(), html = "";
+      gutter.querySelectorAll(".e,.w").forEach(function (d) { d.className = ""; });
+      diagMarks.forEach(function (mk) {
+        if (mk.line < 1 || mk.line > lineCount) return;
+        html += '<div class="' + mk.cls + '" style="top:' + (p + (mk.line - 1) * lh) + 'px"></div>';
+        var gd = gutter.children[mk.line - 1];
+        if (gd && gd.className !== "e") gd.className = mk.cls;
+      });
+      marks.innerHTML = html;
+    }
+    function setMarks(list) { diagMarks = list; paintMarks(); }
+
+    function caretInfo() {
+      var pos = ta.selectionStart, before = ta.value.slice(0, pos);
+      var line = before.split("\n").length, col = pos - before.lastIndexOf("\n");
+      return { line: line, col: col };
+    }
+    function updateCaret() {
+      var c = caretInfo();
+      $("caretPos").textContent = "Z " + c.line + ", S " + c.col;
+      ensureVisible(c.line, c.col);
+    }
+    var charW = 0;
+    function measureChar() {
+      var s = document.createElement("span");
+      s.style.cssText = "position:absolute;visibility:hidden;white-space:pre;font-family:var(--font-mono);font-size:" + getComputedStyle(ta).fontSize;
+      s.textContent = "0000000000";
+      document.body.appendChild(s); charW = s.getBoundingClientRect().width / 10; s.remove();
+    }
+    function ensureVisible(line, col) {
+      var lh = lineHeight(), p = pad();
+      var y = p + (line - 1) * lh, top = scroller.scrollTop, h = scroller.clientHeight;
+      if (y < top) scroller.scrollTop = y - 4;
+      else if (y + lh > top + h) scroller.scrollTop = y + lh - h + 4;
+      if (!charW) measureChar();
+      var gw = gutter.offsetWidth;
+      var lineText = ta.value.split("\n")[line - 1] || "";
+      var vis = lineText.slice(0, col - 1).replace(/\t/g, "    ").length;
+      var x = gw + 14 + vis * charW, left = scroller.scrollLeft, w = scroller.clientWidth;
+      if (x < left + gw + 10) scroller.scrollLeft = Math.max(0, x - gw - 30);
+      else if (x > left + w - 30) scroller.scrollLeft = x - w + 60;
+    }
+    function goTo(line, col) {
+      var lines = ta.value.split("\n"), pos = 0;
+      line = Math.max(1, Math.min(line, lines.length));
+      for (var i = 0; i < line - 1; i++) pos += lines[i].length + 1;
+      pos += Math.max(0, Math.min((col || 1) - 1, lines[line - 1].length));
+      ta.focus({ preventScroll: true });
+      ta.setSelectionRange(pos, pos);
+      updateCaret();
+    }
+
+    // Text einfügen, sodass Strg+Z funktioniert
+    function insertText(text) {
+      ta.focus();
+      var ok = false;
+      try { ok = document.execCommand("insertText", false, text); } catch (e) { ok = false; }
+      if (!ok) { ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, "end"); onEdit(); }
+    }
+    function replaceRange(start, end, text, selStart, selEnd) {
+      ta.setSelectionRange(start, end);
+      insertText(text);
+      if (selStart != null) ta.setSelectionRange(selStart, selEnd);
+    }
+
+    var saveT;
+    function onEdit() {
+      render();
+      if (diagMarks.length) setMarks([]);
+      clearTimeout(saveT);
+      saveT = setTimeout(function () { save("code", ta.value); }, 400);
+      updateCaret();
+    }
+    ta.addEventListener("input", onEdit);
+    ta.addEventListener("keyup", function (e) { if (e.key.indexOf("Arrow") === 0 || e.key === "Home" || e.key === "End" || e.key === "PageUp" || e.key === "PageDown") updateCaret(); });
+    ta.addEventListener("click", updateCaret);
+
+    ta.addEventListener("keydown", function (e) {
+      var v = ta.value, s = ta.selectionStart, en = ta.selectionEnd;
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) { e.preventDefault(); download(); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key === "/") { e.preventDefault(); toggleComment(); return; }
+      if (e.key === "Tab") {
+        e.preventDefault();
+        var ls = v.lastIndexOf("\n", s - 1) + 1;
+        if (s === en && !e.shiftKey) { insertText("    "); return; }
+        // mehrere Zeilen ein- oder ausrücken
+        var le = v.indexOf("\n", en - (en > s && v[en - 1] === "\n" ? 1 : 0)); if (le < 0) le = v.length;
+        var block = v.slice(ls, le).split("\n");
+        var changed = block.map(function (l) {
+          if (e.shiftKey) return l.replace(/^( {1,4}|\t)/, "");
+          return "    " + l;
+        }).join("\n");
+        replaceRange(ls, le, changed, ls, ls + changed.length);
+        return;
+      }
+      if (e.key === "Enter" && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        var ls2 = v.lastIndexOf("\n", s - 1) + 1;
+        var line = v.slice(ls2, s);
+        var ind = (/^[ \t]*/.exec(line) || [""])[0];
+        var before = line.trim(), after = v.slice(en, v.indexOf("\n", en) < 0 ? v.length : v.indexOf("\n", en)).trim();
+        if (/\{$/.test(before)) {
+          if (/^\}/.test(after)) { insertText("\n" + ind + "    \n" + ind); var p = ta.selectionStart - 1 - ind.length; ta.setSelectionRange(p, p); updateCaret(); return; }
+          ind += "    ";
+        }
+        insertText("\n" + ind);
+        return;
+      }
+      if (e.key === "}" && s === en) {
+        var ls3 = v.lastIndexOf("\n", s - 1) + 1, pre = v.slice(ls3, s);
+        if (/^[ \t]+$/.test(pre) && pre.length >= 4) {
+          e.preventDefault();
+          replaceRange(ls3, s, pre.slice(0, pre.length - 4) + "}");
+          return;
+        }
+      }
+    });
+    function toggleComment() {
+      var v = ta.value, s = ta.selectionStart, en = ta.selectionEnd;
+      var ls = v.lastIndexOf("\n", s - 1) + 1, le = v.indexOf("\n", Math.max(en - 1, s)); if (le < 0) le = v.length;
+      var lines = v.slice(ls, le).split("\n");
+      var all = lines.filter(function (l) { return l.trim(); }).every(function (l) { return /^\s*\/\//.test(l); });
+      var res = lines.map(function (l) { if (!l.trim()) return l; return all ? l.replace(/^(\s*)\/\/ ?/, "$1") : l.replace(/^(\s*)/, "$1// "); }).join("\n");
+      replaceRange(ls, le, res, ls, ls + res.length);
+    }
+
+    /* ---------- Schriftgröße ---------- */
+    var fs = parseInt(load("fs", "14"), 10) || 14;
+    function applyFs() {
+      fs = Math.max(11, Math.min(26, fs));
+      $("ide").style.setProperty("--ed-fs", fs + "px");
+      $("ide").style.setProperty("--ed-lh", Math.round(fs * 1.57) + "px");
+      $("fsVal").textContent = fs;
+      charW = 0; save("fs", String(fs)); paintMarks();
+    }
+    $("fsDown").addEventListener("click", function () { fs--; applyFs(); });
+    $("fsUp").addEventListener("click", function () { fs++; applyFs(); });
+
+    /* ---------- Dateien ---------- */
+    function cleanName() {
+      var n = fileName.value.trim().replace(/[\\/:*?"<>|]+/g, "-") || "programm.c";
+      if (!/\.(c|h)$/i.test(n)) n += ".c";
+      return n;
+    }
+    function download() {
+      var blob = new Blob([ta.value], { type: "text/x-csrc;charset=utf-8" });
+      var url = URL.createObjectURL(blob), a = document.createElement("a");
+      a.href = url; a.download = cleanName();
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+      toast(cleanName() + " gespeichert");
+    }
+    $("saveBtn").addEventListener("click", download);
+    $("openBtn").addEventListener("click", function () { $("fileIn").click(); });
+    $("fileIn").addEventListener("change", function (e) {
+      var f = e.target.files && e.target.files[0]; if (!f) return;
+      var rd = new FileReader();
+      rd.onload = function () {
+        ta.focus(); ta.select();
+        insertText(String(rd.result).replace(/\r\n?/g, "\n"));
+        fileName.value = f.name; save("name", f.name);
+        goTo(1, 1); scroller.scrollTop = 0; scroller.scrollLeft = 0;
+        toast(f.name + " geöffnet");
+      };
+      rd.readAsText(f, "utf-8");
+      e.target.value = "";
+    });
+    $("newBtn").addEventListener("click", function () {
+      ta.focus(); ta.select(); insertText(TEMPLATE);
+      fileName.value = "programm.c"; save("name", "programm.c");
+      goTo(5, 5);
+      toast("Neues Programm – Strg+Z holt den alten Code zurück");
+    });
+    fileName.addEventListener("change", function () { fileName.value = cleanName(); save("name", fileName.value); });
+
+    /* ---------- Konsole ---------- */
+    var placeholder = true, outLen = 0, MAXOUT = 400000;
+    function clearOut() { out.innerHTML = ""; placeholder = false; outLen = 0; }
+    function addSpan(text, cls) {
+      if (placeholder) clearOut();
+      var last = out.lastChild;
+      if (last && last.nodeType === 1 && last.className === (cls || "o-out") && last.tagName === "SPAN") last.appendChild(document.createTextNode(text));
+      else { var s = document.createElement("span"); s.className = cls || "o-out"; s.textContent = text; out.appendChild(s); }
+      outLen += text.length;
+      if (outLen > MAXOUT) trimOut();
+      out.scrollTop = out.scrollHeight;
+    }
+    function trimOut() {
+      while (outLen > MAXOUT * 0.7 && out.firstChild) { outLen -= (out.firstChild.textContent || "").length; out.removeChild(out.firstChild); }
+      var note = document.createElement("span"); note.className = "o-sys"; note.textContent = "… (ältere Ausgabe gekürzt)\n";
+      out.insertBefore(note, out.firstChild);
+    }
+    function addDiag(d) {
+      if (placeholder) clearOut();
+      var sev = d.sev === "error" ? "Fehler" : d.sev === "warning" ? "Warnung" : "Hinweis";
+      if (d.runtime && d.sev === "error") sev = "Laufzeitfehler";
+      var el = document.createElement("span");
+      el.className = "diag " + d.sev;
+      el.setAttribute("role", "button"); el.tabIndex = 0;
+      var pos = d.line ? cleanName() + ":" + d.line + ":" + d.col + ": " : "";
+      el.innerHTML = '<span class="d-pos">' + esc(pos) + '</span><span class="d-sev">' + sev + ':</span> ' + esc(d.msg) +
+        (d.hint ? '<span class="d-hint">Tipp: ' + esc(d.hint) + "</span>" : "");
+      if (d.line) {
+        var go = function () { goTo(d.line, d.col); };
+        el.addEventListener("click", go);
+        el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+      }
+      // Diagnose als eigener Block: vorher Zeilenumbruch, falls nötig
+      var lastTxt = out.textContent;
+      if (lastTxt && lastTxt[lastTxt.length - 1] !== "\n") out.appendChild(document.createTextNode("\n"));
+      out.appendChild(el);
+      out.scrollTop = out.scrollHeight;
+    }
+    function setStatus(text, cls) { statusEl.textContent = text; statusEl.className = "status" + (cls ? " " + cls : ""); }
+    $("clearBtn").addEventListener("click", function () { clearOut(); });
+
+    /* ---------- Ausführen ---------- */
+    var ctl = null, runMarks = [], startT = 0, tickT = null, waited = false;
+    function setRunning(on) {
+      runBtn.textContent = on ? "■ Stopp" : "▶ Ausführen";
+      runBtn.classList.toggle("stop", on);
+      inLine.disabled = !on; eofBtn.disabled = !on;
+      if (!on) { inForm.classList.remove("wait"); clearInterval(tickT); }
+    }
+    function run() {
+      if (ctl && ctl.state() !== "done") { ctl.stop(); return; }
+      clearOut();
+      var src = ta.value;
+      var res = CInterp.compile(src, { fileName: cleanName() });
+      var errs = res.diags.filter(function (d) { return d.sev === "error"; });
+      runMarks = res.diags.filter(function (d) { return d.line; }).map(function (d) { return { line: d.line, cls: d.sev === "error" ? "e" : "w" }; });
+      setMarks(runMarks.slice());
+      if (!res.ok) {
+        res.diags.forEach(addDiag);
+        addSpan("\nÜbersetzung abgebrochen: " + errs.length + " Fehler" + (errs.length ? " – zuerst den ersten Fehler beheben, dann erneut ausführen." : "") + "\n", "o-sys");
+        setStatus("Fehler", "err");
+        if (errs[0] && errs[0].line) goTo(errs[0].line, errs[0].col);
+        return;
+      }
+      res.diags.forEach(addDiag);
+      if (res.diags.length) addSpan("\n", "o-sys");
+      startT = Date.now(); waited = false;
+      setStatus("läuft", "run");
+      setRunning(true);
+      tickT = setInterval(function () {
+        if (ctl && ctl.state() === "running") { var s = Math.round((Date.now() - startT) / 1000); if (s >= 2) setStatus("läuft " + s + " s", "run"); }
+      }, 500);
+      inLine.value = "";
+      inLine.focus({ preventScroll: true });
+      ctl = CInterp.start(res.program, {
+        onOutput: function (text, stream) { addSpan(text, stream === "err" ? "o-err" : "o-out"); },
+        onInput: function () {
+          waited = true;
+          setStatus("wartet auf Eingabe", "wait");
+          inForm.classList.add("wait");
+          inLine.focus({ preventScroll: true });
+        },
+        onWarn: function (d) {
+          addDiag(d);
+          runMarks.push({ line: d.line, cls: "w" }); setMarks(runMarks.slice());
+        },
+        onClear: function () { clearOut(); },
+        onExit: function (info) {
+          setRunning(false);
+          if (info.error) {
+            var d = info.error; d.runtime = true;
+            addDiag(d);
+            if (d.line) { runMarks.push({ line: d.line, cls: "e" }); setMarks(runMarks.slice()); }
+            addSpan("— Programm abgebrochen —\n", "o-sys");
+            setStatus("Laufzeitfehler", "err");
+          } else if (info.stopped) {
+            addSpan((out.textContent.slice(-1) === "\n" ? "" : "\n") + "— Programm gestoppt —\n", "o-sys");
+            setStatus("gestoppt", "");
+          } else {
+            addSpan((out.textContent.slice(-1) === "\n" || !out.textContent ? "" : "\n") + "— Programm beendet mit Rückgabewert " + info.code + (waited ? "" : " · " + info.ms + " ms") + " —\n", "o-sys");
+            setStatus("beendet (" + info.code + ")", info.code === 0 ? "ok" : "err");
+          }
+        }
+      });
+    }
+    runBtn.addEventListener("click", run);
+    inForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!ctl || ctl.state() === "done") return;
+      var line = inLine.value;
+      inLine.value = "";
+      addSpan(line + "\n", "o-in");
+      inForm.classList.remove("wait");
+      setStatus("läuft", "run");
+      ctl.input(line);
+    });
+    function sendEof() {
+      if (!ctl || ctl.state() === "done") return;
+      addSpan("^D\n", "o-sys");
+      inForm.classList.remove("wait");
+      ctl.eof();
+    }
+    eofBtn.addEventListener("click", sendEof);
+    inLine.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "d" || e.key === "D")) { e.preventDefault(); sendEof(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && ctl && ctl.state() !== "done") ctl.stop();
+    });
+
+    /* ---------- Start ---------- */
+    ta.value = load("code", TEMPLATE);
+    fileName.value = load("name", "programm.c");
+    applyFs();
+    render();
+    updateCaret();
+    window.addEventListener("resize", function () { charW = 0; paintMarks(); });
+  })();
+  </script>
+</body>
+</html>
