@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Impressum · Unterricht</title>
+  <meta name="robots" content="noindex">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .prose { padding-bottom: 24px; }
+    .prose h2 { font-family: var(--font-mono); font-size: 1rem; }
+    .prose h2::before { content: "// "; color: var(--accent); }
+    .prose address { font-style: normal; line-height: 1.7; }
+    /* Platzhalter: vor der Veröffentlichung ersetzen */
+    .ph { background: var(--accent-soft); color: var(--text); border-bottom: 2px dashed var(--new); padding: 0 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">impressum</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <a class="back" href="index.html">← Übersicht</a>
+      <h1>Impressum</h1>
+    </div>
+  </header>
+
+  <main>
+    <article class="container prose">
+      <h2>Angaben gemäß § 5 DDG</h2>
+      <address>
+        Timo Kempny<br>
+        <span class="ph">Karlstraße 40</span><br>
+        <span class="ph">72764 Reutlingen</span>
+      </address>
+
+      <h2>Kontakt</h2>
+      <p>E-Mail: <span class="ph">timo.kempny@steinbeis.schule</span></p>
+
+      <h2>Verantwortlich für den Inhalt nach § 18 Abs. 1 MStV</h2>
+      <p>Timo Kempny, Anschrift wie oben.</p>
+
+      <h2>Zweck dieser Seite</h2>
+      <p>Diese Seite ist ein privates, nicht-kommerzielles Angebot mit Werkzeugen und Material für den Informatik- und Englischunterricht.
+         Sie ist kein offizielles Angebot der Ferdinand-von-Steinbeis-Schule Reutlingen.</p>
+
+      <h2>Haftung für Inhalte</h2>
+      <p>Die Inhalte wurden mit Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität kann ich jedoch keine Gewähr übernehmen.
+         Die Werkzeuge (z. B. der C-Editor) dienen dem Lernen. Ihre Ergebnisse können in Einzelfällen von anderen Programmen abweichen.</p>
+
+      <h2>Haftung für Links</h2>
+      <p>Diese Seite enthält Links zu externen Webseiten. Auf deren Inhalte habe ich keinen Einfluss, für sie ist der jeweilige Anbieter verantwortlich.
+         Zum Zeitpunkt der Verlinkung waren keine Rechtsverstöße erkennbar. Werden mir Rechtsverletzungen bekannt, entferne ich den betreffenden Link umgehend.</p>
+
+      <h2>Urheberrecht</h2>
+      <p>Die Inhalte dieser Seite unterliegen dem deutschen Urheberrecht. Schülerinnen und Schüler dürfen sie im Rahmen des Unterrichts frei nutzen.
+         Eine Weitergabe oder Veröffentlichung außerhalb des Unterrichts bedarf meiner Zustimmung.</p>
+      <p>Verwendete Fremdsoftware: <a href="https://github.com/parallax/jsPDF">jsPDF</a> (MIT-Lizenz) für den PDF-Export im Struktogramm-Editor.</p>
+
+      <p><a href="datenschutz.html">Zur Datenschutzerklärung →</a></p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

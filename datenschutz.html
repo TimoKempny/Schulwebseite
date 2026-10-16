@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Datenschutz · Unterricht</title>
+  <meta name="robots" content="noindex">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .prose { padding-bottom: 24px; }
+    .prose h2 { font-family: var(--font-mono); font-size: 1rem; }
+    .prose h2::before { content: "// "; color: var(--accent); }
+    .prose address { font-style: normal; line-height: 1.7; }
+    .prose li { margin-bottom: 6px; }
+    .kurz { margin-top: 20px; background: var(--accent-soft); border-radius: var(--radius); padding: 14px 18px; }
+    .kurz p { margin: 0; }
+    /* Platzhalter: vor der Veröffentlichung ersetzen */
+    .ph { background: var(--accent-soft); color: var(--text); border-bottom: 2px dashed var(--new); padding: 0 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">datenschutz</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <a class="back" href="index.html">← Übersicht</a>
+      <h1>Datenschutzerklärung</h1>
+    </div>
+  </header>
+
+  <main>
+    <article class="container prose">
+      <div class="kurz">
+        <p><strong>Kurz gesagt:</strong> Diese Seite setzt keine Cookies, verwendet kein Tracking und keine Analyse-Werkzeuge und hat keine Formulare, die Daten verschicken.
+           Der Anbieter GitHub erfasst beim Aufruf technisch bedingt Ihre IP-Adresse. Einstellungen und Ihr Code im C-Editor bleiben auf Ihrem eigenen Gerät.</p>
+      </div>
+
+      <h2>1. Verantwortlicher</h2>
+      <address>
+        Timo Kempny<br>
+        <span class="ph">Karlstraße 40</span><br>
+        <span class="ph">72764 Reutlingen</span><br>
+        E-Mail: <span class="ph">timo.kempny@steinbeis.schule</span>
+      </address>
+
+      <h2>2. Hosting durch GitHub Pages</h2>
+      <p>Diese Seite wird über GitHub Pages bereitgestellt. Anbieter ist die GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA.</p>
+      <p>Beim Aufruf der Seite verarbeitet GitHub technisch notwendige Daten, insbesondere Ihre IP-Adresse. Laut GitHub wird die IP-Adresse jedes Besuchers
+         aus Sicherheitsgründen protokolliert und gespeichert, unabhängig davon, ob er bei GitHub angemeldet ist. Ich selbst habe auf diese Daten keinen Zugriff.</p>
+      <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Mein berechtigtes Interesse liegt in der sicheren und zuverlässigen Bereitstellung der Seite.</p>
+      <p>Dabei können Daten in die USA übermittelt werden. GitHub verweist in seiner Datenschutzerklärung auf das EU-U.S. Data Privacy Framework.
+         Weitere Informationen: <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement">Datenschutzerklärung von GitHub</a>.</p>
+
+      <h2>3. Speicherung im Browser (localStorage)</h2>
+      <p>Einige Werkzeuge merken sich Einstellungen im Speicher Ihres Browsers (localStorage), zum Beispiel:</p>
+      <ul>
+        <li>das gewählte Farbschema (hell/dunkel),</li>
+        <li>Ihren Code, den Dateinamen und die Schriftgröße im C-Editor,</li>
+        <li>Einstellungen und Statistik im Binär-Trainer,</li>
+        <li>die zuletzt gewählte Farbe im Farbwähler und den Stand im Struktogramm-Editor.</li>
+      </ul>
+      <p>Diese Daten bleiben auf Ihrem Gerät und werden nicht an mich oder Dritte übertragen. Sie können sie jederzeit über die Einstellungen Ihres Browsers löschen
+         („Websitedaten löschen“). Die Speicherung ist für die von Ihnen gewünschte Funktion erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+
+      <h2>4. C-Editor und weitere Werkzeuge</h2>
+      <p>Programme im C-Editor werden vollständig in Ihrem Browser übersetzt und ausgeführt. Ihr Quelltext und Ihre Eingaben werden nicht über das Internet übertragen.
+         Dasselbe gilt für alle anderen Werkzeuge dieser Seite. Alle Schriften und Programmbibliotheken liegen auf dieser Seite selbst, es werden keine Inhalte von fremden Servern nachgeladen.</p>
+
+      <h2>5. Links zu anderen Seiten</h2>
+      <p>Die Übersicht enthält Links zu externen Angeboten, z. B. Moodle, der Schulhomepage oder den Prüfwerkzeugen des W3C. Erst wenn Sie einen solchen Link anklicken,
+         werden Daten an den jeweiligen Anbieter übertragen. Dort gilt dessen Datenschutzerklärung.</p>
+
+      <h2>6. Ihre Rechte</h2>
+      <p>Sie haben nach der DSGVO das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18)
+         und Widerspruch (Art. 21). Wenden Sie sich dazu an die oben genannte Adresse. Für die Protokolldaten bei GitHub ist GitHub zuständig.</p>
+      <p>Sie können sich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren, in Baden-Württemberg zum Beispiel bei:</p>
+      <address>
+        Der Landesbeauftragte für den Datenschutz und die Informationsfreiheit Baden-Württemberg<br>
+        Lautenschlagerstraße 20, 70173 Stuttgart<br>
+        <a href="https://www.baden-wuerttemberg.datenschutz.de">www.baden-wuerttemberg.datenschutz.de</a>
+      </address>
+
+      <p class="mono" style="color: var(--muted); font-size: .85rem; margin-top: 2em;">Stand: Oktober 2026</p>
+      <p><a href="impressum.html">Zum Impressum →</a></p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
