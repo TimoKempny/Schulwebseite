@@ -12,8 +12,11 @@ Webseite von Timo Kempny, veröffentlicht über GitHub Pages.
 
 Schulwebseite/ 
 ├── index.html 	Startseite
+
 ├── css/ 		Stylesheets
+
 ├── js/ 		Skripte
+
 └── img/ 		Bilder
 
 
