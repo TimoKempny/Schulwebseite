@@ -10,7 +10,8 @@ Webseite von Timo Kempny, veröffentlicht über GitHub Pages.
 
 ## Aufbau
 
-Schulwebseite/ 
+Schulwebseite/
+
 ├── index.html 	Startseite
 
 ├── css/ 		Stylesheets
