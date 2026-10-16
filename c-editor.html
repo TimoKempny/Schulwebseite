@@ -38,7 +38,7 @@
     }
 
     main.ide-main { padding-bottom: 24px; }
-    .ide-wrap { padding-top: 14px; }
+    .ide-wrap { padding-top: 14px; max-width: none; padding-left: 16px; padding-right: 16px; }
 
     /* ---------- Werkzeugleiste ---------- */
     .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
@@ -63,7 +63,7 @@
       grid-template-columns: minmax(0, 1fr);
     }
     @media (min-width: 960px) {
-      .ide { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); height: calc(100vh - 175px); min-height: 460px; }
+      .ide { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); height: calc(100vh - 130px); min-height: 460px; }
     }
     .pane {
       display: flex; flex-direction: column; min-height: 0; min-width: 0;
