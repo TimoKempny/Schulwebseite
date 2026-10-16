@@ -232,7 +232,7 @@
             <span><kbd>Strg</kbd>+<kbd>Enter</kbd> ausführen</span>
             <span><kbd>Strg</kbd>+<kbd>S</kbd> speichern</span>
             <span><kbd>Tab</kbd> einrücken</span>
-            <span><kbd>Strg</kbd>+<kbd>/</kbd> Kommentar</span>
+            <span><kbd>Strg</kbd>+<kbd>#</kbd> Kommentar</span>
           </div>
         </section>
 
@@ -429,7 +429,10 @@
       var v = ta.value, s = ta.selectionStart, en = ta.selectionEnd;
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
       if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) { e.preventDefault(); download(); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key === "/") { e.preventDefault(); toggleComment(); return; }
+      if ((e.ctrlKey || e.metaKey) && !e.altKey &&
+                (e.key === "/" || e.key === "#" || e.code === "NumpadDivide" || (e.code === "Digit7" && e.shiftKey))) {
+              e.preventDefault(); toggleComment(); return;
+            }
       if (e.key === "Tab") {
         e.preventDefault();
         var ls = v.lastIndexOf("\n", s - 1) + 1;
