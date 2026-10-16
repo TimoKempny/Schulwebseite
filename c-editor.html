@@ -63,7 +63,14 @@
       grid-template-columns: minmax(0, 1fr);
     }
     @media (min-width: 960px) {
-      .ide { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); height: calc(100vh - 130px); min-height: 460px; }
+      .ide { grid-template-columns: minmax(0, calc(var(--split, 50%) - 7px)) 14px minmax(0, 1fr); gap: 0; height: calc(100vh - 130px); min-height: 460px; }
+    }
+    .splitter { display: none; }
+    @media (min-width: 960px) {
+      .splitter { display: flex; justify-content: center; cursor: col-resize; touch-action: none; outline: none; }
+      .splitter::before { content: ""; width: 4px; height: 48px; margin: auto; border-radius: 4px; background: var(--border); transition: background .15s; }
+      .splitter:hover::before, .splitter:focus-visible::before, .splitter.drag::before { background: var(--accent); height: 80px; }
+      body.splitting { cursor: col-resize; user-select: none; }
     }
     .pane {
       display: flex; flex-direction: column; min-height: 0; min-width: 0;
@@ -228,6 +235,8 @@
             <span><kbd>Strg</kbd>+<kbd>/</kbd> Kommentar</span>
           </div>
         </section>
+
+        <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="Breite von Quelltext und Konsole" tabindex="0" title="Ziehen zum Anpassen, Doppelklick = 50/50"></div>
 
         <section class="pane console" aria-label="Konsole">
           <div class="pane-head"><b>// konsole</b><span class="status" id="status">bereit</span><span class="grow"></span><button class="linkish" id="clearBtn" type="button">leeren</button></div>
@@ -645,6 +654,36 @@
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && ctl && ctl.state() !== "done") ctl.stop();
     });
+
+    /* ---------- Trenner Quelltext | Konsole ---------- */
+    var ide = $("ide"), splitter = $("splitter");
+    function setSplit(pct) {
+      pct = Math.min(80, Math.max(20, Math.round(pct)));
+      ide.style.setProperty("--split", pct + "%");
+      splitter.setAttribute("aria-valuenow", pct);
+      save("split", String(pct));
+      charW = 0; paintMarks();
+    }
+    splitter.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      splitter.setPointerCapture(e.pointerId);
+      splitter.classList.add("drag"); document.body.classList.add("splitting");
+    });
+    splitter.addEventListener("pointermove", function (e) {
+      if (!splitter.hasPointerCapture(e.pointerId)) return;
+      var r = ide.getBoundingClientRect();
+      setSplit((e.clientX - r.left) / r.width * 100);
+    });
+    function endDrag() { splitter.classList.remove("drag"); document.body.classList.remove("splitting"); }
+    splitter.addEventListener("pointerup", endDrag);
+    splitter.addEventListener("pointercancel", endDrag);
+    splitter.addEventListener("dblclick", function () { setSplit(50); });
+    splitter.addEventListener("keydown", function (e) {
+      var v = parseFloat(load("split", "50"));
+      if (e.key === "ArrowLeft") { e.preventDefault(); setSplit(v - 2); }
+      if (e.key === "ArrowRight") { e.preventDefault(); setSplit(v + 2); }
+    });
+    setSplit(parseFloat(load("split", "50")));
 
     /* ---------- Start ---------- */
     ta.value = load("code", TEMPLATE);
