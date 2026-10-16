@@ -10,11 +10,11 @@ Webseite von Timo Kempny, veröffentlicht über GitHub Pages.
 
 ## Aufbau
 
-Schulwebseite/
-├── index.html # Startseite
-├── css/ # Stylesheets
-├── js/ # Skripte
-└── img/ # Bilder
+Schulwebseite/ \n
+├── index.html # Startseite \n
+├── css/ # Stylesheets \n
+├── js/ # Skripte \n
+└── img/ # Bilder \n
 
 
 ## Lokal bearbeiten
