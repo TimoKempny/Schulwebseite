@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS-Merkhilfe · Unterricht</title>
+  <meta name="description" content="Die wichtigsten Eigenschaften und Selektoren zum Nachschlagen.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+    <div class="brand">
+      <a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">CSS Merkhilfe</span>
+	 </div>   
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">merkhilfe · 2BKI · KOM / KOM-P</p>
+      <h1>CSS-Merkhilfe</h1>
+      <p>Die wichtigsten Eigenschaften und Selektoren zum Nachschlagen.</p>
+      <a class="ref-switch" href="html.html">zur HTML-Merkhilfe →</a>
+    </div>
+  </header>
+
+  <div class="ref-bar">
+    <div class="container toolbar">
+      <label class="search">
+        <span class="visually-hidden">In der Merkhilfe suchen</span>
+        <input id="ref-suche" type="search" placeholder="suchen – z. B. padding, grid, border" autocomplete="off">
+      </label>
+      <nav class="chips" aria-label="Abschnitte">
+        <a class="chip" href="#schrift">Schrift</a>
+        <a class="chip" href="#boxmodell">Boxmodell</a>
+        <a class="chip" href="#listen">Listen</a>
+        <a class="chip" href="#tabellen">Tabellen</a>
+        <a class="chip" href="#grid">Grid-Layout</a>
+        <a class="chip" href="#selektoren">Selektoren</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="ref">
+    <div class="container">
+<section class="ref-section" id="schrift">
+<div class="section-head"><h2>Schrift</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Eigenschaft</th><th scope="col">Bedeutung</th><th scope="col">Werte</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>color</code></td><td data-label="Bedeutung">Textfarbe</td><td data-label="Werte">Farbangabe, z. B. <code>red</code>, <code>black</code></td></tr>
+<tr><td class="k"><code>font-family</code></td><td data-label="Bedeutung">Schriftart</td><td data-label="Werte">Name einer Schriftart oder <code>serif</code>, <code>sans-serif</code>, <code>monospace</code></td></tr>
+<tr><td class="k"><code>font-size</code></td><td data-label="Bedeutung">Schriftgröße</td><td data-label="Werte">Größenangabe, z. B. <code>1.5em</code></td></tr>
+<tr><td class="k"><code>font-style</code></td><td data-label="Bedeutung">kursiv oder nicht</td><td data-label="Werte"><code>normal</code> (nicht kursiv), <code>italic</code> (kursiv)</td></tr>
+<tr><td class="k"><code>font-weight</code></td><td data-label="Bedeutung">Schriftstärke</td><td data-label="Werte"><code>normal</code> oder <code>bold</code> (fett)</td></tr>
+<tr><td class="k"><code>text-align</code></td><td data-label="Bedeutung">Textausrichtung</td><td data-label="Werte"><code>left</code> (links), <code>right</code> (rechts), <code>center</code> (zentriert) oder <code>justify</code> (Blocksatz)</td></tr>
+<tr><td class="k"><code>text-decoration</code></td><td data-label="Bedeutung">Text unterstreichen</td><td data-label="Werte"><code>none</code> (nicht unterstreichen) oder <code>underline</code> (unterstreichen)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="boxmodell">
+<div class="section-head"><h2>Boxmodell</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Eigenschaft</th><th scope="col">Bedeutung</th><th scope="col">Werte</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>background-color</code></td><td data-label="Bedeutung">Hintergrundfarbe</td><td data-label="Werte">Farbangabe, z. B. <code>red</code>, <code>black</code></td></tr>
+<tr><td class="k"><code>height</code></td><td data-label="Bedeutung">Höhe</td><td data-label="Werte">Größenangabe, z. B. <code>100%</code> oder <code>50px</code></td></tr>
+<tr><td class="k"><code>width</code></td><td data-label="Bedeutung">Breite</td><td data-label="Werte">Größenangabe, z. B. <code>100%</code> oder <code>50px</code></td></tr>
+<tr><td class="k"><code>max-height</code></td><td data-label="Bedeutung">maximale Höhe</td><td data-label="Werte">Größenangabe, z. B. <code>100%</code> oder <code>50px</code></td></tr>
+<tr><td class="k"><code>max-width</code></td><td data-label="Bedeutung">maximale Breite</td><td data-label="Werte">Größenangabe, z. B. <code>100%</code> oder <code>50px</code></td></tr>
+<tr><td class="k"><code>padding</code></td><td data-label="Bedeutung">Innenabstand (links, rechts, oben, unten)</td><td data-label="Werte">Größenangabe, z. B. <code>100%</code> oder <code>50px</code></td></tr>
+<tr><td class="k"><code>border-width</code></td><td data-label="Bedeutung">Rahmendicke</td><td data-label="Werte"><code>thin</code>, <code>medium</code>, <code>thick</code> oder Größenangabe, z. B. <code>1px</code></td></tr>
+<tr><td class="k"><code>border-style</code></td><td data-label="Bedeutung">Rahmenart</td><td data-label="Werte"><code>solid</code> (durchgezogen), <code>dashed</code> (gestrichelt), <code>dotted</code> (gepunktet), <code>none</code> (kein Rahmen)</td></tr>
+<tr><td class="k"><code>border-color</code></td><td data-label="Bedeutung">Rahmenfarbe</td><td data-label="Werte">Farbangabe, z. B. <code>red</code>, <code>black</code></td></tr>
+<tr><td class="k"><code>border</code></td><td data-label="Bedeutung">Rahmendicke, -art und -farbe</td><td data-label="Werte">Beispiel: <code>border: 1px solid black;</code><br>Gleiche Werte wie oben zulässig.</td></tr>
+<tr><td class="k"><code>margin</code></td><td data-label="Bedeutung">Außenabstand (links, rechts, oben, unten)</td><td data-label="Werte">Größenangabe, z. B. <code>100%</code> oder <code>50px</code></td></tr>
+<tr><td class="k"><code>box-sizing</code></td><td data-label="Bedeutung">Größenberechnung: Worauf beziehen sich <code>width</code> und <code>height</code>?</td><td data-label="Werte"><code>content-box</code> (Standard! <code>width</code> und <code>height</code> = Breite und Höhe des Inhalts)<br><code>border-box</code> (<code>width</code> und <code>height</code> = Breite und Höhe der gesamten Box)</td></tr>
+</tbody></table></div>
+<p class="ref-note">Durch Anhängen von <code>-left</code>, <code>-right</code>, <code>-top</code> oder <code>-bottom</code> lassen sich <code>padding</code>, <code>border</code> und <code>margin</code> für alle vier Seiten separat angeben, z. B. <code>padding-left</code>, <code>margin-left</code>, <code>border-left</code>.</p>
+</section>
+
+<section class="ref-section" id="listen">
+<div class="section-head"><h2>Listen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Eigenschaft</th><th scope="col">Bedeutung</th><th scope="col">Werte</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>list-style-type</code></td><td data-label="Bedeutung">Aufzählungssymbol</td><td data-label="Werte">z. B. <code>disc</code> (•), <code>square</code> (■), <code>none</code> (ohne)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="tabellen">
+<div class="section-head"><h2>Tabellen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Eigenschaft</th><th scope="col">Bedeutung</th><th scope="col">Werte</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>border-collapse</code></td><td data-label="Bedeutung">zusammenfallende Rahmenlinien</td><td data-label="Werte"><code>collapse</code> (zusammenfallend) oder <code>separate</code> (separat)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="grid">
+<div class="section-head"><h2>Grid-Layout</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Eigenschaft und Beispiel</th><th scope="col">Bedeutung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>display: grid;</code></td><td data-label="Bedeutung">Wandelt ein HTML-Element in ein Grid um.</td></tr>
+<tr><td class="k"><code>grid-template-rows: auto 1fr;</code></td><td data-label="Bedeutung">Legt die Zeilen-Anzahl des Grids fest. Pro Zeile eine Größenangabe! (hier: 2 Zeilen)</td></tr>
+<tr><td class="k"><code>grid-template-columns: 1fr auto;</code></td><td data-label="Bedeutung">Legt die Spalten-Anzahl des Grids fest. Pro Spalte eine Größenangabe! (hier: 2 Spalten)</td></tr>
+<tr><td class="k"><code>grid-row: span 2;</code></td><td data-label="Bedeutung">Legt fest, dass sich ein Grid-Element über zwei Zeilen erstreckt.</td></tr>
+<tr><td class="k"><code>grid-column: span 2;</code></td><td data-label="Bedeutung">Legt fest, dass sich ein Grid-Element über zwei Spalten erstreckt.</td></tr>
+<tr><td class="k"><code>order: 1;</code></td><td data-label="Bedeutung">Reihenfolge des Grid-Elements im Grid. Elemente werden aufsteigend sortiert.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="selektoren">
+<div class="section-head"><h2>Selektoren</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Selektor</th><th scope="col">Beispiel</th><th scope="col">Erklärung</th></tr></thead>
+<tbody>
+<tr><td class="k">Typselektor</td><td data-label="Beispiel"><code>h1</code></td><td data-label="Erklärung">Wählt alle HTML-Elemente vom entsprechenden Typ aus. Entspricht dem Namen des HTML-Elements. <code>h1</code> wählt alle h1-Überschriften aus.</td></tr>
+<tr><td class="k">Nachfahrenselektor</td><td data-label="Beispiel"><code>ul em</code></td><td data-label="Erklärung">Wählt alle Elemente aus, die sich innerhalb eines anderen Elements befinden. <code>ul em</code> wählt alle <code>em</code>-Elemente aus, die sich innerhalb eines <code>ul</code>-Elements befinden.</td></tr>
+<tr><td class="k">Liste von Selektoren</td><td data-label="Beispiel"><code>h1, p</code></td><td data-label="Erklärung">Wenn man Selektoren mittels Komma auflistet, gilt die folgende Regel für jeden der Selektoren. <code>h1, p</code> wählt alle <code>h1</code>-Elemente und alle <code>p</code>-Elemente aus.</td></tr>
+<tr><td class="k">ID-Selektor</td><td data-label="Beispiel"><code>#foo</code></td><td data-label="Erklärung">Wählt das Element mit der entsprechenden ID aus. <code>#foo</code> wählt das Element mit der ID <code>foo</code> aus.</td></tr>
+<tr><td class="k">Klassenselektor</td><td data-label="Beispiel"><code>.bar</code></td><td data-label="Erklärung">Wählt alle Elemente mit der entsprechenden Klasse aus. <code>.bar</code> wählt alle Elemente mit der Klasse <code>bar</code> aus.</td></tr>
+</tbody></table></div>
+</section>
+
+      <p class="empty" id="leer" hidden>&gt; keine Treffer</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="../impressum.html">Impressum</a>
+        <a href="../datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="../app.js"></script>
+  <script src="../merkhilfe.js"></script>
+</body>
+</html>

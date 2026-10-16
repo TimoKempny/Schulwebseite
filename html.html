@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTML-Merkhilfe · Unterricht</title>
+  <meta name="description" content="Die wichtigsten Tags zum Nachschlagen – vom Grundgerüst bis zur Seitenstruktur.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+    <div class="brand">
+      <a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">HTML Merkhilfe</span>
+	 </div>   
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">merkhilfe · 2BKI · KOM / KOM-P</p>
+      <h1>HTML-Merkhilfe</h1>
+      <p>Die wichtigsten Tags zum Nachschlagen – vom Grundgerüst bis zur Seitenstruktur.</p>
+      <a class="ref-switch" href="css.html">zur CSS-Merkhilfe →</a>
+    </div>
+  </header>
+
+  <div class="ref-bar">
+    <div class="container toolbar">
+      <label class="search">
+        <span class="visually-hidden">In der Merkhilfe suchen</span>
+        <input id="ref-suche" type="search" placeholder="suchen – z. B. img, table, href" autocomplete="off">
+      </label>
+      <nav class="chips" aria-label="Abschnitte">
+        <a class="chip" href="#grundgeruest">HTML-Grundgerüst</a>
+        <a class="chip" href="#text">Textstrukturierung</a>
+        <a class="chip" href="#bilder">Bilder einbinden</a>
+        <a class="chip" href="#links">Hyperlinks</a>
+        <a class="chip" href="#tabellen">Tabellen</a>
+        <a class="chip" href="#struktur">Seitenstrukturierung</a>
+        <a class="chip" href="#css-einbinden">CSS einbinden</a>
+        <a class="chip" href="#id-klasse">Attribute für IDs und Klassen</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="ref">
+    <div class="container">
+<section class="ref-section" id="grundgeruest">
+<div class="section-head"><h2>HTML-Grundgerüst</h2></div>
+<div class="ref-code ref-item"><pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="de"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Titel der Seite&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    Inhalt der Seite
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre></div>
+</section>
+
+<section class="ref-section" id="text">
+<div class="section-head"><h2>Textstrukturierung</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Tag</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>&lt;h1&gt;Überschrift&lt;/h1&gt;</code><br><code>&lt;h2&gt;Überschrift&lt;/h2&gt;</code></td><td data-label="Beschreibung">Überschrift (<b class="mn">h</b>eading). Die Zahl gibt die Ordnung an, von <code>h1</code> bis <code>h6</code>.</td></tr>
+<tr><td class="k"><code>&lt;p&gt;Absatz&lt;/p&gt;</code></td><td data-label="Beschreibung">Absatz (<b class="mn">p</b>aragraph)</td></tr>
+<tr><td class="k"><code>&lt;br&gt;</code></td><td data-label="Beschreibung">Zeilenumbruch (<b class="mn">br</b>eak)</td></tr>
+<tr><td class="k"><pre><code>&lt;ul&gt;
+  &lt;li&gt;Punkt 1&lt;/li&gt;
+  &lt;li&gt;Punkt 2&lt;/li&gt;
+&lt;/ul&gt;</code></pre></td><td data-label="Beschreibung">Unnummerierte Liste mit Aufzählungszeichen<br>(<b class="mn">u</b>nordered <b class="mn">l</b>ist mit <b class="mn">l</b>ist <b class="mn">i</b>tems)</td></tr>
+<tr><td class="k"><pre><code>&lt;ol&gt;
+  &lt;li&gt;Punkt 1&lt;/li&gt;
+  &lt;li&gt;Punkt 2&lt;/li&gt;
+&lt;/ol&gt;</code></pre></td><td data-label="Beschreibung">Nummerierte Liste (1., 2., …)<br>(<b class="mn">o</b>rdered <b class="mn">l</b>ist mit <b class="mn">l</b>ist <b class="mn">i</b>tems)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="bilder">
+<div class="section-head"><h2>Bilder einbinden</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Tag</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>&lt;img src="bild" alt="text"&gt;</code></td><td data-label="Beschreibung">Bild einbinden (<b class="mn">im</b>a<b class="mn">g</b>e). <code>src</code> ist der Pfad zur Bilddatei (<b class="mn">s</b>ou<b class="mn">rc</b>e), <code>alt</code> der <b class="mn">Alt</b>ernativtext.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="links">
+<div class="section-head"><h2>Hyperlinks</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Tag</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>&lt;a href="ziel"&gt;Linktext&lt;/a&gt;</code></td><td data-label="Beschreibung">Link. <code>href</code> gibt die verlinkte Seite an. Linktext ist der Text, der im Browser angezeigt wird.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="tabellen">
+<div class="section-head"><h2>Tabellen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Tag</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th&gt;Z1&lt;/th&gt;
+    &lt;th&gt;Z2&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;Z3&lt;/td&gt;
+    &lt;td&gt;Z4&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre></td><td data-label="Beschreibung">Tabelle.<br><code>tr</code> (<b class="mn">t</b>able <b class="mn">r</b>ow) umschließt eine Zeile.<br><code>th</code> (<b class="mn">t</b>able <b class="mn">h</b>eader) umschließt eine Überschrift für eine Zeile/Spalte.<br><code>td</code> (<b class="mn">t</b>able <b class="mn">d</b>ata) umschließt eine normale Zelle.</td></tr>
+<tr><td class="k"><code>&lt;td colspan="2"&gt;...&lt;/td&gt;</code></td><td data-label="Beschreibung">Attribut für <code>th</code> und <code>td</code>: <code>colspan</code> (<b class="mn">col</b>umn <b class="mn">span</b>) – Zelle überspannt mehrere Spalten.</td></tr>
+<tr><td class="k"><code>&lt;td rowspan="2"&gt;...&lt;/td&gt;</code></td><td data-label="Beschreibung">Attribut für <code>th</code> und <code>td</code>: <code>rowspan</code> (<b class="mn">row</b> <b class="mn">span</b>) – Zelle überspannt mehrere Zeilen.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="struktur">
+<div class="section-head"><h2>Seitenstrukturierung</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Tag</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>&lt;header&gt;...&lt;/header&gt;</code></td><td data-label="Beschreibung">Kopfbereich einer Seite (≠ <code>head</code>)</td></tr>
+<tr><td class="k"><code>&lt;nav&gt;...&lt;/nav&gt;</code></td><td data-label="Beschreibung">Navigationsbereich einer Seite</td></tr>
+<tr><td class="k"><code>&lt;main&gt;...&lt;/main&gt;</code></td><td data-label="Beschreibung">Haupt-Inhaltsbereich einer Seite</td></tr>
+<tr><td class="k"><code>&lt;footer&gt;...&lt;/footer&gt;</code></td><td data-label="Beschreibung">Fußbereich einer Seite</td></tr>
+<tr><td class="k"><code>&lt;div&gt;...&lt;/div&gt;</code></td><td data-label="Beschreibung">Allgemeine Box ohne inhaltliche Bedeutung</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="css-einbinden">
+<div class="section-head"><h2>CSS einbinden</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Tag</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>&lt;link rel="stylesheet" href="style.css"&gt;</code></td><td data-label="Beschreibung">CSS-Datei einbinden (im <code>head</code>!). <code>href</code> gibt den Pfad zur CSS-Datei an.</td></tr>
+<tr><td class="k"><code>&lt;style&gt; ... &lt;/style&gt;</code></td><td data-label="Beschreibung"><code>style</code>-Block im <code>head</code> einer HTML-Datei. Regeln werden so geschrieben wie in der CSS-Datei.</td></tr>
+<tr><td class="k"><code>&lt;p style="color: red;"&gt;...&lt;/p&gt;</code></td><td data-label="Beschreibung"><code>style</code>-Angaben direkt am HTML-Tag. Es sind auch mehrere Angaben möglich!</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="id-klasse">
+<div class="section-head"><h2>Attribute für IDs und Klassen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Attribut</th><th scope="col">Beispiel</th><th scope="col">Erklärung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>id</code></td><td data-label="Beispiel"><code>&lt;div id="foo"&gt;...&lt;/div&gt;</code></td><td data-label="Erklärung">Mit dem Attribut <code>id</code> weist man einem Element eine ID zu.</td></tr>
+<tr><td class="k"><code>class</code></td><td data-label="Beispiel"><code>&lt;div class="bar"&gt;...&lt;/div&gt;</code></td><td data-label="Erklärung">Mit dem Attribut <code>class</code> weist man einem Element eine oder mehrere Klassen zu.</td></tr>
+</tbody></table></div>
+</section>
+
+      <p class="empty" id="leer" hidden>&gt; keine Treffer</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="../impressum.html">Impressum</a>
+        <a href="../datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="../app.js"></script>
+  <script src="../merkhilfe.js"></script>
+</body>
+</html>

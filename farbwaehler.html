@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Farbwähler · Unterricht</title>
+  <meta name="description" content="Farbe wählen, als HEX oder RGB kopieren und passende Farben finden.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ---------- Werkzeug-spezifische Styles ---------- */
+    .cp-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: minmax(0, 1fr);
+      margin-top: 32px;
+    }
+    @media (min-width: 860px) {
+      .cp-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+    }
+	.top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;min-width:0;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px 8px 16px}
+	.brand{display:flex;align-items:center;gap:2px;font:600 14px/1 var(--f-mono);white-space:nowrap}
+	.brand a{color:var(--fg);text-decoration:none;border-radius:4px}
+	.brand a span{color:var(--accent)}
+	.brand a:hover{color:var(--accent)}
+	.brand .sep{color:var(--muted)}
+	.brand .here{color:var(--fg)}
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    /* Sättigung/Helligkeit-Feld */
+    .sv {
+      --h: 174;
+      position: relative;
+      aspect-ratio: 4 / 3;
+      border-radius: 10px;
+      background:
+        linear-gradient(to top, #000, transparent),
+        linear-gradient(to right, #fff, transparent),
+        hsl(var(--h) 100% 50%);
+      cursor: crosshair;
+      touch-action: none;
+      user-select: none;
+    }
+    .sv:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .sv-knob {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    /* Farbton-Regler */
+    .hue {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 16px;
+      margin: 0;
+      border-radius: 999px;
+      background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+      cursor: pointer;
+    }
+    .hue::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--thumb, #fff);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+    }
+    .hue::-moz-range-thumb {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--thumb, #fff);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+    }
+    .hue:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+    /* Vorschau */
+    .preview {
+      height: 132px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+    }
+    .preview strong { font-size: 1.5rem; letter-spacing: .02em; }
+    .preview span { font-size: .85rem; opacity: .85; }
+
+    /* Felder */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .flabel {
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      color: var(--muted);
+    }
+    .flabel::before { content: "> "; color: var(--accent); }
+    .frow { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+
+    .inp {
+      font: inherit;
+      font-family: var(--font-mono);
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 12px;
+      min-width: 0;
+    }
+    .inp:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .inp[aria-invalid="true"] { border-color: #c8343b; box-shadow: 0 0 0 3px rgba(200, 52, 59, .15); }
+    #hex { flex: 1 1 140px; text-transform: lowercase; }
+
+    .rgbbox {
+      flex: 1 1 70px;
+      display: flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding-left: 10px;
+      min-width: 0;
+    }
+    .rgbbox:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .rgbbox span { font-family: var(--font-mono); font-size: .8rem; color: var(--accent); }
+    .rgbbox .inp { border: 0; background: transparent; width: 100%; padding-left: 6px; box-shadow: none; -moz-appearance: textfield; }
+    .rgbbox .inp::-webkit-inner-spin-button { opacity: .5; }
+
+    .btn {
+      font-family: var(--font-mono);
+      font-size: .82rem;
+      color: var(--on-accent);
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 8px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn-ghost {
+      color: var(--muted);
+      background: var(--surface);
+      border-color: var(--border);
+      border-radius: 999px;
+      align-self: flex-start;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); filter: none; }
+
+    /* Vorschläge */
+    .sugg { margin-top: 40px; }
+    .group { margin-top: 22px; }
+    .group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 10px; }
+    .group-head h3 { font-size: 1rem; margin: 0; }
+    .group-head p { color: var(--muted); font-size: .9rem; margin: 0; }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+      gap: 10px;
+    }
+    .sw {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .sw.is-base { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .sw-color {
+      height: 64px;
+      border: 0;
+      cursor: pointer;
+      position: relative;
+    }
+    .sw-color:hover::after {
+      content: "übernehmen";
+      position: absolute;
+      inset: auto 8px 8px auto;
+      font: .7rem/1 var(--font-mono);
+      color: var(--sw-ink, #fff);
+      opacity: .9;
+    }
+    .sw.is-base .sw-color::before {
+      content: "aktuell";
+      position: absolute;
+      inset: 8px auto auto 8px;
+      font: .7rem/1 var(--font-mono);
+      color: var(--sw-ink, #fff);
+    }
+    .sw-meta { display: flex; flex-direction: column; padding: 6px; gap: 2px; }
+    .sw-code {
+      font-family: var(--font-mono);
+      font-size: .78rem;
+      text-align: left;
+      color: var(--text);
+      background: transparent;
+      border: 0;
+      border-radius: 6px;
+      padding: 4px 6px;
+      cursor: copy;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sw-code.small { color: var(--muted); font-size: .72rem; white-space: normal; }
+    .sw-code:hover { background: var(--accent-soft); color: var(--text); }
+
+    /* Hinweis-Meldung */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translate(-50%, 16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s, transform .18s;
+      background: #142120;
+      color: #e4eeec;
+      font: .82rem/1.4 var(--font-mono);
+      padding: 9px 14px;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .2);
+      z-index: 50;
+      max-width: calc(100% - 32px);
+    }
+    .toast::before { content: "> "; color: #2dd4bf; }
+    .toast.on { opacity: 1; transform: translate(-50%, 0); }
+    @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+    <div class="brand">
+      <a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">farbwähler</span>
+	 </div>   
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">tool · allgemein</p>
+      <h1>Farbwähler</h1>
+      <p>Farbe wählen, als HEX oder RGB kopieren und passende Farben finden.</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="container cp-grid">
+      <section class="panel" aria-label="Farbe wählen">
+        <div class="sv" id="sv" tabindex="0" role="application"
+             aria-label="Sättigung und Helligkeit. Pfeiltasten verschieben, mit Umschalt in größeren Schritten.">
+          <div class="sv-knob" id="knob"></div>
+        </div>
+        <label class="visually-hidden" for="hue">Farbton</label>
+        <input class="hue" id="hue" type="range" min="0" max="359" step="1" value="174">
+      </section>
+
+      <section class="panel" aria-label="Farbwerte">
+        <div class="preview" id="preview">
+          <strong id="pvHex">#0f766e</strong>
+          <span id="pvRgb">rgb(15, 118, 110)</span>
+        </div>
+
+        <div class="field">
+          <label class="flabel" for="hex">hex</label>
+          <div class="frow">
+            <input class="inp" id="hex" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#0f766e">
+            <button class="btn" type="button" data-copy="hex">kopieren</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="flabel" id="rgbLabel">rgb</span>
+          <div class="frow" role="group" aria-labelledby="rgbLabel">
+            <label class="rgbbox"><span>r</span><input class="inp" id="r" type="number" min="0" max="255" inputmode="numeric" aria-label="Rot"></label>
+            <label class="rgbbox"><span>g</span><input class="inp" id="g" type="number" min="0" max="255" inputmode="numeric" aria-label="Grün"></label>
+            <label class="rgbbox"><span>b</span><input class="inp" id="b" type="number" min="0" max="255" inputmode="numeric" aria-label="Blau"></label>
+            <button class="btn" type="button" data-copy="rgb">kopieren</button>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost" type="button" id="zufall">zufällige Farbe</button>
+      </section>
+    </div>
+
+    <section class="container sugg" aria-label="Passende Farben">
+      <div class="section-head"><h2>Passende Farben</h2></div>
+      <p class="flabel" style="margin:0">Farbfeld anklicken übernimmt die Farbe · Code anklicken kopiert ihn</p>
+      <div id="gruppen"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="../impressum.html">Impressum</a>
+        <a href="../datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="../app.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var $ = function (id) { return document.getElementById(id); };
+    var sv = $("sv"), knob = $("knob"), hue = $("hue"), hexIn = $("hex");
+    var rIn = $("r"), gIn = $("g"), bIn = $("b");
+    var STORE = "farbwaehler";
+
+    /* ---------- Farbmathematik ---------- */
+    function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+
+    function hsvToRgb(h, s, v) {
+      s /= 100; v /= 100;
+      var c = v * s, hp = (((h % 360) + 360) % 360) / 60, x = c * (1 - Math.abs(hp % 2 - 1));
+      var r = 0, g = 0, b = 0;
+      if (hp < 1) { r = c; g = x; } else if (hp < 2) { r = x; g = c; } else if (hp < 3) { g = c; b = x; }
+      else if (hp < 4) { g = x; b = c; } else if (hp < 5) { r = x; b = c; } else { r = c; b = x; }
+      var m = v - c;
+      return [r, g, b].map(function (k) { return Math.round((k + m) * 255); });
+    }
+
+    function rgbToHsv(rgb) {
+      var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+      var max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min, h = 0;
+      if (d) {
+        if (max === r) h = ((g - b) / d) % 6;
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h *= 60; if (h < 0) h += 360;
+      }
+      return { h: h, s: max ? d / max * 100 : 0, v: max * 100 };
+    }
+
+    function rgbToHsl(rgb) {
+      var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+      var max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+      var l = (max + min) / 2, s = d ? d / (1 - Math.abs(2 * l - 1)) : 0, h = 0;
+      if (d) {
+        if (max === r) h = ((g - b) / d) % 6;
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h *= 60; if (h < 0) h += 360;
+      }
+      return { h: h, s: s * 100, l: l * 100 };
+    }
+
+    function hslToRgb(h, s, l) {
+      s /= 100; l /= 100;
+      var c = (1 - Math.abs(2 * l - 1)) * s, hp = (((h % 360) + 360) % 360) / 60;
+      var x = c * (1 - Math.abs(hp % 2 - 1)), r = 0, g = 0, b = 0;
+      if (hp < 1) { r = c; g = x; } else if (hp < 2) { r = x; g = c; } else if (hp < 3) { g = c; b = x; }
+      else if (hp < 4) { g = x; b = c; } else if (hp < 5) { r = x; b = c; } else { r = c; b = x; }
+      var m = l - c / 2;
+      return [r, g, b].map(function (k) { return Math.round((k + m) * 255); });
+    }
+
+    function toHex(rgb) {
+      return "#" + rgb.map(function (n) { return n.toString(16).padStart(2, "0"); }).join("");
+    }
+    function rgbText(rgb) { return "rgb(" + rgb.join(", ") + ")"; }
+
+    function parseHex(str) {
+      var s = String(str).trim().replace(/^#/, "");
+      if (/^[0-9a-f]{3}$/i.test(s)) s = s.split("").map(function (c) { return c + c; }).join("");
+      if (!/^[0-9a-f]{6}$/i.test(s)) return null;
+      return [0, 2, 4].map(function (i) { return parseInt(s.substr(i, 2), 16); });
+    }
+
+    // Schriftfarbe mit dem besseren Kontrast (WCAG-Luminanz)
+    function inkFor(rgb) {
+      var L = rgb.map(function (c) { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+      var lum = 0.2126 * L[0] + 0.7152 * L[1] + 0.0722 * L[2];
+      return (lum + 0.05) / 0.05 > 1.05 / (lum + 0.05) ? "#142120" : "#ffffff";
+    }
+
+    function rotate(rgb, deg) { var c = rgbToHsl(rgb); return hslToRgb(c.h + deg, c.s, c.l); }
+    function mix(rgb, target, t) { return rgb.map(function (c, i) { return Math.round(c + (target[i] - c) * t); }); }
+
+    /* ---------- Zustand ---------- */
+    var state = { h: 174, s: 87.3, v: 46.3 };
+
+    function currentRgb() { return hsvToRgb(state.h, state.s, state.v); }
+
+    function setFromRgb(rgb) {
+      var c = rgbToHsv(rgb);
+      if (c.s > 0 && c.v > 0) state.h = c.h; // Farbton bei Grau/Schwarz behalten
+      state.s = c.s; state.v = c.v;
+    }
+
+    /* ---------- Anzeige ---------- */
+    var GRUPPEN = [
+      { name: "Komplementär", info: "gegenüber im Farbkreis – starker Kontrast", f: function (c) { return [c, rotate(c, 180)]; } },
+      { name: "Analog", info: "direkte Nachbarn – ruhig und harmonisch", f: function (c) { return [rotate(c, -30), c, rotate(c, 30)]; } },
+      { name: "Triadisch", info: "gleichmäßig verteilt – lebendig und ausgewogen", f: function (c) { return [c, rotate(c, 120), rotate(c, 240)]; } },
+      { name: "Split-komplementär", info: "Kontrast, aber weicher als komplementär", f: function (c) { return [c, rotate(c, 150), rotate(c, 210)]; } },
+      { name: "Tetradisch", info: "vier Farben im Quadrat – viel Spielraum", f: function (c) { return [c, rotate(c, 90), rotate(c, 180), rotate(c, 270)]; } },
+      { name: "Abstufungen", info: "heller und dunkler – für Hintergründe, Rahmen, Hover", f: function (c) {
+          var w = [255, 255, 255], k = [0, 0, 0];
+          return [mix(c, w, .75), mix(c, w, .5), mix(c, w, .25), c, mix(c, k, .25), mix(c, k, .5), mix(c, k, .75)];
+        } }
+    ];
+
+    var gruppenEl = $("gruppen"), pending = false;
+
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+
+    function renderVorschlaege() {
+      pending = false;
+      var base = currentRgb(), baseHex = toHex(base);
+      gruppenEl.textContent = "";
+      GRUPPEN.forEach(function (gr) {
+        var g = el("div", "group"), head = el("div", "group-head");
+        head.appendChild(el("h3", "", gr.name));
+        head.appendChild(el("p", "", gr.info));
+        g.appendChild(head);
+        var grid = el("div", "swatches");
+        gr.f(base).forEach(function (rgb) {
+          var hex = toHex(rgb), sw = el("div", "sw" + (hex === baseHex ? " is-base" : ""));
+          var col = el("button", "sw-color");
+          col.type = "button";
+          col.style.background = hex;
+          col.style.setProperty("--sw-ink", inkFor(rgb));
+          col.title = "Als aktuelle Farbe übernehmen";
+          col.setAttribute("aria-label", hex + " übernehmen");
+          col.dataset.hex = hex;
+          var meta = el("div", "sw-meta");
+          var c1 = el("button", "sw-code", hex); c1.type = "button"; c1.dataset.text = hex; c1.title = "HEX kopieren";
+          var c2 = el("button", "sw-code small", rgbText(rgb)); c2.type = "button"; c2.dataset.text = rgbText(rgb); c2.title = "RGB kopieren";
+          meta.appendChild(c1); meta.appendChild(c2);
+          sw.appendChild(col); sw.appendChild(meta);
+          grid.appendChild(sw);
+        });
+        g.appendChild(grid);
+        gruppenEl.appendChild(g);
+      });
+    }
+
+    function update(quelle) {
+      var rgb = currentRgb(), hex = toHex(rgb), ink = inkFor(rgb);
+
+      sv.style.setProperty("--h", Math.round(state.h));
+      knob.style.left = state.s + "%";
+      knob.style.top = (100 - state.v) + "%";
+      knob.style.background = hex;
+      if (quelle !== "hue") hue.value = Math.round(state.h) % 360;
+      hue.style.setProperty("--thumb", "hsl(" + Math.round(state.h) + " 100% 50%)");
+
+      var pv = $("preview");
+      pv.style.background = hex;
+      pv.style.color = ink;
+      $("pvHex").textContent = hex;
+      $("pvRgb").textContent = rgbText(rgb);
+
+      if (quelle !== "hex") { hexIn.value = hex; hexIn.removeAttribute("aria-invalid"); }
+      if (quelle !== "rgb") { rIn.value = rgb[0]; gIn.value = rgb[1]; bIn.value = rgb[2]; }
+
+      try { localStorage.setItem(STORE, hex); } catch (e) {}
+      try { history.replaceState(null, "", "#" + hex.slice(1)); } catch (e) {}
+
+      if (!pending) { pending = true; requestAnimationFrame(renderVorschlaege); }
+    }
+
+    /* ---------- Farbfeld ---------- */
+    function svFromPointer(e) {
+      var r = sv.getBoundingClientRect();
+      state.s = clamp((e.clientX - r.left) / r.width, 0, 1) * 100;
+      state.v = (1 - clamp((e.clientY - r.top) / r.height, 0, 1)) * 100;
+      update("sv");
+    }
+    sv.addEventListener("pointerdown", function (e) {
+      if (e.button !== 0) return;
+      sv.setPointerCapture(e.pointerId);
+      svFromPointer(e);
+      sv.focus({ preventScroll: true });
+      e.preventDefault();
+    });
+    sv.addEventListener("pointermove", function (e) {
+      if (sv.hasPointerCapture && sv.hasPointerCapture(e.pointerId)) svFromPointer(e);
+    });
+    sv.addEventListener("keydown", function (e) {
+      var step = e.shiftKey ? 10 : 1, used = true;
+      if (e.key === "ArrowLeft") state.s = clamp(state.s - step, 0, 100);
+      else if (e.key === "ArrowRight") state.s = clamp(state.s + step, 0, 100);
+      else if (e.key === "ArrowUp") state.v = clamp(state.v + step, 0, 100);
+      else if (e.key === "ArrowDown") state.v = clamp(state.v - step, 0, 100);
+      else used = false;
+      if (used) { e.preventDefault(); update("sv"); }
+    });
+
+    hue.addEventListener("input", function () { state.h = +hue.value; update("hue"); });
+
+    /* ---------- Eingaben ---------- */
+    hexIn.addEventListener("input", function () {
+      var rgb = parseHex(hexIn.value);
+      if (!rgb) { hexIn.setAttribute("aria-invalid", "true"); return; }
+      hexIn.removeAttribute("aria-invalid");
+      setFromRgb(rgb); update("hex");
+    });
+    hexIn.addEventListener("blur", function () { update(); });
+    hexIn.addEventListener("keydown", function (e) { if (e.key === "Enter") hexIn.blur(); });
+
+    [rIn, gIn, bIn].forEach(function (inp) {
+      inp.addEventListener("input", function () {
+        var vals = [rIn, gIn, bIn].map(function (i) { return i.value === "" ? NaN : +i.value; });
+        if (vals.some(function (v) { return isNaN(v) || v < 0 || v > 255 || v % 1; })) return;
+        setFromRgb(vals); update("rgb");
+      });
+      inp.addEventListener("blur", function () { update(); });
+      inp.addEventListener("keydown", function (e) { if (e.key === "Enter") inp.blur(); });
+    });
+
+    $("zufall").addEventListener("click", function () {
+      state.h = Math.random() * 360;
+      state.s = 45 + Math.random() * 50;
+      state.v = 45 + Math.random() * 50;
+      update();
+    });
+
+    /* ---------- Kopieren & Übernehmen ---------- */
+    var toastEl = $("toast"), toastT;
+    function toast(msg) {
+      toastEl.textContent = msg; toastEl.classList.add("on");
+      clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove("on"); }, 1800);
+    }
+
+    function copy(text) {
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.setAttribute("readonly", "");
+        ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        var ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+        ta.remove();
+        toast(ok ? text + " kopiert" : "Kopieren nicht möglich – bitte markieren und Strg+C");
+      }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function () { toast(text + " kopiert"); }, fallback);
+      } else fallback();
+    }
+
+    document.querySelectorAll("[data-copy]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var rgb = currentRgb();
+        copy(btn.dataset.copy === "hex" ? toHex(rgb) : rgbText(rgb));
+      });
+    });
+
+    gruppenEl.addEventListener("click", function (e) {
+      var code = e.target.closest(".sw-code");
+      if (code) { copy(code.dataset.text); return; }
+      var col = e.target.closest(".sw-color");
+      if (col) {
+        setFromRgb(parseHex(col.dataset.hex)); update();
+        toast(col.dataset.hex + " übernommen");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+
+    /* ---------- Start: Farbe aus Adresse (#rrggbb) oder letzter Sitzung ---------- */
+    var start = parseHex(location.hash);
+    if (!start) { try { start = parseHex(localStorage.getItem(STORE) || ""); } catch (e) {} }
+    setFromRgb(start || [15, 118, 110]); // Standard: Akzentfarbe der Seite
+    update();
+  })();
+  </script>
+</body>
+</html>

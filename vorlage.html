@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Vorlage für neue Unterseiten: Datei kopieren, umbenennen, Titel + Inhalt anpassen.
+       Liegt die neue Seite in einem Unterordner (z. B. tools/), alle Pfade mit ../ beginnen:
+       ../style.css, ../app.js, ../index.html -->
+  <title>Seitentitel · Unterricht</title>
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <a class="brand" href="index.html">~/<span>unterricht</span></a>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <a class="back" href="index.html">← Übersicht</a>
+      <p class="kicker">Informatik · 2BKI1</p>
+      <h1>Seitentitel</h1>
+      <p>Ein Satz, worum es auf dieser Seite geht.</p>
+    </div>
+  </header>
+
+  <main>
+    <article class="container prose">
+      <h2>Abschnitt</h2>
+      <p>Normaler Fließtext. Inline-Code sieht so aus: <code>print("Hallo")</code>.</p>
+      <pre><code>for i in range(3):
+    print(i)</code></pre>
+      <h3>Unterabschnitt</h3>
+      <ul>
+        <li>Punkt eins</li>
+        <li>Punkt zwei</li>
+      </ul>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

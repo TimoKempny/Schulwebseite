@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Struktogramm-Editor · Unterricht</title>
+<!-- Theme vor dem Zeichnen setzen (gleicher Speicher wie die Startseite) -->
+<script>
+  try {
+    var t = localStorage.getItem("theme");
+    if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+    if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+  } catch (e) {}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: Kopfleiste über Elementleiste links und Zeichenfläche mit Papierblatt rechts.
+   Farben und Schriften wie auf der Startseite (style.css). */
+:root{
+  --bg:#f5f8f7; --panel:#ffffff; --line:#d8e1de; --fg:#142120; --muted:#586664;
+  --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:#dcf1ed; --dot:#cdd9d5;
+  --canvas:#eaf1ef; --btn:#ffffff; --btn-hover:#eaf1ef;
+  --sheet:#ffffff; --ink:#15171c; --ink-muted:#8f9b98; --sheet-accent:#0f766e;
+  --sheet-hl:rgba(15,118,110,.07); --sheet-drop:rgba(15,118,110,.14); --sheet-ring:rgba(15,118,110,.20);
+  --float:#142120; --float-ink:#e4eeec;
+  --shadow:0 1px 2px rgba(16,32,30,.06),0 6px 18px rgba(16,32,30,.08);
+  --f-ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-brand:var(--f-ui);
+  --f-mono:ui-monospace,"Cascadia Code","JetBrains Mono","SF Mono",Consolas,"Liberation Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1413; --panel:#141d1c; --line:#253331; --fg:#e4eeec; --muted:#93a4a0;
+  --accent:#2dd4bf; --accent-ink:#06201d; --accent-soft:rgba(45,212,191,.12); --dot:#22302e;
+  --canvas:#101817; --btn:#1b2624; --btn-hover:#22302e;
+  --float:#22302e; --float-ink:#e4eeec;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0d1413; --panel:#141d1c; --line:#253331; --fg:#e4eeec; --muted:#93a4a0;
+  --accent:#2dd4bf; --accent-ink:#06201d; --accent-soft:rgba(45,212,191,.12); --dot:#22302e;
+  --canvas:#101817; --btn:#1b2624; --btn-hover:#22302e;
+  --float:#22302e; --float-ink:#e4eeec;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--f-ui);overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{height:100%;display:grid;grid-template-columns:250px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:12px;
+  padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Kopfleiste */
+.top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;min-width:0;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px 8px 16px}
+.brand{display:flex;align-items:center;gap:2px;font:600 14px/1 var(--f-mono);white-space:nowrap}
+.brand a{color:var(--fg);text-decoration:none;border-radius:4px}
+.brand a span{color:var(--accent)}
+.brand a:hover{color:var(--accent)}
+.brand .sep{color:var(--muted)}
+.brand .here{color:var(--fg)}
+.name{min-width:0;flex:1 1 160px;max-width:260px;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:5px 10px;font-weight:500}
+.name:hover{border-color:var(--accent)}
+.name:focus{border-color:var(--accent);background:var(--panel);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-left:auto}
+.grp{display:flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+.lbl{font:11px/1 var(--f-mono);color:var(--muted);padding:0 6px 0 6px}
+.tb{border:0;background:transparent;border-radius:7px;min-width:30px;height:28px;padding:0 9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.tb:hover:not(:disabled){background:var(--btn-hover);color:var(--accent)}
+.tb:disabled{opacity:.38;cursor:default}
+.tb svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tb.primary{background:var(--accent);color:var(--accent-ink);font:600 12.5px/1 var(--f-mono)}
+.tb.primary:hover:not(:disabled){background:var(--accent);color:var(--accent-ink);filter:brightness(1.08)}
+.num{width:44px;height:28px;border:0;background:transparent;text-align:center;font-family:var(--f-mono);font-variant-numeric:tabular-nums;border-radius:7px;-moz-appearance:textfield}
+.num::-webkit-inner-spin-button,.num::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.num:hover{background:var(--btn-hover)}
+.unit{color:var(--muted);font:12px/1 var(--f-mono);padding-right:4px}
+.sel{height:28px;border:0;background:transparent;border-radius:7px;padding:0 4px;cursor:pointer;font-family:var(--f-mono);font-size:12.5px}
+.sel:hover{background:var(--btn-hover)}
+.zoomv{min-width:56px;font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.theme-toggle{font:12px/1 var(--f-mono);color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.theme-toggle:hover{color:var(--fg);border-color:var(--accent)}
+
+/* Elementleiste */
+.palette{background:var(--panel);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-height:0;overflow:auto}
+.palette h2{font:600 13px/1 var(--f-mono);color:var(--fg);margin:18px 16px 10px}
+.palette h2::before{content:"// ";color:var(--accent)}
+.items{display:flex;flex-direction:column;gap:4px;padding:0 8px}
+.item{display:flex;align-items:center;gap:11px;padding:7px 9px;border:1px solid transparent;border-radius:10px;background:transparent;cursor:grab;text-align:left;touch-action:none;user-select:none}
+.item:hover{background:var(--accent-soft);border-color:transparent}
+.item:hover svg{color:var(--accent)}
+.item:active{cursor:grabbing}
+.item svg{flex:none;width:44px;height:32px;fill:none;stroke:currentColor;stroke-width:1.5;color:var(--fg)}
+.item .t{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.item .n{font-weight:500}
+.item .s{font:11.5px/1.2 var(--f-mono);color:var(--accent)}
+.help{margin:auto 8px 8px;padding:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;line-height:1.5}
+.help ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.help li{padding-left:14px;position:relative}
+.help li::before{content:">";position:absolute;left:0;font-family:var(--f-mono);color:var(--accent)}
+.help kbd{font:11px/1 var(--f-mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 4px;color:var(--fg);background:var(--btn)}
+.help .din{margin-top:10px;font:11px/1.4 var(--f-mono)}
+
+/* Zeichenfläche */
+.canvas{position:relative;min-width:0;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:12px;
+  background-color:var(--canvas);background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
+.stage{position:relative;width:max-content;margin:28px auto}
+#svg{display:block;background:var(--sheet);box-shadow:var(--shadow);border-radius:4px;touch-action:none;user-select:none;-webkit-user-select:none}
+#svg text{fill:var(--ink)}
+#svg .b{fill:none;stroke:var(--ink);stroke-width:1.5}
+#svg .mut{fill:var(--ink-muted)}
+#svg .hl{fill:var(--sheet-hl);stroke:var(--sheet-accent);stroke-width:1.5}
+#svg .src{fill:rgba(20,33,32,.10)}
+#svg .drop{stroke:var(--sheet-accent);stroke-width:3.5;stroke-linecap:round}
+#svg .dropdot{fill:var(--sheet-accent)}
+#svg .dropbox{fill:var(--sheet-drop);stroke:var(--sheet-accent);stroke-width:1.5;stroke-dasharray:6 4}
+#svg .ph{fill:none;stroke:var(--ink-muted);stroke-width:1.5;stroke-dasharray:6 5}
+#svg .phtext{fill:var(--ink-muted)}
+
+.hoverbar{position:absolute;display:flex;gap:2px;padding:3px;background:var(--float);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.25);transform:translateX(-100%);z-index:3}
+.hoverbar button{border:0;background:transparent;color:var(--float-ink);height:24px;min-width:24px;padding:0 6px;border-radius:5px;cursor:pointer;font:12px/1 var(--f-mono);display:inline-flex;align-items:center;gap:4px}
+.hoverbar button:hover{background:rgba(255,255,255,.14)}
+.hoverbar button.del:hover{background:#c8343b;color:#fff}
+.hoverbar svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+#editor{position:absolute;z-index:4;resize:none;border:2px solid var(--sheet-accent);border-radius:4px;background:#fff;color:#15171c;
+  box-shadow:0 0 0 4px var(--sheet-ring);outline:none;overflow:hidden;white-space:pre;margin:0}
+
+#ghost{position:fixed;left:0;top:0;z-index:50;pointer-events:none;padding:6px 10px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font:600 12.5px/1.2 var(--f-mono);box-shadow:0 6px 18px rgba(0,0,0,.22);white-space:nowrap}
+body.dragging,body.dragging *{cursor:grabbing!important}
+
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;transition:opacity .18s,transform .18s;
+  background:var(--float);color:var(--float-ink);padding:9px 14px;border-radius:10px;font:12.5px/1.4 var(--f-mono);pointer-events:none;z-index:60;max-width:calc(100% - 32px);box-shadow:0 6px 18px rgba(0,0,0,.2)}
+#toast::before{content:"> ";color:#2dd4bf}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+.modal{position:fixed;inset:0;background:rgba(8,16,15,.55);display:grid;place-items:center;z-index:70;padding:16px}
+.dlg{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;max-width:min(900px,100%);max-height:100%;overflow:auto;display:grid;gap:12px}
+.dlg h3{margin:0;font:600 15px/1.2 var(--f-mono)}
+.dlg h3::before{content:"// ";color:var(--accent)}
+.dlg p{margin:0;color:var(--muted)}
+.dlg img{max-width:100%;border:1px solid var(--line);background:#fff}
+.dlg .tb{justify-self:end;border:1px solid var(--line)}
+
+@media (prefers-reduced-motion: reduce){#toast{transition:none}}
+
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);gap:10px}
+  .top{padding:8px 10px}
+  .tools{margin-left:0}
+  .palette{overflow-x:auto;overflow-y:hidden}
+  .palette h2,.help{display:none}
+  .items{flex-direction:row;padding:6px}
+  .item{flex-direction:column;gap:3px;padding:6px 8px;min-width:84px;text-align:center}
+  .item .t{align-items:center}
+  .item .n{font-size:11.5px;white-space:nowrap}
+  .item .s{display:none}
+  .stage{margin:16px}
+}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">struktogramm</span>
+    </div>
+    <input class="name" id="docName" aria-label="Name des Struktogramms" spellcheck="false">
+    <div class="tools">
+      <div class="grp">
+        <button class="tb" id="undoBtn" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+        <button class="tb" id="redoBtn" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+      </div>
+      <div class="grp" title="Schriftgröße im Struktogramm">
+        <span class="lbl">Schrift</span>
+        <button class="tb" id="fsDown" aria-label="Schrift kleiner">A−</button>
+        <input class="num" id="fsVal" type="number" min="9" max="36" step="1" aria-label="Schriftgröße in Pixel">
+        <span class="unit">px</span>
+        <button class="tb" id="fsUp" aria-label="Schrift größer">A+</button>
+        <select class="sel" id="fontSel" aria-label="Schriftart">
+          <option value="sans">Sans</option>
+          <option value="mono">Mono</option>
+        </select>
+      </div>
+      <div class="grp">
+        <span class="lbl">Zoom</span>
+        <button class="tb" id="zOut" aria-label="Verkleinern">−</button>
+        <button class="tb zoomv" id="zVal" title="Auf 100 % zurücksetzen">100 %</button>
+        <button class="tb" id="zIn" aria-label="Vergrößern">+</button>
+      </div>
+      <div class="grp">
+        <span class="lbl">Export</span>
+        <button class="tb primary" id="pngBtn">PNG</button>
+        <button class="tb primary" id="pdfBtn">PDF</button>
+      </div>
+      <div class="grp">
+        <button class="tb" id="openBtn" title="Struktogramm-Datei (.json) öffnen">Öffnen</button>
+        <button class="tb" id="saveBtn" title="Als .json speichern, um später weiterzuarbeiten">Speichern</button>
+        <button class="tb" id="newBtn" title="Leeres Struktogramm (rückgängig machbar)">Neu</button>
+        <input type="file" id="fileIn" accept=".json,application/json" hidden>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+  </header>
+
+  <aside class="palette" aria-label="Elemente">
+    <h2>Elemente</h2>
+    <div class="items" id="items"></div>
+    <div class="help">
+      <ul>
+        <li>Element auf das Blatt ziehen. Klick hängt es unten an.</li>
+        <li>Text anklicken zum Bearbeiten. <kbd>Enter</kbd> bestätigt, <kbd>Esc</kbd> bricht ab, <kbd>Shift</kbd>+<kbd>Enter</kbd> neue Zeile.</li>
+        <li>Blöcke auf dem Blatt ziehen, um sie zu verschieben.</li>
+        <li>Über einem Block erscheinen Löschen und Duplizieren.</li>
+        <li><kbd>Strg</kbd>+<kbd>Z</kbd> rückgängig</li>
+      </ul>
+      <div class="din">Darstellung nach Nassi-Shneiderman (DIN 66261)</div>
+    </div>
+  </aside>
+
+  <main class="canvas" id="canvas">
+    <div class="stage" id="stage">
+      <svg id="svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Struktogramm"></svg>
+      <div class="hoverbar" id="hoverbar" hidden>
+        <button data-act="addcase" title="Fall hinzufügen">+ Fall</button>
+        <button data-act="delcase" title="Letzten Fall entfernen">− Fall</button>
+        <button data-act="dup" title="Duplizieren" aria-label="Duplizieren"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>
+        <button data-act="del" class="del" title="Löschen" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+      </div>
+      <textarea id="editor" hidden spellcheck="false" aria-label="Text bearbeiten"></textarea>
+    </div>
+  </main>
+</div>
+
+<div id="ghost" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div class="modal" id="modal" hidden>
+  <div class="dlg">
+    <h3 id="mTitle">PNG-Export</h3>
+    <p id="mText"></p>
+    <img id="mImg" alt="Exportiertes Struktogramm">
+    <button class="tb" id="mClose">Schließen</button>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const FAM = {
+  sans: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  mono: 'Consolas, "Cascadia Mono", "SF Mono", Menlo, "DejaVu Sans Mono", "Courier New", monospace'
+};
+const MARGIN = 24;
+const STORE = 'struktogramm-editor-v1';
+const $ = id => document.getElementById(id);
+const svg = $('svg'), stage = $('stage'), canvasEl = $('canvas'), hoverbar = $('hoverbar'), editor = $('editor'), ghost = $('ghost');
+
+/* ---------- Modell ---------- */
+let uidc = 1;
+const nid = () => 'n' + Date.now().toString(36) + (uidc++);
+const TYPES = {
+  statement: { label: 'Anweisung', sub: 'statement', make: () => ({ type: 'statement', text: 'Anweisung' }) },
+  call:      { label: 'Unterprogramm', sub: 'call', make: () => ({ type: 'call', text: 'Unterprogramm()' }) },
+  if:        { label: 'Verzweigung', sub: 'if-else', make: () => ({ type: 'if', text: 'Bedingung?', yesLabel: 'wahr', noLabel: 'falsch', yes: [], no: [] }) },
+  switch:    { label: 'Fallauswahl', sub: 'switch-case', make: () => ({ type: 'switch', text: 'Variable', cases: [{ label: '1', body: [] }, { label: '2', body: [] }, { label: 'sonst', body: [] }] }) },
+  for:       { label: 'Zählschleife', sub: 'for', make: () => ({ type: 'for', text: 'für i von 1 bis 10', body: [] }) },
+  while:     { label: 'Kopfgesteuerte Schleife', sub: 'while', make: () => ({ type: 'while', text: 'solange Bedingung', body: [] }) },
+  dowhile:   { label: 'Fußgesteuerte Schleife', sub: 'do-while', make: () => ({ type: 'dowhile', text: 'solange Bedingung', body: [] }) }
+};
+const ICONS = {
+  statement: '<rect x="2" y="6" width="40" height="20"/>',
+  call: '<rect x="2" y="6" width="40" height="20"/><path d="M7 6v20M37 6v20"/>',
+  if: '<rect x="2" y="3" width="40" height="26"/><path d="M2 3l20 11 20-11M2 14h40M22 14v15"/>',
+  switch: '<rect x="2" y="3" width="40" height="26"/><path d="M2 3l28 11 12-11M2 14h40M16 8.5V29M30 14v15"/>',
+  for: '<rect x="2" y="3" width="40" height="26"/><path d="M12 29V12h30"/><path d="M17 7.5h4M24 7.5h4M31 7.5h4" stroke-width="1.2"/>',
+  while: '<rect x="2" y="3" width="40" height="26"/><path d="M12 29V12h30"/>',
+  dowhile: '<rect x="2" y="3" width="40" height="26"/><path d="M12 3v17h30"/>'
+};
+function create(type) { const n = TYPES[type].make(); n.id = nid(); return n; }
+function walk(arr, fn) {
+  for (const n of arr) {
+    fn(n);
+    if (n.body) walk(n.body, fn);
+    if (n.yes) walk(n.yes, fn);
+    if (n.no) walk(n.no, fn);
+    if (n.cases) n.cases.forEach(c => walk(c.body, fn));
+  }
+}
+function sanitize(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.filter(n => n && typeof n === 'object').map(n => {
+    const type = TYPES[n.type] ? n.type : 'statement';
+    const o = { id: nid(), type, text: typeof n.text === 'string' ? n.text : '' };
+    if (type === 'if') { o.yesLabel = String(n.yesLabel ?? 'wahr'); o.noLabel = String(n.noLabel ?? 'falsch'); o.yes = sanitize(n.yes); o.no = sanitize(n.no); }
+    if (type === 'switch') {
+      let cs = Array.isArray(n.cases) ? n.cases : [];
+      cs = cs.map(c => ({ label: String(c?.label ?? ''), body: sanitize(c?.body) }));
+      while (cs.length < 2) cs.push({ label: cs.length ? 'sonst' : '1', body: [] });
+      o.cases = cs;
+    }
+    if (type === 'for' || type === 'while' || type === 'dowhile') o.body = sanitize(n.body);
+    return o;
+  });
+}
+function cloneNode(n) { const c = sanitize([JSON.parse(JSON.stringify(n))])[0]; return c; }
+
+function sample() {
+  const st = t => Object.assign(create('statement'), { text: t });
+  const inner = Object.assign(create('if'), { text: 'tipp > zahl?', yes: [st('Ausgabe "zu groß"')], no: [st('Ausgabe "Richtig!"')] });
+  const outer = Object.assign(create('if'), { text: 'tipp < zahl?', yes: [st('Ausgabe "zu klein"')], no: [inner] });
+  const loop = Object.assign(create('dowhile'), { text: 'solange tipp ≠ zahl', body: [st('Eingabe tipp'), st('versuche ← versuche + 1'), outer] });
+  return { name: 'Zahlenraten', fontSize: 15, font: 'sans',
+    root: [st('zahl ← Zufallszahl(1, 100)'), st('versuche ← 0'), loop, st('Ausgabe "Versuche: " + versuche')] };
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE); if (!raw) return null;
+    const d = JSON.parse(raw);
+    return { name: String(d.name ?? 'Struktogramm'), fontSize: clampFs(+d.fontSize || 15), font: FAM[d.font] ? d.font : 'sans', root: sanitize(d.root) };
+  } catch (e) { return null; }
+}
+function persist() {
+  try { localStorage.setItem(STORE, JSON.stringify({ name: S.name, fontSize: S.fontSize, font: S.font, root: S.root })); } catch (e) {}
+}
+const clampFs = v => Math.max(9, Math.min(36, Math.round(v)));
+
+let S = load() || sample();
+let zoom = 1;
+const undoStack = [], redoStack = [];
+
+/* ---------- Messen ---------- */
+let MT;
+const mctx = document.createElement('canvas').getContext('2d');
+const mcache = new Map();
+function metrics() {
+  const fs = S.fontSize, fam = FAM[S.font] || FAM.sans, fss = Math.max(8, Math.round(fs * 0.8));
+  return { fs, fss, lh: Math.round(fs * 1.35), lhs: Math.round(fss * 1.3), p: Math.round(fs * 0.6), bar: Math.round(fs * 1.6), cb: Math.round(fs * 0.6),
+    font: `${fs}px ${fam}`, fontS: `${fss}px ${fam}`, fam };
+}
+function tw(str, font) {
+  const k = font + '|' + str; let v = mcache.get(k);
+  if (v == null) { mctx.font = font; v = mctx.measureText(str).width; mcache.set(k, v); }
+  return v;
+}
+function ts(text, small) {
+  const lines = String(text ?? '').split('\n');
+  const font = small ? MT.fontS : MT.font, lh = small ? MT.lhs : MT.lh;
+  let w = 0; for (const l of lines) w = Math.max(w, tw(l, font));
+  return { lines, w: Math.ceil(w), h: lines.length * lh };
+}
+
+/* ---------- Layout ---------- */
+let SZ, OPS, REG, TREG, SEQS, PARENT, DW, DH;
+function seqSize(arr) {
+  if (!arr.length) return { minW: Math.round(MT.fs * 3), h: MT.lh + 2 * MT.p };
+  let w = 0, h = 0; for (const n of arr) { const s = size(n); w = Math.max(w, s.minW); h += s.h; }
+  return { minW: w, h };
+}
+function size(n) {
+  let s = SZ.get(n); if (s) return s;
+  const { p, lh, lhs, bar, cb } = MT, t = ts(n.text);
+  switch (n.type) {
+    case 'statement': s = { minW: t.w + 2 * p, h: t.h + 2 * p }; break;
+    case 'call': s = { minW: t.w + 2 * p + 2 * cb, h: t.h + 2 * p }; break;
+    case 'for': case 'while': case 'dowhile': {
+      const b = seqSize(n.body), hh = t.h + 2 * p;
+      s = { minW: Math.max(t.w + 2 * p, bar + b.minW), h: hh + b.h, hh }; break;
+    }
+    case 'if': {
+      const hh = t.h + 2 * p + lhs + Math.round(p / 2), f = (p + t.h) / hh;
+      const head = Math.ceil((t.w + 2 * p) / (1 - f));
+      const lf = (hh - lhs - p * 0.3) / hh;
+      const ly = ts(n.yesLabel, true), ln = ts(n.noLabel, true);
+      const by = seqSize(n.yes), bn = seqSize(n.no);
+      const cy = Math.ceil(Math.max(by.minW, (ly.w + p * 1.2) / lf));
+      const cn = Math.ceil(Math.max(bn.minW, (ln.w + p * 1.2) / lf));
+      s = { minW: Math.max(cy + cn, head), h: hh + Math.max(by.h, bn.h), hh, cy, cn, f }; break;
+    }
+    case 'switch': {
+      const ht = t.h + 2 * p + lh, band = lhs + Math.round(p * 0.8), hh = ht + band, f = (p + t.h) / ht;
+      const head = Math.ceil((t.w + 2 * p) / (1 - f));
+      const cols = n.cases.map(c => Math.ceil(Math.max(seqSize(c.body).minW, ts(c.label, true).w + 2 * p)));
+      const sum = cols.reduce((a, b) => a + b, 0);
+      const bh = Math.max(...n.cases.map(c => seqSize(c.body).h));
+      s = { minW: Math.max(sum, head), h: hh + bh, hh, ht, band, cols, f }; break;
+    }
+  }
+  SZ.set(n, s); return s;
+}
+function layout() {
+  MT = metrics(); SZ = new Map();
+  OPS = { rects: [], lines: [], texts: [] }; REG = []; TREG = []; SEQS = {}; PARENT = {};
+  const rs = seqSize(S.root);
+  DW = Math.max(rs.minW, Math.round(MT.fs * 26));
+  DH = S.root.length ? rs.h : Math.round(MT.fs * 9);
+  laySeq(S.root, 'root', null, 0, 0, DW, DH, 0);
+}
+function laySeq(arr, key, owner, x, y, w, H, depth) {
+  const ys = []; SEQS[key] = { arr, owner, x, y, w, H, ys };
+  if (owner !== null || arr.length) OPS.rects.push({ x, y, w, h: H });
+  if (!arr.length) {
+    ys.push(y); REG.push({ kind: 'empty', key, x, y, w, h: H, depth });
+    if (owner !== null) OPS.texts.push({ x: x + w / 2, y: y + (H - MT.lh) / 2, lines: ['∅'], align: 'center', muted: true });
+    return;
+  }
+  let total = 0; for (const n of arr) total += size(n).h;
+  const extra = H - total; let cy = y;
+  arr.forEach((n, i) => { const h = size(n).h + (i === arr.length - 1 ? extra : 0); ys.push(cy); lay(n, key, i, x, cy, w, h, depth); cy += h; });
+  ys.push(cy);
+}
+function lay(n, key, index, x, y, w, h, depth) {
+  PARENT[n.id] = { key, index };
+  REG.push({ kind: 'node', node: n, key, index, x, y, w, h, depth });
+  const s = size(n), { p, bar, cb } = MT, t = ts(n.text);
+  const L = OPS.lines, T = OPS.texts;
+  OPS.rects.push({ x, y, w, h });
+  switch (n.type) {
+    case 'statement':
+      T.push({ x: x + p, y: y + (h - t.h) / 2, lines: t.lines, align: 'left' });
+      TREG.push({ node: n, field: 'text', x, y, w, h, align: 'left' }); break;
+    case 'call':
+      L.push({ x1: x + cb, y1: y, x2: x + cb, y2: y + h }, { x1: x + w - cb, y1: y, x2: x + w - cb, y2: y + h });
+      T.push({ x: x + w / 2, y: y + (h - t.h) / 2, lines: t.lines, align: 'center' });
+      TREG.push({ node: n, field: 'text', x: x + cb, y, w: w - 2 * cb, h, align: 'center' }); break;
+    case 'for': case 'while':
+      T.push({ x: x + p, y: y + p, lines: t.lines, align: 'left' });
+      TREG.push({ node: n, field: 'text', x, y, w, h: s.hh, align: 'left' });
+      laySeq(n.body, n.id + '.body', n.id, x + bar, y + s.hh, w - bar, h - s.hh, depth + 1); break;
+    case 'dowhile':
+      laySeq(n.body, n.id + '.body', n.id, x + bar, y, w - bar, h - s.hh, depth + 1);
+      T.push({ x: x + p, y: y + h - s.hh + p, lines: t.lines, align: 'left' });
+      TREG.push({ node: n, field: 'text', x, y: y + h - s.hh, w, h: s.hh, align: 'left' }); break;
+    case 'if': {
+      const { hh, cy, cn, f } = s, extra = w - (cy + cn);
+      const wy = cy + Math.floor(extra / 2), wn = w - wy, sx = x + wy;
+      L.push({ x1: x, y1: y, x2: sx, y2: y + hh }, { x1: x + w, y1: y, x2: sx, y2: y + hh });
+      const lx = x + (sx - x) * f, rx = x + w - (x + w - sx) * f, cx = (lx + rx) / 2;
+      T.push({ x: cx, y: y + p, lines: t.lines, align: 'center' });
+      const rl = Math.max(x, lx - p), rr = Math.min(x + w, rx + p);
+      TREG.push({ node: n, field: 'text', x: rl, y, w: rr - rl, h: p + t.h + p / 2, align: 'center' });
+      const ly = ts(n.yesLabel, true), ln = ts(n.noLabel, true), q = Math.round(p * 0.6);
+      const lyy = y + hh - ly.h - Math.round(p * 0.3), lny = y + hh - ln.h - Math.round(p * 0.3);
+      T.push({ x: x + q, y: lyy, lines: ly.lines, align: 'left', small: true });
+      T.push({ x: x + w - q, y: lny, lines: ln.lines, align: 'right', small: true });
+      TREG.push({ node: n, field: 'yesLabel', x, y: lyy - 2, w: ly.w + 2 * q, h: ly.h + 4, align: 'left', small: true });
+      TREG.push({ node: n, field: 'noLabel', x: x + w - ln.w - 2 * q, y: lny - 2, w: ln.w + 2 * q, h: ln.h + 4, align: 'right', small: true });
+      laySeq(n.yes, n.id + '.yes', n.id, x, y + hh, wy, h - hh, depth + 1);
+      laySeq(n.no, n.id + '.no', n.id, sx, y + hh, wn, h - hh, depth + 1);
+      break;
+    }
+    case 'switch': {
+      const { hh, ht, band, cols, f } = s, k = cols.length;
+      const sum = cols.reduce((a, b) => a + b, 0), add = Math.floor((w - sum) / k);
+      const ws = cols.map(c => c + add); ws[k - 1] += w - ws.reduce((a, b) => a + b, 0);
+      const xs = []; let cx0 = x; for (let i = 0; i < k; i++) { xs.push(cx0); cx0 += ws[i]; }
+      const sx = xs[k - 1];
+      L.push({ x1: x, y1: y, x2: sx, y2: y + ht }, { x1: x + w, y1: y, x2: sx, y2: y + ht }, { x1: sx, y1: y + ht, x2: sx, y2: y + hh });
+      for (let i = 1; i < k - 1; i++) { const b = xs[i], yb = y + ht * (b - x) / (sx - x); L.push({ x1: b, y1: yb, x2: b, y2: y + hh }); }
+      const lx = x + (sx - x) * f, rx = x + w - (x + w - sx) * f, cx = (lx + rx) / 2;
+      T.push({ x: cx, y: y + p, lines: t.lines, align: 'center' });
+      const rl = Math.max(x, lx - p), rr = Math.min(x + w, rx + p);
+      TREG.push({ node: n, field: 'text', x: rl, y, w: rr - rl, h: p + t.h + p / 2, align: 'center' });
+      n.cases.forEach((c, i) => {
+        const l = ts(c.label, true);
+        T.push({ x: xs[i] + ws[i] / 2, y: y + ht + (band - l.h) / 2, lines: l.lines, align: 'center', small: true });
+        TREG.push({ node: n, field: 'case:' + i, x: xs[i], y: y + ht, w: ws[i], h: band, align: 'center', small: true });
+        laySeq(c.body, n.id + '.c' + i, n.id, xs[i], y + hh, ws[i], h - hh, depth + 1);
+      });
+      break;
+    }
+  }
+}
+function getField(n, f) { if (f.startsWith('case:')) return n.cases[+f.slice(5)].label; return n[f] ?? ''; }
+function setField(n, f, v) { if (f.startsWith('case:')) n.cases[+f.slice(5)].label = v; else n[f] = v; }
+
+/* ---------- Zeichnen (SVG) ---------- */
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const r1 = v => Math.round(v * 10) / 10;
+function textSVG(t) {
+  const lh = t.small ? MT.lhs : MT.lh, fsz = t.small ? MT.fss : MT.fs;
+  const anchor = t.align === 'center' ? 'middle' : t.align === 'right' ? 'end' : 'start';
+  return t.lines.map((l, i) => `<text x="${r1(t.x)}" y="${r1(t.y + i * lh + lh / 2)}" font-size="${fsz}" text-anchor="${anchor}" dominant-baseline="central"${t.muted ? ' class="mut"' : ''} xml:space="preserve">${esc(l)}</text>`).join('');
+}
+function render() {
+  layout();
+  const W = DW + 2 * MARGIN, H = DH + 2 * MARGIN;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.style.width = W * zoom + 'px'; svg.style.height = H * zoom + 'px';
+  svg.style.fontFamily = MT.fam;
+  let o = `<g transform="translate(${MARGIN},${MARGIN})">`;
+  for (const r of OPS.rects) o += `<rect class="b" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}"/>`;
+  for (const l of OPS.lines) o += `<line class="b" x1="${r1(l.x1)}" y1="${r1(l.y1)}" x2="${r1(l.x2)}" y2="${r1(l.y2)}"/>`;
+  for (const t of OPS.texts) o += textSVG(t);
+  if (!S.root.length) {
+    o += `<rect class="ph" x="0" y="0" width="${DW}" height="${DH}" rx="4"/>`;
+    o += `<text class="phtext" x="${DW / 2}" y="${DH / 2}" font-size="${MT.fs}" text-anchor="middle" dominant-baseline="central">Element aus der Leiste hierher ziehen</text>`;
+  }
+  o += `<g id="ov"></g></g>`;
+  svg.innerHTML = o;
+  renderOverlay();
+  placeHoverbar();
+  $('fsVal').value = S.fontSize; $('fontSel').value = S.font; $('zVal').textContent = Math.round(zoom * 100) + ' %';
+  $('undoBtn').disabled = !undoStack.length; $('redoBtn').disabled = !redoStack.length;
+}
+function regById(id) { return REG.find(r => r.kind === 'node' && r.node.id === id); }
+function renderOverlay() {
+  const ov = svg.querySelector('#ov'); if (!ov) return;
+  let s = '';
+  if (!drag && hoverId && !editing) { const r = regById(hoverId); if (r) s += `<rect class="hl" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}"/>`; }
+  if (drag && drag.kind === 'move') { const r = regById(drag.node.id); if (r) s += `<rect class="src" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}"/>`; }
+  if (drag && drag.target) {
+    const sq = SEQS[drag.target.key];
+    if (!sq.arr.length) s += `<rect class="dropbox" x="${sq.x + 2}" y="${sq.y + 2}" width="${sq.w - 4}" height="${sq.H - 4}"/>`;
+    else {
+      const y = sq.ys[drag.target.index];
+      s += `<line class="drop" x1="${sq.x + 3}" y1="${y}" x2="${sq.x + sq.w - 3}" y2="${y}"/><circle class="dropdot" cx="${sq.x + 3}" cy="${y}" r="4.5"/><circle class="dropdot" cx="${sq.x + sq.w - 3}" cy="${y}" r="4.5"/>`;
+    }
+  }
+  ov.innerHTML = s;
+}
+
+/* ---------- Trefferprüfung ---------- */
+function toDiag(e) { const r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left) / zoom - MARGIN, y: (e.clientY - r.top) / zoom - MARGIN }; }
+const inside = (r, x, y) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+function nodeAt(x, y) { let b = null; for (const r of REG) if (r.kind === 'node' && inside(r, x, y) && (!b || r.depth > b.depth)) b = r; return b; }
+function textAt(x, y) { let b = null; for (const r of TREG) if (inside(r, x, y) && (!b || r.w * r.h < b.w * b.h)) b = r; return b; }
+function targetAt(x, y, forbidden) {
+  const root = SEQS.root;
+  let t;
+  if (y < 0) t = { key: 'root', index: 0 };
+  else if (y > DH) t = { key: 'root', index: root.arr.length };
+  else {
+    const cx = Math.min(Math.max(x, 1), DW - 1);
+    let b = null; for (const r of REG) if (inside(r, cx, y) && (!b || r.depth > b.depth)) b = r;
+    if (!b) return null;
+    if (b.kind === 'empty') t = { key: b.key, index: 0 };
+    else t = { key: b.key, index: y < b.y + b.h / 2 ? b.index : b.index + 1 };
+  }
+  if (forbidden) {
+    const own = SEQS[t.key].owner;
+    if (own && forbidden.has(own)) return null;
+  }
+  return t;
+}
+
+/* ---------- Änderungen ---------- */
+function snapshot() { return JSON.stringify(S.root); }
+function pushUndo() { undoStack.push(snapshot()); if (undoStack.length > 200) undoStack.shift(); redoStack.length = 0; }
+function commit() { persist(); render(); }
+function undo() { if (!undoStack.length) return; redoStack.push(snapshot()); S.root = JSON.parse(undoStack.pop()); hoverId = null; commit(); }
+function redo() { if (!redoStack.length) return; undoStack.push(snapshot()); S.root = JSON.parse(redoStack.pop()); hoverId = null; commit(); }
+function removeNode(id) { const pr = PARENT[id]; if (!pr) return null; return SEQS[pr.key].arr.splice(pr.index, 1)[0]; }
+
+/* ---------- Hover-Leiste ---------- */
+let hoverId = null;
+function placeHoverbar() {
+  const r = hoverId && !drag && !editing ? regById(hoverId) : null;
+  if (!r) { hoverbar.hidden = true; return; }
+  const isSw = r.node.type === 'switch';
+  hoverbar.querySelector('[data-act="addcase"]').hidden = !isSw;
+  hoverbar.querySelector('[data-act="delcase"]').hidden = !isSw || r.node.cases.length <= 2;
+  hoverbar.style.left = ((MARGIN + r.x + r.w) * zoom - 4) + 'px';
+  hoverbar.style.top = ((MARGIN + r.y) * zoom + 4) + 'px';
+  hoverbar.hidden = false;
+}
+hoverbar.addEventListener('pointerdown', e => e.stopPropagation());
+hoverbar.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !hoverId) return;
+  const r = regById(hoverId); if (!r) return;
+  const n = r.node, act = b.dataset.act;
+  pushUndo();
+  if (act === 'del') { removeNode(n.id); hoverId = null; }
+  else if (act === 'dup') { const pr = PARENT[n.id]; SEQS[pr.key].arr.splice(pr.index + 1, 0, cloneNode(n)); }
+  else if (act === 'addcase') { const k = n.cases.length; n.cases.splice(k - 1, 0, { label: String(k), body: [] }); }
+  else if (act === 'delcase') { if (n.cases.length > 2) n.cases.splice(n.cases.length - 2, 1); }
+  commit();
+});
+function updateHover(e) {
+  if (editing) return;
+  if (hoverbar.contains(e.target)) return;
+  let id = null;
+  if (stage.contains(e.target)) { const pt = toDiag(e); const r = nodeAt(pt.x, pt.y); id = r ? r.node.id : null; }
+  if (id !== hoverId) { hoverId = id; renderOverlay(); placeHoverbar(); }
+}
+stage.addEventListener('pointerleave', e => {
+  if (drag || (e.relatedTarget && stage.contains(e.relatedTarget))) return;
+  hoverId = null; renderOverlay(); placeHoverbar();
+});
+
+/* ---------- Text bearbeiten ---------- */
+let editing = null;
+function beginEdit(tr) {
+  editing = { node: tr.node, field: tr.field, orig: getField(tr.node, tr.field), tr };
+  hoverbar.hidden = true; renderOverlay();
+  const fsz = (tr.small ? MT.fss : MT.fs) * zoom, lh = (tr.small ? MT.lhs : MT.lh) * zoom;
+  Object.assign(editor.style, {
+    left: (MARGIN + tr.x) * zoom + 'px', top: (MARGIN + tr.y) * zoom + 'px',
+    width: Math.max(tr.w * zoom, 150) + 'px', minHeight: tr.h * zoom + 'px', height: 'auto',
+    fontFamily: MT.fam, fontSize: fsz + 'px', lineHeight: lh + 'px',
+    padding: Math.round(MT.p * zoom * (tr.small ? 0.4 : 0.8)) + 'px', textAlign: tr.align
+  });
+  editor.value = editing.orig;
+  editor.hidden = false;
+  autoSize();
+  editor.focus(); editor.select();
+}
+function autoSize() { editor.style.height = 'auto'; editor.style.height = editor.scrollHeight + 'px'; }
+function endEdit(save) {
+  if (!editing) return;
+  const ed = editing; editing = null; editor.hidden = true;
+  if (save && editor.value !== ed.orig) { pushUndo(); setField(ed.node, ed.field, editor.value); commit(); }
+  else render();
+}
+editor.addEventListener('input', autoSize);
+editor.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); endEdit(true); }
+  else if (e.key === 'Escape') { e.preventDefault(); endEdit(false); }
+});
+editor.addEventListener('blur', () => endEdit(true));
+editor.addEventListener('pointerdown', e => e.stopPropagation());
+
+/* ---------- Ziehen & Ablegen ---------- */
+let press = null, drag = null, suppressClick = false;
+function subtreeIds(n) { const s = new Set(); walk([n], x => s.add(x.id)); return s; }
+function startDrag(info, e) {
+  drag = Object.assign({ target: null }, info);
+  if (drag.kind === 'move') drag.forbidden = subtreeIds(drag.node);
+  ghost.textContent = drag.kind === 'new' ? TYPES[drag.type].label : (TYPES[drag.node.type].label + ' verschieben');
+  ghost.hidden = false; document.body.classList.add('dragging');
+  hoverbar.hidden = true; hoverId = null;
+  moveDrag(e);
+}
+function moveDrag(e) {
+  ghost.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 12}px)`;
+  const cr = canvasEl.getBoundingClientRect();
+  let t = null;
+  if (e.clientX >= cr.left && e.clientX <= cr.right && e.clientY >= cr.top && e.clientY <= cr.bottom) {
+    const pt = toDiag(e); t = targetAt(pt.x, pt.y, drag.forbidden);
+  }
+  const same = (t && drag.target && t.key === drag.target.key && t.index === drag.target.index) || (!t && !drag.target);
+  drag.target = t;
+  if (!same) renderOverlay();
+}
+function finishDrag() {
+  const d = drag; drag = null;
+  ghost.hidden = true; document.body.classList.remove('dragging');
+  if (d.target) {
+    const t = d.target;
+    if (d.kind === 'new') {
+      pushUndo(); SEQS[t.key].arr.splice(t.index, 0, create(d.type)); commit(); return;
+    }
+    const from = PARENT[d.node.id];
+    let idx = t.index;
+    if (!(from.key === t.key && (idx === from.index || idx === from.index + 1))) {
+      pushUndo();
+      if (from.key === t.key && idx > from.index) idx--;
+      const destArr = SEQS[t.key].arr;
+      const node = removeNode(d.node.id);
+      destArr.splice(idx, 0, node);
+      commit(); return;
+    }
+  }
+  render();
+}
+svg.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || editing) return;
+  const pt = toDiag(e), r = nodeAt(pt.x, pt.y);
+  press = { kind: 'svg', x: e.clientX, y: e.clientY, pt, node: r ? r.node : null };
+  e.preventDefault();
+});
+window.addEventListener('pointermove', e => {
+  if (drag) { moveDrag(e); return; }
+  if (press) {
+    if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 5) {
+      if (press.kind === 'palette') { suppressClick = true; startDrag({ kind: 'new', type: press.type }, e); }
+      else if (press.node) startDrag({ kind: 'move', node: press.node }, e);
+      press = null;
+    }
+    return;
+  }
+  updateHover(e);
+});
+window.addEventListener('pointerup', e => {
+  if (drag) { finishDrag(); press = null; return; }
+  if (press && press.kind === 'svg') {
+    const tr = textAt(press.pt.x, press.pt.y);
+    if (tr) beginEdit(tr);
+  }
+  press = null;
+});
+window.addEventListener('pointercancel', () => { if (drag) { drag.target = null; finishDrag(); } press = null; });
+
+/* ---------- Elementleiste ---------- */
+const items = $('items');
+for (const [type, def] of Object.entries(TYPES)) {
+  const b = document.createElement('button');
+  b.className = 'item'; b.type = 'button'; b.dataset.type = type;
+  b.title = def.label + ' – ziehen oder klicken';
+  b.innerHTML = `<svg viewBox="0 0 44 32" aria-hidden="true">${ICONS[type]}</svg><span class="t"><span class="n">${def.label}</span><span class="s">${def.sub}</span></span>`;
+  b.addEventListener('pointerdown', e => { if (e.button !== 0) return; press = { kind: 'palette', type, x: e.clientX, y: e.clientY }; });
+  b.addEventListener('click', () => {
+    if (suppressClick) { suppressClick = false; return; }
+    pushUndo(); S.root.push(create(type)); commit();
+    toast(def.label + ' unten angehängt');
+  });
+  items.appendChild(b);
+}
+
+/* ---------- Werkzeuge ---------- */
+function setFs(v) { const n = clampFs(v); if (n === S.fontSize) { render(); return; } S.fontSize = n; persist(); render(); }
+$('fsDown').onclick = () => setFs(S.fontSize - 1);
+$('fsUp').onclick = () => setFs(S.fontSize + 1);
+$('fsVal').addEventListener('change', e => setFs(+e.target.value || S.fontSize));
+$('fontSel').addEventListener('change', e => {
+  S.font = e.target.value; persist(); render();
+  const m = metrics(); document.fonts.load(m.font).then(() => { mcache.clear(); render(); }).catch(() => {});
+});
+function setZoom(z) { zoom = Math.max(0.4, Math.min(2.5, Math.round(z * 10) / 10)); render(); }
+$('zIn').onclick = () => setZoom(zoom + 0.1);
+$('zOut').onclick = () => setZoom(zoom - 0.1);
+$('zVal').onclick = () => setZoom(1);
+canvasEl.addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); setZoom(zoom + (e.deltaY < 0 ? 0.1 : -0.1)); } }, { passive: false });
+$('undoBtn').onclick = undo; $('redoBtn').onclick = redo;
+$('docName').value = S.name;
+$('docName').addEventListener('input', e => { S.name = e.target.value; persist(); });
+$('docName').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+$('newBtn').onclick = () => {
+  if (!S.root.length) return;
+  pushUndo(); S.root = []; hoverId = null; commit();
+  toast('Blatt geleert. Strg+Z holt es zurück.');
+};
+document.addEventListener('keydown', e => {
+  if (editing || e.target.matches('input, textarea, select')) return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+  else if ((e.ctrlKey || e.metaKey) && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+});
+
+/* ---------- Export ---------- */
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+const dlReady = (async () => { try { return window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { return null; } })();
+function fileBase() { return (S.name || '').trim().replace(/[\\/:*?"<>|]+/g, '-') || 'Struktogramm'; }
+async function saveFile(filename, data) {
+  const dl = await dlReady;
+  if (!dl) {
+    const blob = data instanceof Blob ? data : new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast(filename + ' heruntergeladen');
+    return true;
+  }
+  try { await dl.save({ filename, data }); toast(filename + ' gespeichert'); }
+  catch (e) {
+    const c = e && e.code;
+    if (c === 'declined') toast('Speichern abgebrochen');
+    else if (c === 'rate_limited') toast('Bitte einen Moment warten und erneut versuchen');
+    else toast('Speichern ist hier nicht möglich' + (c ? ' (' + c + ')' : ''));
+  }
+  return true;
+}
+async function toCanvas(scale) {
+  try { await Promise.all([document.fonts.load(MT.font), document.fonts.load(MT.fontS)]); } catch (e) {}
+  mcache.clear(); render();
+  const m = 20, W = DW + 2 * m, H = DH + 2 * m;
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(W * scale); c.height = Math.ceil(H * scale);
+  const g = c.getContext('2d');
+  g.scale(scale, scale);
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+  g.translate(m, m);
+  g.strokeStyle = '#15171c'; g.lineWidth = 1.5; g.lineCap = 'square';
+  for (const r of OPS.rects) g.strokeRect(r.x, r.y, r.w, r.h);
+  g.beginPath();
+  for (const l of OPS.lines) { g.moveTo(l.x1, l.y1); g.lineTo(l.x2, l.y2); }
+  g.stroke();
+  g.textBaseline = 'middle';
+  for (const t of OPS.texts) {
+    const lh = t.small ? MT.lhs : MT.lh;
+    g.font = t.small ? MT.fontS : MT.font;
+    g.fillStyle = t.muted ? '#9198a5' : '#15171c';
+    g.textAlign = t.align;
+    t.lines.forEach((l, i) => g.fillText(l, t.x, t.y + i * lh + lh / 2));
+  }
+  return c;
+}
+$('pngBtn').onclick = async () => {
+  if (!S.root.length) { toast('Das Struktogramm ist leer.'); return; }
+  const c = await toCanvas(3);
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  const ok = await saveFile(fileBase() + '.png', blob);
+  if (!ok) {
+    $('mTitle').textContent = 'PNG-Export';
+    $('mText').textContent = 'Direktes Speichern ist in dieser Ansicht nicht verfügbar. Rechtsklick auf das Bild und „Bild speichern unter …“ wählen.';
+    $('mImg').src = c.toDataURL('image/png'); $('modal').hidden = false;
+  }
+};
+$('pdfBtn').onclick = async () => {
+  if (!S.root.length) { toast('Das Struktogramm ist leer.'); return; }
+  if (!window.jspdf || !window.jspdf.jsPDF) { toast('PDF-Modul nicht geladen. Nutze den PNG-Export.'); return; }
+  const scale = 3, c = await toCanvas(scale);
+  const mmW = c.width / scale * 0.2646, mmH = c.height / scale * 0.2646;
+  const pdf = new window.jspdf.jsPDF({ orientation: mmW > mmH ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
+  const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+  const k = Math.min(1, (pw - 20) / mmW, (ph - 20) / mmH), w = mmW * k, h = mmH * k;
+  pdf.addImage(c.toDataURL('image/png'), 'PNG', (pw - w) / 2, 10, w, h);
+  const ok = await saveFile(fileBase() + '.pdf', pdf.output('blob'));
+  if (!ok) toast('PDF-Speichern ist hier nicht verfügbar. Nutze den PNG-Export.');
+};
+$('saveBtn').onclick = async () => {
+  const data = JSON.stringify({ app: 'struktogramm-editor', version: 1, name: S.name, fontSize: S.fontSize, font: S.font, root: S.root }, null, 2);
+  const ok = await saveFile(fileBase() + '.json', data);
+  if (!ok) toast('Speichern als Datei ist hier nicht verfügbar. Der Stand bleibt im Browser erhalten.');
+};
+$('openBtn').onclick = () => $('fileIn').click();
+$('fileIn').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const d = JSON.parse(rd.result);
+      if (!Array.isArray(d.root)) throw new Error('kein Struktogramm');
+      pushUndo();
+      S.root = sanitize(d.root);
+      if (d.name) { S.name = String(d.name); $('docName').value = S.name; }
+      if (d.fontSize) S.fontSize = clampFs(+d.fontSize);
+      if (FAM[d.font]) S.font = d.font;
+      hoverId = null; commit(); toast(f.name + ' geöffnet');
+    } catch (err) { toast('Die Datei ist kein gültiges Struktogramm (.json aus diesem Editor).'); }
+  };
+  rd.readAsText(f);
+  e.target.value = '';
+});
+$('mClose').onclick = () => { $('modal').hidden = true; };
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal') $('modal').hidden = true; });
+
+/* ---------- Start ---------- */
+render();
+if (document.fonts) {
+  document.fonts.ready.then(() => { mcache.clear(); render(); });
+  document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', () => { mcache.clear(); if (!editing && !drag) render(); });
+  const m = metrics(); document.fonts.load(m.font).catch(() => {});
+}
+})();
+</script>
+
+<script>
+/* Hell/Dunkel-Umschalter – gleicher Speicher wie die Startseite */
+(function () {
+  var root = document.documentElement, btn = document.getElementById("theme-toggle");
+  var MODI = ["auto", "hell", "dunkel"];
+  function get() { try { return localStorage.getItem("theme") || "auto"; } catch (e) { return "auto"; } }
+  function set(m) {
+    if (m === "hell") root.setAttribute("data-theme", "light");
+    else if (m === "dunkel") root.setAttribute("data-theme", "dark");
+    else root.removeAttribute("data-theme");
+    try { if (m === "auto") localStorage.removeItem("theme"); else localStorage.setItem("theme", m); } catch (e) {}
+    btn.textContent = "theme: " + m;
+  }
+  set(get());
+  btn.addEventListener("click", function () { set(MODI[(MODI.indexOf(get()) + 1) % MODI.length]); });
+})();
+</script>
+
+</body>
+</html>

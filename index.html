@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unterricht · Informatik &amp; Englisch</title>
+  <meta name="description" content="Tools, Skripte, Quizze und Links für den Unterricht.">
+  <!-- Theme vor dem Zeichnen setzen, damit nichts aufblitzt -->
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <a class="brand" href="index.html">~/<span>unterricht</span></a>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">Timo Kempny <a href="mailto:timo.kempny@steinbeis.schule">E-mail schreiben</a></p> 
+      <h1>Informatik &amp; Englisch</h1>
+      <p>Tools, Skripte Links und co für den Unterricht. Alles an einem Ort.</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="container toolbar">
+      <label class="search">
+        <span class="visually-hidden">Suchen</span>
+        <input id="suche" type="search" placeholder="suchen – Titel, Fach oder Klasse" autocomplete="off">
+      </label>
+      <div class="chips" id="chips" role="group" aria-label="Nach Typ filtern">
+        <button class="chip" type="button" data-typ="alle" aria-pressed="true">Alle</button>
+      </div>
+    </div>
+
+    <div class="container" id="eintraege"></div>
+
+    <div class="container">
+      <p class="empty" id="leer" hidden>&gt; keine Treffer</p>
+    </div>
+
+    <noscript>
+      <div class="container"><p class="empty">Bitte JavaScript aktivieren, damit die Übersicht angezeigt wird.</p></div>
+    </noscript>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="links.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

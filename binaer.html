@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dezimal ↔ Binär · Unterricht</title>
+  <meta name="description" content="Umrechnen zwischen Dezimal- und Binärsystem Schritt für Schritt verstehen und mit Zufallszahlen üben.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ---------- Seitenaufbau ---------- */
+    .bn-section { margin-top: 36px; scroll-margin-top: 80px; }
+    .stack { display: grid; gap: 16px; }
+    .panel p { margin: 0; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+    /* ---------- Grundidee ---------- */
+    .idee { display: grid; gap: 12px; }
+    .idee code {
+      font-family: var(--font-mono); font-size: .9em;
+      background: var(--surface-2); padding: 1px 6px; border-radius: 5px;
+    }
+    .pv-strip { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pv-strip span {
+      font-family: var(--font-mono); font-size: .85rem;
+      background: var(--accent-soft); color: var(--accent);
+      border-radius: 6px; padding: 3px 9px;
+    }
+    .pv-strip i { font-style: normal; color: var(--muted); align-self: center; font-family: var(--font-mono); font-size: .8rem; }
+
+    /* ---------- Erklärteil ---------- */
+    .explainer { display: grid; gap: 14px; }
+    .numbox {
+      display: flex; align-items: center;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding-left: 12px;
+    }
+    .numbox:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .numbox span { font-family: var(--font-mono); font-size: .8rem; color: var(--accent); }
+    .numbox .inp { border: 0; background: transparent; width: 92px; box-shadow: none; font-size: 1.05rem; }
+    .numbox .inp[aria-invalid="true"] { color: var(--bad); box-shadow: none; }
+    .mode-chips { margin-left: auto; }
+    @media (max-width: 720px) { .mode-chips { margin-left: 0; } }
+
+    .stage {
+      min-height: 280px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 18px;
+      overflow-x: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .caption {
+      font-size: 1rem;
+      border-left: 3px solid var(--accent);
+      padding: 6px 0 6px 12px;
+      min-height: 3.2em;
+    }
+    .caption b { font-family: var(--font-mono); color: var(--accent); }
+
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .stepinfo { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); margin-left: auto; }
+
+    /* Restwertmethode */
+    .rest {
+      position: relative;
+      display: grid;
+      width: min(100%, 340px);
+      font-family: var(--font-mono);
+      padding-right: 34px;
+    }
+    .rest-head, .rest-row {
+      display: grid;
+      grid-template-columns: 1fr 44px;
+      align-items: center;
+      padding: 5px 8px;
+    }
+    .rest-head { font-size: .75rem; color: var(--muted); border-bottom: 1px solid var(--border); }
+    .rest-head span:last-child { text-align: center; }
+    .rest-row { border-bottom: 1px dashed var(--border); font-size: 1.05rem; }
+    .rest-row b { color: var(--text); }
+    .rest-row .calc { color: var(--muted); }
+    .rest-row.new { animation: slideIn .4s ease both; }
+    .bit {
+      justify-self: center;
+      display: inline-grid; place-items: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--surface-2); color: var(--text);
+      font-weight: 700;
+    }
+    .rest-row.new .bit { animation: pop .4s .15s ease both; }
+    .rest-start { font-size: 1.05rem; padding: 8px; color: var(--muted); }
+    .rest-start b { color: var(--text); font-size: 1.3rem; }
+
+    .reading .bit { background: var(--accent); color: var(--on-accent); animation: glow .5s ease both; animation-delay: calc(var(--d) * 260ms); }
+    .reading::after {
+      content: "";
+      position: absolute; right: 10px; top: 40px; bottom: 10px; width: 2px;
+      background: linear-gradient(to top, var(--accent), transparent);
+    }
+    .reading::before {
+      content: "▲";
+      position: absolute; right: 3px; top: 26px;
+      color: var(--accent); font-size: .8rem;
+    }
+
+    .result { display: grid; gap: 8px; }
+    .result-bits { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px; }
+    .rbit {
+      display: inline-grid; place-items: center;
+      width: 36px; height: 42px; border-radius: 8px;
+      background: var(--accent); color: var(--on-accent);
+      font: 700 1.35rem/1 var(--font-mono);
+      animation: drop .4s ease both;
+      animation-delay: calc(var(--d) * 260ms);
+    }
+    .rbit.gap { margin-left: 8px; }
+    .base { font-family: var(--font-mono); color: var(--muted); font-size: .9rem; padding-bottom: 2px; }
+
+    /* Stellenwert-Zellen (Stellenwertmethode, Binär → Dezimal, Hinweise) */
+    .cells { display: flex; align-items: flex-end; gap: 6px; }
+    .cell {
+      flex: 1 1 0;
+      min-width: 28px; max-width: 64px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      font-family: var(--font-mono);
+      background: none; border: 0; padding: 0; color: inherit;
+    }
+    .cell.gap { margin-left: 10px; }
+    .pv { font-size: .72rem; color: var(--muted); }
+    .cb {
+      width: 100%; aspect-ratio: 1 / 1.15;
+      display: grid; place-items: center;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      font-size: 1.3rem; font-weight: 700; color: var(--muted);
+    }
+    .cell.b1 .cb { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .cell.b1 .pv { color: var(--accent); font-weight: 600; }
+    .cell.next .cb { border: 2px dashed var(--accent); }
+    .cell.new .cb { animation: flip .45s ease both; }
+    button.cell { cursor: pointer; }
+    button.cell:hover .cb { border-color: var(--accent); }
+    button.cell:focus-visible { outline: none; }
+    button.cell:focus-visible .cb { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .st-info { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: baseline; font-family: var(--font-mono); }
+    .st-info strong { font-size: 1.5rem; color: var(--text); }
+    .st-info .sum { color: var(--muted); }
+    .st-info .sum b { color: var(--text); }
+    .formula { font-family: var(--font-mono); font-size: 1.05rem; color: var(--muted); }
+    .formula strong { color: var(--accent); font-size: 1.6rem; }
+
+    /* ---------- Üben ---------- */
+    .settings { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-bottom: 16px; }
+    .setting { display: grid; gap: 6px; }
+
+    .pr-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 860px) { .pr-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
+
+    .task { display: grid; gap: 14px; align-content: start; }
+    .task-num {
+      font: 700 clamp(1.9rem, 8vw, 3rem)/1.1 var(--font-mono);
+      letter-spacing: .04em;
+      word-break: break-all;
+    }
+    .task-num sub { font-size: .4em; color: var(--muted); letter-spacing: 0; }
+    .answer-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .answer-row .inp { flex: 1 1 200px; font-size: 1.25rem; padding: 11px 14px; letter-spacing: .06em; }
+    .answer-row .btn { font-size: .9rem; padding: 10px 18px; }
+    .answer-row.shake { animation: shake .4s ease; }
+    .answer-row.is-ok .inp { border-color: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+    .answer-row.is-bad .inp { border-color: var(--bad); box-shadow: 0 0 0 3px var(--bad-soft); }
+
+    .feedback {
+      border-radius: 10px;
+      padding: 12px 14px;
+      border-left: 4px solid var(--muted);
+      background: var(--surface-2);
+      display: grid; gap: 8px;
+    }
+    .feedback .fb-title { font-family: var(--font-mono); font-weight: 700; }
+    .feedback.ok { border-color: var(--ok); background: var(--ok-soft); }
+    .feedback.ok .fb-title { color: var(--ok); }
+    .feedback.bad { border-color: var(--bad); background: var(--bad-soft); }
+    .feedback.bad .fb-title { color: var(--bad); }
+    .feedback.sol { border-color: var(--accent); background: var(--accent-soft); }
+    .feedback.sol .fb-title { color: var(--accent); }
+    .feedback.ok { animation: pop .35s ease; }
+    .feedback code, .feedback .mono { font-family: var(--font-mono); }
+    .feedback .hint { color: var(--muted); font-size: .92rem; }
+    .linkbtn {
+      justify-self: start;
+      font-family: var(--font-mono); font-size: .82rem;
+      color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .mini .cell { max-width: 44px; }
+    .mini .cb { font-size: 1rem; }
+
+    .stats { display: grid; gap: 14px; align-content: start; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; }
+    .stat strong { font: 700 1.5rem/1.1 var(--font-mono); }
+    .stat span { font-size: .78rem; color: var(--muted); }
+    .history { display: flex; flex-wrap: wrap; gap: 4px; min-height: 14px; }
+    .history i { width: 14px; height: 14px; border-radius: 4px; background: var(--bad); }
+    .history i.ok { background: var(--ok); }
+    .history-empty { font-size: .8rem; color: var(--muted); }
+
+    /* ---------- Animationen ---------- */
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+    @keyframes pop { 0% { transform: scale(.5); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+    @keyframes glow {
+      0% { background: var(--surface-2); color: var(--text); transform: scale(1); }
+      50% { transform: scale(1.25); }
+      100% { background: var(--accent); color: var(--on-accent); transform: scale(1); }
+    }
+    @keyframes drop { from { opacity: 0; transform: translateY(-14px) scale(.7); } to { opacity: 1; transform: none; } }
+    @keyframes flip { from { transform: rotateX(90deg); } to { transform: none; } }
+    @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+    @media (max-width: 520px) {
+      .stage { padding: 16px 10px; }
+      .cells { gap: 4px; }
+      .cell { min-width: 22px; }
+      .cell.gap { margin-left: 6px; }
+      .cb { font-size: 1rem; border-radius: 6px; }
+      .pv { font-size: .62rem; }
+      .rbit { width: 30px; height: 36px; font-size: 1.15rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .stage *, .task * , .feedback { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">binär</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">tool · informatik</p>
+      <h1>Dezimal ↔ Binär</h1>
+      <p>Schritt für Schritt verstehen, wie man Zahlen umrechnet – und dann mit Zufallszahlen üben.</p>
+    </div>
+  </header>
+
+  <nav class="ref-bar" aria-label="Abschnitte">
+    <div class="container toolbar">
+      <div class="chips">
+        <a class="chip" href="#verstehen">verstehen</a>
+        <a class="chip" href="#ueben">üben</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- ================= Verstehen ================= -->
+    <section class="container bn-section" id="verstehen">
+      <div class="section-head"><h2>Verstehen</h2></div>
+      <div class="stack">
+        <div class="panel idee">
+          <span class="flabel">grundidee</span>
+          <p>Im Dezimalsystem ist jede Stelle 10-mal so viel wert wie die Stelle rechts daneben: <code>345 = 3·100 + 4·10 + 5·1</code>.
+             Im Binärsystem gibt es nur die Ziffern <b>0</b> und <b>1</b>, und jede Stelle ist <b>doppelt</b> so viel wert:</p>
+          <div class="pv-strip" aria-label="Stellenwerte im Binärsystem">
+            <span>512</span><span>256</span><span>128</span><span>64</span><span>32</span><span>16</span><span>8</span><span>4</span><span>2</span><span>1</span>
+            <i>← jede Stelle ×2</i>
+          </div>
+        </div>
+
+        <div class="panel explainer">
+          <div class="row">
+            <label class="numbox">
+              <span>dezimal</span>
+              <input class="inp" id="exNum" type="number" min="0" max="1023" value="45" inputmode="numeric" aria-label="Dezimalzahl zum Erklären (0 bis 1023)">
+            </label>
+            <button class="btn btn-ghost" type="button" id="exRandom">zufällig</button>
+            <div class="chips mode-chips" id="modeChips" role="group" aria-label="Methode">
+              <button class="chip" type="button" data-mode="rest" aria-pressed="true">Restwertmethode</button>
+              <button class="chip" type="button" data-mode="stelle" aria-pressed="false">Stellenwertmethode</button>
+              <button class="chip" type="button" data-mode="b2d" aria-pressed="false">Binär → Dezimal</button>
+            </div>
+          </div>
+
+          <div class="stage" id="stage"></div>
+          <p class="caption" id="caption" aria-live="polite"></p>
+
+          <div class="controls" id="controls">
+            <button class="btn btn-ghost" type="button" id="exReset">⟲ von vorn</button>
+            <button class="btn btn-ghost" type="button" id="exBack">◀ zurück</button>
+            <button class="btn" type="button" id="exNext">weiter ▶</button>
+            <button class="btn btn-ghost" type="button" id="exPlay">▶ abspielen</button>
+            <span class="stepinfo" id="stepInfo"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Üben ================= -->
+    <section class="container bn-section" id="ueben">
+      <div class="section-head"><h2>Üben</h2></div>
+
+      <div class="settings">
+        <div class="setting">
+          <span class="flabel">richtung</span>
+          <div class="chips" id="dirChips" role="group" aria-label="Richtung">
+            <button class="chip" type="button" data-dir="d2b">dezimal → binär</button>
+            <button class="chip" type="button" data-dir="b2d">binär → dezimal</button>
+            <button class="chip" type="button" data-dir="mix">gemischt</button>
+          </div>
+        </div>
+        <div class="setting">
+          <span class="flabel">stufe</span>
+          <div class="chips" id="lvlChips" role="group" aria-label="Schwierigkeit">
+            <button class="chip" type="button" data-bits="4">leicht · 0–15</button>
+            <button class="chip" type="button" data-bits="8">mittel · 0–255</button>
+            <button class="chip" type="button" data-bits="10">schwer · 0–1023</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pr-grid">
+        <div class="panel task">
+          <span class="flabel" id="taskQ">aufgabe</span>
+          <div class="task-num" id="taskNum"></div>
+          <form class="answer-row" id="answerForm" autocomplete="off" novalidate>
+            <label class="visually-hidden" for="answer">Deine Antwort</label>
+            <input class="inp" id="answer" inputmode="numeric" autocomplete="off" spellcheck="false">
+            <button class="btn" type="submit" id="checkBtn">prüfen</button>
+          </form>
+          <div class="feedback" id="feedback" role="status" aria-live="polite" hidden></div>
+          <div class="row">
+            <button class="btn btn-ghost" type="button" id="solveBtn">Lösung zeigen</button>
+            <button class="btn btn-ghost" type="button" id="newBtn">neue Aufgabe</button>
+          </div>
+        </div>
+
+        <aside class="panel stats" aria-label="Statistik">
+          <span class="flabel">statistik</span>
+          <div class="stat-grid">
+            <div class="stat"><strong id="stRight">0</strong><span>beim 1. Versuch richtig</span></div>
+            <div class="stat"><strong id="stTotal">0</strong><span>Aufgaben</span></div>
+            <div class="stat"><strong id="stStreak">0</strong><span>Serie</span></div>
+            <div class="stat"><strong id="stBest">0</strong><span>beste Serie</span></div>
+          </div>
+          <span class="flabel">letzte aufgaben</span>
+          <div class="history" id="history"></div>
+          <button class="btn btn-ghost" type="button" id="resetStats" style="justify-self:start">zurücksetzen</button>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="../impressum.html">Impressum</a>
+        <a href="../datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="../app.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var $ = function (id) { return document.getElementById(id); };
+
+    /* ---------- Hilfsfunktionen ---------- */
+    function toBin(n, width) {
+      var s = n.toString(2);
+      while (s.length < (width || 0)) s = "0" + s;
+      return s;
+    }
+    // Bits in Vierergruppen von rechts: 101101 -> "10 1101"
+    function group(bits) {
+      var out = [];
+      for (var i = bits.length; i > 0; i -= 4) out.unshift(bits.slice(Math.max(0, i - 4), i));
+      return out.join(" ");
+    }
+    function widthFor(n) { return n < 16 ? 4 : n < 256 ? 8 : 10; }
+    // Zweierpotenzen, aus denen n besteht: 45 -> [32, 8, 4, 1]
+    function terms(n) {
+      var t = [];
+      for (var p = 512; p >= 1; p /= 2) if (n & p) t.push(p);
+      return t;
+    }
+    function sumText(n) { var t = terms(n); return t.length ? t.join(" + ") : "0"; }
+    function cellsHtml(bits, opts) {
+      opts = opts || {};
+      var w = bits.length, h = "";
+      for (var k = 0; k < w; k++) {
+        var pv = Math.pow(2, w - 1 - k), b = bits[k];
+        var cls = "cell";
+        if (b === "0" || b === "1") cls += " b" + b;
+        if (k > 0 && (w - k) % 4 === 0) cls += " gap";
+        if (opts.newIdx === k) cls += " new";
+        if (opts.nextIdx === k) cls += " next";
+        var inner = '<span class="pv">' + pv + '</span><span class="cb">' + (b === "_" ? "" : b) + '</span>';
+        if (opts.buttons) {
+          h += '<button type="button" class="' + cls + '" data-pv="' + pv + '" aria-pressed="' + (b === "1") +
+               '" aria-label="Stellenwert ' + pv + ', Bit ' + b + '">' + inner + '</button>';
+        } else {
+          h += '<div class="' + cls + '">' + inner + '</div>';
+        }
+      }
+      return '<div class="cells' + (opts.mini ? ' mini' : '') + '">' + h + '</div>';
+    }
+
+    /* =========================================================
+       Erklärteil
+       ========================================================= */
+    var ex = { n: 45, mode: "rest", step: 0, bw: 8, timer: null };
+    var stage = $("stage"), caption = $("caption"), exNum = $("exNum");
+
+    function restRows(n) {
+      var rows = [];
+      while (n > 0) { rows.push({ n: n, q: Math.floor(n / 2), r: n % 2 }); n = Math.floor(n / 2); }
+      return rows;
+    }
+
+    function totalSteps() {
+      if (ex.mode === "rest") return restRows(ex.n).length + 1;
+      if (ex.mode === "stelle") return widthFor(ex.n) + 1;
+      return 0;
+    }
+
+    function renderRest(s) {
+      var rows = restRows(ex.n), reading = s > rows.length, shown = Math.min(s, rows.length), h = "";
+      var bits = toBin(ex.n);
+
+      if (rows.length) {
+        h += '<div class="rest' + (reading ? " reading" : "") + '">';
+        h += '<div class="rest-head"><span>Rechnung</span><span>Rest</span></div>';
+        if (!shown) h += '<div class="rest-start">Start mit <b>' + ex.n + '</b></div>';
+        for (var i = 0; i < shown; i++) {
+          var r = rows[i];
+          h += '<div class="rest-row' + (i === s - 1 && !reading ? " new" : "") + '" style="--d:' + (rows.length - 1 - i) + '">' +
+               '<span class="calc"><b>' + r.n + '</b> : 2 = <b>' + r.q + '</b></span>' +
+               '<span class="bit">' + r.r + '</span></div>';
+        }
+        h += '</div>';
+      }
+
+      if (reading) {
+        h += '<div class="result"><span class="flabel">ergebnis</span><div class="result-bits">';
+        for (var j = 0; j < bits.length; j++) {
+          var gap = j > 0 && (bits.length - j) % 4 === 0 ? " gap" : "";
+          h += '<span class="rbit' + gap + '" style="--d:' + j + '">' + bits[j] + '</span>';
+        }
+        h += '<span class="base">2</span></div></div>';
+      }
+      stage.innerHTML = h;
+
+      var c;
+      if (ex.n === 0) c = "Die <b>0</b> bleibt auch im Binärsystem <b>0</b>.";
+      else if (s === 0) c = "Teile die Zahl immer wieder durch <b>2</b> und schreibe jeweils den Rest auf. Rest 1 heißt: ungerade. Rest 0 heißt: gerade.";
+      else if (!reading) {
+        var rr = rows[s - 1];
+        c = "<b>" + rr.n + " : 2 = " + rr.q + " Rest " + rr.r + "</b>. " +
+            (rr.r ? rr.n + " ist ungerade, also bleibt 1 übrig." : rr.n + " ist gerade, also bleibt nichts übrig.") +
+            (rr.q ? " Weiter mit " + rr.q + "." : " Das Ergebnis ist 0 – fertig geteilt.");
+      } else {
+        c = "Jetzt die Reste <b>von unten nach oben</b> lesen: <b>" + group(bits) + "₂</b>. Der letzte Rest ist die Stelle mit dem höchsten Wert.";
+      }
+      caption.innerHTML = c;
+    }
+
+    function renderStelle(s) {
+      var w = widthFor(ex.n), bits = toBin(ex.n, w), restBefore = [], r = ex.n;
+      for (var k = 0; k < w; k++) {
+        restBefore.push(r);
+        if (bits[k] === "1") r -= Math.pow(2, w - 1 - k);
+      }
+      var decided = Math.min(s, w);
+      var shown = "";
+      for (var i = 0; i < w; i++) shown += i < decided ? bits[i] : "_";
+      var restNow = decided === 0 ? ex.n : restBefore[decided - 1] - (bits[decided - 1] === "1" ? Math.pow(2, w - decided) : 0);
+      var partial = parseInt(shown.replace(/_/g, "0"), 2);
+
+      var h = cellsHtml(shown, { newIdx: s >= 1 && s <= w ? s - 1 : -1, nextIdx: s < w ? s : -1 });
+      h += '<div class="st-info"><span><span class="flabel">rest</span> <strong>' + restNow + '</strong></span>' +
+           '<span class="sum">' + (partial ? sumText(partial) + " = <b>" + partial + "</b>" : "noch keine 1") + '</span></div>';
+      stage.innerHTML = h;
+
+      var c;
+      if (s === 0) {
+        c = "Schreibe die Stellenwerte auf. Prüfe dann von links nach rechts: <b>Passt der Stellenwert in den Rest?</b> Ja → 1 und abziehen, nein → 0.";
+      } else if (s <= w) {
+        var idx = s - 1, pv = Math.pow(2, w - 1 - idx), rb = restBefore[idx];
+        if (bits[idx] === "1") c = "Passt <b>" + pv + "</b> in " + rb + "? Ja → <b>1</b>. Neuer Rest: " + rb + " − " + pv + " = " + (rb - pv) + ".";
+        else c = "Passt <b>" + pv + "</b> in " + rb + "? Nein → <b>0</b>. Der Rest bleibt " + rb + ".";
+        if (rb - (bits[idx] === "1" ? pv : 0) === 0 && idx < w - 1) c += " Der Rest ist 0 – alle weiteren Stellen sind 0.";
+      } else {
+        c = "Fertig: " + ex.n + " = " + sumText(ex.n) + " → <b>" + group(bits) + "₂</b>";
+      }
+      caption.innerHTML = c;
+    }
+
+    function renderB2D() {
+      var bits = toBin(ex.n, ex.bw);
+      var h = cellsHtml(bits, { buttons: true });
+      h += '<div class="formula">' + sumText(ex.n) + ' = <strong>' + ex.n + '</strong><sub>10</sub></div>';
+      stage.innerHTML = h;
+      caption.innerHTML = "Klicke auf die Bits. Jede <b>1</b> zählt ihren Stellenwert. Alle Stellenwerte mit 1 zusammengezählt ergeben die Dezimalzahl.";
+    }
+
+    function renderEx() {
+      var total = totalSteps();
+      $("controls").hidden = ex.mode === "b2d";
+      if (ex.mode === "rest") renderRest(ex.step);
+      else if (ex.mode === "stelle") renderStelle(ex.step);
+      else renderB2D();
+      $("exBack").disabled = ex.step <= 0;
+      $("exNext").disabled = ex.step >= total;
+      $("stepInfo").textContent = "Schritt " + ex.step + " / " + total;
+      $("exPlay").textContent = ex.timer ? "⏸ pause" : "▶ abspielen";
+      document.querySelectorAll("#modeChips .chip").forEach(function (c) {
+        c.setAttribute("aria-pressed", c.dataset.mode === ex.mode ? "true" : "false");
+      });
+    }
+
+    function stop() { clearTimeout(ex.timer); ex.timer = null; }
+    function tick() {
+      if (ex.step >= totalSteps()) { stop(); renderEx(); return; }
+      ex.step++; renderEx();
+      ex.timer = setTimeout(tick, 1600);
+      if (ex.step >= totalSteps()) { stop(); renderEx(); }
+    }
+
+    function setExNumber(n) {
+      stop();
+      ex.n = n; ex.step = 0; ex.bw = Math.max(8, widthFor(n));
+      exNum.value = n; exNum.removeAttribute("aria-invalid");
+      renderEx();
+    }
+    function setMode(m) { stop(); ex.mode = m; ex.step = 0; ex.bw = Math.max(8, widthFor(ex.n)); renderEx(); }
+
+    exNum.addEventListener("input", function () {
+      var v = exNum.value.trim(), n = +v;
+      if (v === "" || !/^\d+$/.test(v) || n > 1023) { exNum.setAttribute("aria-invalid", "true"); return; }
+      exNum.removeAttribute("aria-invalid");
+      stop(); ex.n = n; ex.step = 0; ex.bw = Math.max(8, widthFor(n)); renderEx();
+    });
+    exNum.addEventListener("blur", function () { exNum.value = ex.n; exNum.removeAttribute("aria-invalid"); });
+    $("exRandom").addEventListener("click", function () {
+      var n; do { n = 1 + Math.floor(Math.random() * 255); } while (n === ex.n);
+      setExNumber(n);
+    });
+    $("modeChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (c) setMode(c.dataset.mode);
+    });
+    $("exNext").addEventListener("click", function () { stop(); if (ex.step < totalSteps()) ex.step++; renderEx(); });
+    $("exBack").addEventListener("click", function () { stop(); if (ex.step > 0) ex.step--; renderEx(); });
+    $("exReset").addEventListener("click", function () { stop(); ex.step = 0; renderEx(); });
+    $("exPlay").addEventListener("click", function () {
+      if (ex.timer) { stop(); renderEx(); return; }
+      if (ex.step >= totalSteps()) ex.step = 0;
+      ex.timer = -1;           // als "läuft" markieren
+      renderEx();
+      ex.timer = setTimeout(tick, 400);
+    });
+    stage.addEventListener("click", function (e) {
+      var b = e.target.closest("button.cell");
+      if (!b) return;
+      var pv = +b.dataset.pv;
+      ex.n ^= pv; exNum.value = ex.n; exNum.removeAttribute("aria-invalid");
+      renderB2D();
+      var again = stage.querySelector('button.cell[data-pv="' + pv + '"]');
+      if (again) again.focus();
+    });
+
+    /* =========================================================
+       Üben
+       ========================================================= */
+    var STORE = "binaer-ueben";
+    var pr = { dir: "d2b", bits: 8, task: null, wrong: 0, done: false, counted: false };
+    var stats = { right: 0, total: 0, streak: 0, best: 0, hist: [] };
+    var answer = $("answer"), form = $("answerForm"), fb = $("feedback");
+    var interacted = false;
+
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORE) || "null");
+      if (saved) {
+        if (["d2b", "b2d", "mix"].indexOf(saved.dir) !== -1) pr.dir = saved.dir;
+        if ([4, 8, 10].indexOf(saved.bits) !== -1) pr.bits = saved.bits;
+        if (saved.stats) stats = Object.assign(stats, saved.stats);
+      }
+    } catch (e) {}
+    function save() {
+      try { localStorage.setItem(STORE, JSON.stringify({ dir: pr.dir, bits: pr.bits, stats: stats })); } catch (e) {}
+    }
+
+    function renderStats() {
+      $("stRight").textContent = stats.right;
+      $("stTotal").textContent = stats.total;
+      $("stStreak").textContent = stats.streak;
+      $("stBest").textContent = stats.best;
+      var h = $("history");
+      h.innerHTML = stats.hist.length ? stats.hist.map(function (ok) {
+        return '<i class="' + (ok ? "ok" : "") + '" title="' + (ok ? "richtig" : "falsch") + '"></i>';
+      }).join("") : '<span class="history-empty">noch keine</span>';
+    }
+    function record(ok) {
+      stats.total++;
+      if (ok) { stats.right++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); }
+      else stats.streak = 0;
+      stats.hist.push(ok); if (stats.hist.length > 20) stats.hist.shift();
+      save(); renderStats();
+    }
+
+    function renderSettings() {
+      document.querySelectorAll("#dirChips .chip").forEach(function (c) { c.setAttribute("aria-pressed", c.dataset.dir === pr.dir ? "true" : "false"); });
+      document.querySelectorAll("#lvlChips .chip").forEach(function (c) { c.setAttribute("aria-pressed", +c.dataset.bits === pr.bits ? "true" : "false"); });
+    }
+
+    function showFb(kind, title, body) {
+      fb.className = "feedback " + kind;
+      fb.innerHTML = '<span class="fb-title">' + title + '</span>' + (body || "");
+      fb.hidden = false;
+    }
+
+    function newTask() {
+      var max = Math.pow(2, pr.bits) - 1, n;
+      do { n = 1 + Math.floor(Math.random() * max); } while (pr.task && n === pr.task.n);
+      var dir = pr.dir === "mix" ? (Math.random() < 0.5 ? "d2b" : "b2d") : pr.dir;
+      pr.task = { n: n, dir: dir, bits: pr.bits };
+      pr.wrong = 0; pr.done = false; pr.counted = false;
+
+      if (dir === "d2b") {
+        $("taskQ").textContent = "wandle ins binärsystem um";
+        $("taskNum").innerHTML = n + "<sub>10</sub>";
+        answer.placeholder = "nur 0 und 1, z. B. 1011";
+      } else {
+        $("taskQ").textContent = "wandle ins dezimalsystem um";
+        $("taskNum").innerHTML = group(toBin(n, pr.bits)) + "<sub>2</sub>";
+        answer.placeholder = "Dezimalzahl";
+      }
+      answer.value = ""; answer.readOnly = false;
+      form.classList.remove("is-ok", "is-bad");
+      $("checkBtn").textContent = "prüfen";
+      $("solveBtn").disabled = false;
+      fb.hidden = true;
+      if (interacted) answer.focus({ preventScroll: true });
+    }
+
+    function solutionHtml(t) {
+      var bits = group(toBin(t.n, t.bits));
+      return t.dir === "d2b"
+        ? '<span class="mono">' + t.n + " = " + sumText(t.n) + " → <b>" + bits + "₂</b></span>"
+        : '<span class="mono">' + bits + "₂ = " + sumText(t.n) + " = <b>" + t.n + "</b></span>";
+    }
+
+    function check(e) {
+      e.preventDefault();
+      interacted = true;
+      if (pr.done) { newTask(); return; }
+      var t = pr.task, raw = answer.value.replace(/\s+/g, ""), val;
+      form.classList.remove("is-ok", "is-bad");
+
+      if (!raw) { showFb("", "> Antwort fehlt", "<span>Bitte gib zuerst eine Zahl ein.</span>"); return; }
+      if (t.dir === "d2b") {
+        if (!/^[01]+$/.test(raw)) { showFb("", "> Nur 0 und 1", "<span>Eine Binärzahl besteht nur aus den Ziffern 0 und 1.</span>"); return; }
+        val = parseInt(raw, 2);
+      } else {
+        if (!/^\d+$/.test(raw)) { showFb("", "> Nur Ziffern", "<span>Bitte nur Ziffern von 0 bis 9 eingeben.</span>"); return; }
+        val = parseInt(raw, 10);
+      }
+
+      var ok = val === t.n;
+      if (!pr.counted) { pr.counted = true; record(ok); }
+
+      if (ok) {
+        pr.done = true;
+        form.classList.add("is-ok");
+        answer.readOnly = true;
+        $("checkBtn").textContent = "weiter ▶";
+        $("solveBtn").disabled = true;
+        showFb("ok", "> richtig!", solutionHtml(t) + '<span class="hint">Enter oder „weiter“ für die nächste Aufgabe.</span>');
+        return;
+      }
+
+      pr.wrong++;
+      form.classList.add("is-bad");
+      form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+      var msg, hint;
+      if (t.dir === "d2b") {
+        var diff = Math.abs(val - t.n);
+        msg = 'Deine Eingabe <span class="mono">' + group(raw.replace(/^0+(?=.)/, "")) + "₂</span> entspricht <b>" + val +
+              "</b>. Das " + (diff === 1 ? "ist " : "sind ") + diff + (val < t.n ? " zu wenig." : " zu viel.");
+        var top = Math.pow(2, Math.floor(Math.log2(t.n)));
+        hint = pr.wrong === 1
+          ? "Tipp: Die größte Zweierpotenz, die in " + t.n + " passt, ist " + top + "."
+          : "Tipp: " + t.n + " lässt sich zerlegen in " + terms(t.n).length + " Zweierpotenzen. Die größte ist " + top + ".";
+        msg = "<span>" + msg + '</span><span class="hint">' + hint + "</span>";
+      } else {
+        msg = "<span><b>" + val + "</b> ist " + (val < t.n ? "zu klein" : "zu groß") + ".</span>";
+        msg += '<span class="hint">Tipp: Addiere die Stellenwerte, an denen eine 1 steht.</span>';
+        msg += cellsHtml(toBin(t.n, t.bits), { mini: true });
+      }
+      showFb("bad", "> leider falsch – versuch’s nochmal", msg);
+      answer.select();
+    }
+
+    function solve() {
+      interacted = true;
+      if (pr.done) return;
+      if (!pr.counted) { pr.counted = true; record(false); }
+      pr.done = true;
+      answer.readOnly = true;
+      form.classList.remove("is-bad", "is-ok");
+      $("checkBtn").textContent = "weiter ▶";
+      $("solveBtn").disabled = true;
+      showFb("sol", "> lösung", solutionHtml(pr.task) +
+        '<button type="button" class="linkbtn" id="toExplain">Schritt für Schritt ansehen ↑</button>');
+    }
+
+    fb.addEventListener("click", function (e) {
+      if (!e.target.closest("#toExplain")) return;
+      var t = pr.task;
+      ex.mode = t.dir === "b2d" ? "b2d" : (ex.mode === "b2d" ? "rest" : ex.mode);
+      setExNumber(t.n);
+      $("verstehen").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    form.addEventListener("submit", check);
+    $("solveBtn").addEventListener("click", solve);
+    $("newBtn").addEventListener("click", function () { interacted = true; newTask(); });
+    answer.addEventListener("input", function () { form.classList.remove("is-bad"); });
+    $("dirChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      interacted = true; pr.dir = c.dataset.dir; save(); renderSettings(); newTask();
+    });
+    $("lvlChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      interacted = true; pr.bits = +c.dataset.bits; save(); renderSettings(); newTask();
+    });
+    $("resetStats").addEventListener("click", function () {
+      stats = { right: 0, total: 0, streak: 0, best: 0, hist: [] };
+      save(); renderStats();
+    });
+
+    /* ---------- Start ---------- */
+    renderEx();
+    renderSettings();
+    renderStats();
+    newTask();
+  })();
+  </script>
+</body>
+</html>
