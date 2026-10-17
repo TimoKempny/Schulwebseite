@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hexadezimal &amp; Oktal · Unterricht</title>
+  <meta name="description" content="Hexadezimal- und Oktalsystem verstehen: Umrechnen von und nach Dezimal und Binär Schritt für Schritt, dann mit Zufallszahlen üben.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    /* ---------- Seitenaufbau ---------- */
+    .bn-section { margin-top: 36px; scroll-margin-top: 80px; }
+    .stack { display: grid; gap: 16px; }
+    .panel p { margin: 0; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    code, .code {
+      font-family: var(--font-mono); font-size: .9em;
+      background: var(--surface-2); padding: 1px 6px; border-radius: 5px; white-space: nowrap;
+    }
+
+    /* ---------- Grundidee ---------- */
+    .idee-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 860px) { .idee-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+    .idee { display: grid; gap: 12px; align-content: start; }
+    .pv-strip { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .pv-strip span {
+      font-family: var(--font-mono); font-size: .85rem;
+      background: var(--accent-soft); color: var(--accent);
+      border-radius: 6px; padding: 3px 9px;
+    }
+    .pv-strip i { font-style: normal; color: var(--muted); font-family: var(--font-mono); font-size: .8rem; }
+
+    .tiles { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); }
+    .tile {
+      display: grid; justify-items: center; gap: 1px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 4px;
+      font-family: var(--font-mono);
+    }
+    .tile b { font-size: 1.25rem; color: var(--accent); line-height: 1.2; }
+    .tile span { font-size: .72rem; color: var(--muted); }
+    .tile.okt-end { box-shadow: inset -3px 0 0 var(--accent); }
+    .legend { font-size: .85rem; color: var(--muted); }
+
+    .uses { display: grid; gap: 10px; }
+    .use { display: grid; gap: 4px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+    .use .flabel { margin: 0; }
+    .use .mono { font-size: .92rem; }
+    .use .mono b { color: var(--accent); }
+    .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; background: #0f766e; margin-right: 4px; }
+
+    /* ---------- Erklärteil ---------- */
+    .explainer { display: grid; gap: 14px; }
+    .numbox {
+      display: flex; align-items: center;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding-left: 12px;
+    }
+    .numbox:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .numbox span { font-family: var(--font-mono); font-size: .8rem; color: var(--accent); }
+    .numbox .inp { border: 0; background: transparent; width: 92px; box-shadow: none; font-size: 1.05rem; }
+    .numbox .inp[aria-invalid="true"] { color: var(--bad); box-shadow: none; }
+    .overview { font-family: var(--font-mono); font-size: .9rem; color: var(--muted); }
+    .overview b { color: var(--text); }
+    .overview sub { font-size: .7em; }
+    .mode-row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+
+    .stage {
+      min-height: 280px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 18px;
+      overflow-x: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .caption {
+      font-size: 1rem;
+      border-left: 3px solid var(--accent);
+      padding: 6px 0 6px 12px;
+      min-height: 3.2em;
+    }
+    .caption b { font-family: var(--font-mono); color: var(--accent); }
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .stepinfo { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); margin-left: auto; }
+
+    /* Restwertmethode */
+    .rest {
+      position: relative;
+      display: grid;
+      width: min(100%, 400px);
+      font-family: var(--font-mono);
+      padding-right: 34px;
+    }
+    .rest-head, .rest-row {
+      display: grid;
+      grid-template-columns: 1fr 44px;
+      align-items: center;
+      padding: 5px 8px;
+    }
+    .rest-head { font-size: .75rem; color: var(--muted); border-bottom: 1px solid var(--border); }
+    .rest-head span:last-child { text-align: center; }
+    .rest-row { border-bottom: 1px dashed var(--border); font-size: 1.05rem; }
+    .rest-row b { color: var(--text); }
+    .rest-row .calc { color: var(--muted); }
+    .rest-row .rnote { font-size: .78rem; color: var(--accent); margin-left: 6px; }
+    .rest-row.new { animation: slideIn .4s ease both; }
+    .dig {
+      justify-self: center;
+      display: inline-grid; place-items: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--surface-2); color: var(--text);
+      font-weight: 700;
+    }
+    .rest-row.new .dig { animation: pop .4s .15s ease both; }
+    .rest-start { font-size: 1.05rem; padding: 8px; color: var(--muted); }
+    .rest-start b { color: var(--text); font-size: 1.3rem; }
+    .reading .dig { background: var(--accent); color: var(--on-accent); animation: glow .5s ease both; animation-delay: calc(var(--d) * 260ms); }
+    .reading::after {
+      content: "";
+      position: absolute; right: 10px; top: 40px; bottom: 10px; width: 2px;
+      background: linear-gradient(to top, var(--accent), transparent);
+    }
+    .reading::before {
+      content: "▲";
+      position: absolute; right: 3px; top: 26px;
+      color: var(--accent); font-size: .8rem;
+    }
+
+    .result { display: grid; gap: 8px; }
+    .result-digits { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px; }
+    .rdig {
+      display: inline-grid; place-items: center;
+      min-width: 36px; height: 42px; padding: 0 4px; border-radius: 8px;
+      background: var(--accent); color: var(--on-accent);
+      font: 700 1.35rem/1 var(--font-mono);
+      animation: drop .4s ease both;
+      animation-delay: calc(var(--d) * var(--dt, 200ms));
+    }
+    .rdig.gap { margin-left: 8px; }
+    .rdig.lead { background: var(--surface-2); color: var(--muted); text-decoration: line-through; }
+    .base { font-family: var(--font-mono); color: var(--muted); font-size: .9rem; padding-bottom: 2px; }
+
+    /* Stellenwert-Spalten (X → Dezimal) */
+    .pvcols { display: flex; gap: 8px; align-items: stretch; }
+    .pvcol {
+      flex: 1 1 0; min-width: 76px; max-width: 130px;
+      display: grid; justify-items: center; gap: 6px;
+      font-family: var(--font-mono);
+    }
+    .pvcol .pv { font-size: .78rem; color: var(--muted); }
+    .pvcol .pv sup { font-size: .7em; }
+    .pvcol .cb {
+      width: 100%; height: 54px;
+      display: grid; place-items: center;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      font-size: 1.5rem; font-weight: 700;
+    }
+    .pvcol .prod { font-size: .85rem; color: var(--muted); min-height: 2.6em; text-align: center; line-height: 1.3; }
+    .pvcol .prod b { color: var(--text); font-size: 1rem; }
+    .pvcol.on .cb { background: var(--accent); border-color: var(--accent); color: var(--on-accent); animation: flip .45s ease both; }
+    .pvcol.done .cb { border-color: var(--accent); color: var(--accent); }
+    .pvcol.next .cb { border: 2px dashed var(--accent); }
+    .formula { font-family: var(--font-mono); font-size: 1.05rem; color: var(--muted); }
+    .formula strong { color: var(--accent); font-size: 1.6rem; }
+
+    /* Bitgruppen (Binär ↔ Hex/Oktal) */
+    .groups { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+    .gbox {
+      display: grid; gap: 8px; justify-items: center;
+      padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+      transition: border-color .2s, background .2s;
+    }
+    .gbox.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .gbits { display: flex; gap: 4px; }
+    .gb { display: grid; justify-items: center; gap: 3px; font-family: var(--font-mono); }
+    .gb i { font-style: normal; font-size: .66rem; color: var(--muted); }
+    .gb b {
+      display: grid; place-items: center; width: 28px; height: 32px; border-radius: 6px;
+      background: var(--bg); border: 1px solid var(--border); font-size: 1.05rem; color: var(--muted);
+    }
+    .gb.one b { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+    .gb.pad b { border-style: dashed; color: var(--muted); background: transparent; }
+    .gbox.active .gb.one b { background: var(--accent); color: var(--on-accent); }
+    .gbits.new .gb b { animation: flip .45s ease both; }
+    .gdig {
+      display: grid; place-items: center; min-width: 44px; height: 42px; padding: 0 6px; border-radius: 8px;
+      font: 700 1.4rem/1 var(--font-mono); color: var(--muted);
+      background: var(--bg); border: 1px dashed var(--border);
+    }
+    .gdig.on { background: var(--accent); color: var(--on-accent); border: 0; }
+    .gdig.new { animation: pop .4s ease both; }
+    .gsum { font-family: var(--font-mono); font-size: .72rem; color: var(--muted); min-height: 1.2em; }
+    /* Startzustand: Bits noch ohne Gruppen */
+    .groups.flat { gap: 0; }
+    .groups.flat .gbox { border-color: transparent; background: none; padding: 8px 2px; }
+    .groups.flat .gb i, .groups.flat .gdig, .groups.flat .gsum { visibility: hidden; }
+    .groups.flat .gb.pad { display: none; }
+    .groups.flat .gbits { gap: 4px; }
+
+    /* ---------- Üben ---------- */
+    .settings { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-bottom: 16px; }
+    .setting { display: grid; gap: 6px; }
+    .pr-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 860px) { .pr-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
+    .task { display: grid; gap: 14px; align-content: start; }
+    .task-num {
+      font: 700 clamp(1.9rem, 8vw, 3rem)/1.1 var(--font-mono);
+      letter-spacing: .04em;
+      word-break: break-all;
+    }
+    .task-num sub { font-size: .4em; color: var(--muted); letter-spacing: 0; }
+    .answer-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .answer-row .inp { flex: 1 1 200px; font-size: 1.25rem; padding: 11px 14px; letter-spacing: .06em; font-family: var(--font-mono); }
+    .answer-row .btn { font-size: .9rem; padding: 10px 18px; }
+    .answer-row.shake { animation: shake .4s ease; }
+    .answer-row.is-ok .inp { border-color: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+    .answer-row.is-bad .inp { border-color: var(--bad); box-shadow: 0 0 0 3px var(--bad-soft); }
+    .feedback {
+      border-radius: 10px;
+      padding: 12px 14px;
+      border-left: 4px solid var(--muted);
+      background: var(--surface-2);
+      display: grid; gap: 8px;
+    }
+    .feedback .fb-title { font-family: var(--font-mono); font-weight: 700; }
+    .feedback.ok { border-color: var(--ok); background: var(--ok-soft); animation: pop .35s ease; }
+    .feedback.ok .fb-title { color: var(--ok); }
+    .feedback.bad { border-color: var(--bad); background: var(--bad-soft); }
+    .feedback.bad .fb-title { color: var(--bad); }
+    .feedback.sol { border-color: var(--accent); background: var(--accent-soft); }
+    .feedback.sol .fb-title { color: var(--accent); }
+    .feedback code, .feedback .mono { font-family: var(--font-mono); }
+    .feedback .hint { color: var(--muted); font-size: .92rem; }
+    .linkbtn {
+      justify-self: start;
+      font-family: var(--font-mono); font-size: .82rem;
+      color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .stats { display: grid; gap: 14px; align-content: start; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; }
+    .stat strong { font: 700 1.5rem/1.1 var(--font-mono); }
+    .stat span { font-size: .78rem; color: var(--muted); }
+    .history { display: flex; flex-wrap: wrap; gap: 4px; min-height: 14px; }
+    .history i { width: 14px; height: 14px; border-radius: 4px; background: var(--bad); }
+    .history i.ok { background: var(--ok); }
+    .history-empty { font-size: .8rem; color: var(--muted); }
+
+    /* ---------- Animationen ---------- */
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+    @keyframes pop { 0% { transform: scale(.5); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+    @keyframes glow {
+      0% { background: var(--surface-2); color: var(--text); transform: scale(1); }
+      50% { transform: scale(1.25); }
+      100% { background: var(--accent); color: var(--on-accent); transform: scale(1); }
+    }
+    @keyframes drop { from { opacity: 0; transform: translateY(-14px) scale(.7); } to { opacity: 1; transform: none; } }
+    @keyframes flip { from { transform: rotateX(90deg); } to { transform: none; } }
+    @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+    @media (max-width: 520px) {
+      .stage { padding: 16px 10px; }
+      .pvcols { gap: 5px; }
+      .pvcol { min-width: 64px; }
+      .pvcol .prod { font-size: .75rem; }
+      .gb b { width: 22px; height: 28px; font-size: .9rem; }
+      .groups { gap: 6px; }
+      .gbox { padding: 6px; }
+      .rdig { min-width: 30px; height: 36px; font-size: 1.15rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .stage *, .task *, .feedback { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">hex-oktal</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">tool · informatik</p>
+      <h1>Hexadezimal &amp; Oktal</h1>
+      <p>Verstehen, wie Hexadezimal- und Oktalzahlen aufgebaut sind, wie man sie in Dezimal- und Binärzahlen umrechnet und zurück. Danach mit Zufallszahlen üben.</p>
+    </div>
+  </header>
+
+  <nav class="ref-bar" aria-label="Abschnitte">
+    <div class="container toolbar">
+      <div class="chips">
+        <a class="chip" href="#grundlagen">grundlagen</a>
+        <a class="chip" href="#verstehen">umrechnen</a>
+        <a class="chip" href="#ueben">üben</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- ================= Grundlagen ================= -->
+    <section class="container bn-section" id="grundlagen">
+      <div class="section-head"><h2>Grundlagen</h2></div>
+      <div class="stack">
+        <div class="idee-grid">
+          <div class="panel idee">
+            <span class="flabel">hexadezimal · basis 16</span>
+            <p>Das Hexadezimalsystem hat <b>16 Ziffern</b>. Nach der 9 geht es mit Buchstaben weiter:
+               <code>A=10</code> <code>B=11</code> <code>C=12</code> <code>D=13</code> <code>E=14</code> <code>F=15</code>.
+               Jede Stelle ist <b>16-mal</b> so viel wert wie die Stelle rechts daneben:</p>
+            <div class="pv-strip" aria-label="Stellenwerte im Hexadezimalsystem">
+              <span>4096</span><span>256</span><span>16</span><span>1</span><i>← jede Stelle ×16</i>
+            </div>
+            <p>Beispiel: <code>2F₁₆ = 2·16 + 15·1 = 47</code>. Geschrieben wird oft mit Vorsilbe <code>0x2F</code> (C, Python) oder <code>#</code> (Farben).</p>
+          </div>
+          <div class="panel idee">
+            <span class="flabel">oktal · basis 8</span>
+            <p>Das Oktalsystem hat nur <b>8 Ziffern</b>: 0 bis 7. Eine 8 oder 9 gibt es nicht.
+               Jede Stelle ist <b>8-mal</b> so viel wert wie die Stelle rechts daneben:</p>
+            <div class="pv-strip" aria-label="Stellenwerte im Oktalsystem">
+              <span>4096</span><span>512</span><span>64</span><span>8</span><span>1</span><i>← jede Stelle ×8</i>
+            </div>
+            <p>Beispiel: <code>57₈ = 5·8 + 7·1 = 47</code>. In C beginnt eine Oktalzahl mit einer <code>0</code>: <code>057</code> ist also nicht 57, sondern 47.</p>
+          </div>
+        </div>
+
+        <div class="idee-grid">
+          <div class="panel idee">
+            <span class="flabel">der trick: bits bündeln</span>
+            <p>Binärzahlen werden schnell lang und unübersichtlich. Weil <code>16 = 2⁴</code> und <code>8 = 2³</code> ist, passt
+               <b>eine Hexziffer genau auf 4 Bits</b> und <b>eine Oktalziffer genau auf 3 Bits</b>. Deshalb lässt sich zwischen Binär und Hex/Oktal
+               umrechnen, ohne über das Dezimalsystem zu gehen.</p>
+            <div class="tiles" aria-label="Tabelle der Ziffern 0 bis F">
+              <!-- per JS gefüllt -->
+            </div>
+            <p class="legend">Große Ziffer = hex, darunter dezimal und die 4 Bits. Für Oktal gelten die ersten 8 Kacheln (bis zur Markierung), mit den letzten 3 Bits: <code>5 = 101</code>.</p>
+          </div>
+          <div class="panel idee">
+            <span class="flabel">wo begegnet mir das?</span>
+            <div class="uses">
+              <div class="use">
+                <span class="flabel">farben in html/css</span>
+                <span class="mono"><span class="swatch" aria-hidden="true"></span>#<b>0F</b><b>76</b><b>6E</b> → rot 15 · grün 118 · blau 110</span>
+                <span class="legend">Je zwei Hexziffern = ein Byte (0–255) pro Farbkanal. Ausprobieren im <a href="farbwaehler.html">Farbwähler</a>.</span>
+              </div>
+              <div class="use">
+                <span class="flabel">dateirechte unter linux</span>
+                <span class="mono">chmod <b>755</b> → 111 101 101 → rwx r-x r-x</span>
+                <span class="legend">Jede Oktalziffer = 3 Bits = Lesen, Schreiben, Ausführen für Besitzer, Gruppe, andere.</span>
+              </div>
+              <div class="use">
+                <span class="flabel">bytes und adressen</span>
+                <span class="mono">1 Byte = 8 Bit = 2 Hexziffern · <b>FF</b> = 255</span>
+                <span class="legend">MAC-Adressen (<code>3C:52:82:1A:F0:07</code>), Speicheradressen und Fehlercodes werden fast immer hexadezimal angegeben.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Umrechnen ================= -->
+    <section class="container bn-section" id="verstehen">
+      <div class="section-head"><h2>Umrechnen</h2></div>
+      <div class="panel explainer">
+        <div class="row">
+          <label class="numbox">
+            <span>dezimal</span>
+            <input class="inp" id="exNum" type="number" min="0" max="4095" value="2026" inputmode="numeric" aria-label="Dezimalzahl zum Erklären (0 bis 4095)">
+          </label>
+          <button class="btn btn-ghost" type="button" id="exRandom">zufällig</button>
+          <span class="overview" id="overview" aria-live="polite"></span>
+        </div>
+        <div class="mode-row">
+          <div class="chips" id="sysChips" role="group" aria-label="Zahlensystem">
+            <button class="chip" type="button" data-sys="hex" aria-pressed="true">Hexadezimal</button>
+            <button class="chip" type="button" data-sys="okt" aria-pressed="false">Oktal</button>
+          </div>
+          <div class="chips" id="modeChips" role="group" aria-label="Umrechnung"></div>
+        </div>
+
+        <div class="stage" id="stage"></div>
+        <p class="caption" id="caption" aria-live="polite"></p>
+
+        <div class="controls">
+          <button class="btn btn-ghost" type="button" id="exReset">⟲ von vorn</button>
+          <button class="btn btn-ghost" type="button" id="exBack">◀ zurück</button>
+          <button class="btn" type="button" id="exNext">weiter ▶</button>
+          <button class="btn btn-ghost" type="button" id="exPlay">▶ abspielen</button>
+          <span class="stepinfo" id="stepInfo"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Üben ================= -->
+    <section class="container bn-section" id="ueben">
+      <div class="section-head"><h2>Üben</h2></div>
+
+      <div class="settings">
+        <div class="setting">
+          <span class="flabel">system</span>
+          <div class="chips" id="prSysChips" role="group" aria-label="Zahlensystem">
+            <button class="chip" type="button" data-sys="hex">hex</button>
+            <button class="chip" type="button" data-sys="okt">oktal</button>
+            <button class="chip" type="button" data-sys="mix">gemischt</button>
+          </div>
+        </div>
+        <div class="setting">
+          <span class="flabel">richtung</span>
+          <div class="chips" id="dirChips" role="group" aria-label="Richtung"></div>
+        </div>
+        <div class="setting">
+          <span class="flabel">stufe</span>
+          <div class="chips" id="lvlChips" role="group" aria-label="Schwierigkeit">
+            <button class="chip" type="button" data-bits="6">leicht · 0–63</button>
+            <button class="chip" type="button" data-bits="8">mittel · 0–255</button>
+            <button class="chip" type="button" data-bits="12">schwer · 0–4095</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pr-grid">
+        <div class="panel task">
+          <span class="flabel" id="taskQ">aufgabe</span>
+          <div class="task-num" id="taskNum"></div>
+          <form class="answer-row" id="answerForm" autocomplete="off" novalidate>
+            <label class="visually-hidden" for="answer">Deine Antwort</label>
+            <input class="inp" id="answer" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button class="btn" type="submit" id="checkBtn">prüfen</button>
+          </form>
+          <div class="feedback" id="feedback" role="status" aria-live="polite" hidden></div>
+          <div class="row">
+            <button class="btn btn-ghost" type="button" id="solveBtn">Lösung zeigen</button>
+            <button class="btn btn-ghost" type="button" id="newBtn">neue Aufgabe</button>
+          </div>
+        </div>
+
+        <aside class="panel stats" aria-label="Statistik">
+          <span class="flabel">statistik</span>
+          <div class="stat-grid">
+            <div class="stat"><strong id="stRight">0</strong><span>beim 1. Versuch richtig</span></div>
+            <div class="stat"><strong id="stTotal">0</strong><span>Aufgaben</span></div>
+            <div class="stat"><strong id="stStreak">0</strong><span>Serie</span></div>
+            <div class="stat"><strong id="stBest">0</strong><span>beste Serie</span></div>
+          </div>
+          <span class="flabel">letzte aufgaben</span>
+          <div class="history" id="history"></div>
+          <button class="btn btn-ghost" type="button" id="resetStats" style="justify-self:start">zurücksetzen</button>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var $ = function (id) { return document.getElementById(id); };
+
+    /* ---------- Zahlensysteme ---------- */
+    var SYS = {
+      hex: { b: 16, g: 4, name: "Hexadezimal", kurz: "hex", ziffer: "Hexziffer", sub: "₁₆" },
+      okt: { b: 8,  g: 3, name: "Oktal",       kurz: "oktal", ziffer: "Oktalziffer", sub: "₈" }
+    };
+    var DIGITS = "0123456789ABCDEF";
+    var SUBS = { 2: "₂", 8: "₈", 10: "₁₀", 16: "₁₆" };
+
+    function toBase(n, b) { return n.toString(b).toUpperCase(); }
+    function pad(s, w) { while (s.length < w) s = "0" + s; return s; }
+    // Bits in Gruppen von rechts: ("101101", 4) -> ["0010", "1101"]
+    function bitGroups(n, g) {
+      var bits = n.toString(2), w = Math.ceil(bits.length / g) * g;
+      bits = pad(bits, w);
+      var out = [];
+      for (var i = 0; i < w; i += g) out.push(bits.slice(i, i + g));
+      return out;
+    }
+    function groupStr(bits, g) {
+      var out = [];
+      for (var i = bits.length; i > 0; i -= g) out.unshift(bits.slice(Math.max(0, i - g), i));
+      return out.join(" ");
+    }
+    function digitVal(ch) { return DIGITS.indexOf(ch.toUpperCase()); }
+    // "E" -> "E (=14)" bei Buchstaben
+    function digitTxt(ch) { var v = digitVal(ch); return v > 9 ? ch + " (=" + v + ")" : ch; }
+    function bitSum(bits) {
+      var t = [];
+      for (var k = 0; k < bits.length; k++) if (bits[k] === "1") t.push(Math.pow(2, bits.length - 1 - k));
+      return t.length ? t.join(" + ") : "0";
+    }
+    function productTerms(n, b) {
+      var d = toBase(n, b), t = [];
+      for (var k = 0; k < d.length; k++) t.push(digitVal(d[k]) + "·" + Math.pow(b, d.length - 1 - k));
+      return t.join(" + ");
+    }
+
+    /* ---------- Grundlagen: Kacheln 0–F ---------- */
+    (function () {
+      var h = "";
+      for (var i = 0; i < 16; i++) {
+        h += '<div class="tile' + (i === 7 ? " okt-end" : "") + '"><b>' + DIGITS[i] + '</b><span>' + i + '</span><span>' + pad(i.toString(2), 4) + '</span></div>';
+      }
+      document.querySelector(".tiles").innerHTML = h;
+    })();
+
+    /* =========================================================
+       Erklärteil
+       ========================================================= */
+    var ex = { n: 2026, sys: "hex", mode: "d2x", step: 0, timer: null };
+    var stage = $("stage"), caption = $("caption"), exNum = $("exNum");
+
+    function modeLabels(k) {
+      return [
+        ["d2x", "Dezimal → " + k], ["x2d", k + " → Dezimal"],
+        ["b2x", "Binär → " + k], ["x2b", k + " → Binär"]
+      ];
+    }
+    function renderModeChips() {
+      var s = SYS[ex.sys], k = ex.sys === "hex" ? "Hex" : "Oktal";
+      $("modeChips").innerHTML = modeLabels(k).map(function (m) {
+        return '<button class="chip" type="button" data-mode="' + m[0] + '" aria-pressed="' + (m[0] === ex.mode) + '">' + m[1] + '</button>';
+      }).join("");
+      document.querySelectorAll("#sysChips .chip").forEach(function (c) {
+        c.setAttribute("aria-pressed", c.dataset.sys === ex.sys ? "true" : "false");
+      });
+    }
+    function renderOverview() {
+      var n = ex.n;
+      $("overview").innerHTML = "<b>" + n + "</b><sub>10</sub> = <b>" + groupStr(n.toString(2), 4) + "</b><sub>2</sub> = <b>" +
+        toBase(n, 16) + "</b><sub>16</sub> = <b>" + toBase(n, 8) + "</b><sub>8</sub>";
+    }
+
+    function restRows(n, b) {
+      var rows = [];
+      while (n > 0) { rows.push({ n: n, q: Math.floor(n / b), r: n % b }); n = Math.floor(n / b); }
+      return rows;
+    }
+
+    function totalSteps() {
+      var s = SYS[ex.sys];
+      if (ex.n === 0) return 0;
+      if (ex.mode === "d2x") return restRows(ex.n, s.b).length + 1;
+      if (ex.mode === "x2d") return toBase(ex.n, s.b).length + 1;
+      if (ex.mode === "b2x") return bitGroups(ex.n, s.g).length + 2;
+      return toBase(ex.n, s.b).length + 1; // x2b
+    }
+
+    function resultHtml(str, base, opts) {
+      opts = opts || {};
+      var dt = str.replace(/ /g, "").length > 5 ? 90 : 200, idx = 0;
+      var h = '<div class="result"><span class="flabel">ergebnis</span><div class="result-digits" style="--dt:' + dt + 'ms">';
+      for (var j = 0; j < str.length; j++) {
+        if (str[j] === " ") continue;
+        var cls = "rdig";
+        if (opts.g && j > 0 && str[j - 1] === " ") cls += " gap";
+        if (opts.lead && j < opts.lead) cls += " lead";
+        h += '<span class="' + cls + '" style="--d:' + (idx++) + '">' + str[j] + '</span>';
+      }
+      return h + '<span class="base">' + base + '</span></div></div>';
+    }
+
+    /* --- Dezimal → X (Restwertmethode) --- */
+    function renderD2X(s) {
+      var S = SYS[ex.sys], rows = restRows(ex.n, S.b), reading = s > rows.length, shown = Math.min(s, rows.length), h = "";
+      var res = toBase(ex.n, S.b);
+      if (rows.length) {
+        h += '<div class="rest' + (reading ? " reading" : "") + '">';
+        h += '<div class="rest-head"><span>Rechnung</span><span>Rest</span></div>';
+        if (!shown) h += '<div class="rest-start">Start mit <b>' + ex.n + '</b></div>';
+        for (var i = 0; i < shown; i++) {
+          var r = rows[i];
+          h += '<div class="rest-row' + (i === s - 1 && !reading ? " new" : "") + '" style="--d:' + (rows.length - 1 - i) + '">' +
+               '<span class="calc"><b>' + r.n + '</b> : ' + S.b + ' = <b>' + r.q + '</b>' +
+               (r.r > 9 ? '<span class="rnote">Rest ' + r.r + ' = ' + DIGITS[r.r] + '</span>' : '') + '</span>' +
+               '<span class="dig">' + DIGITS[r.r] + '</span></div>';
+        }
+        h += '</div>';
+      }
+      if (reading) h += resultHtml(res, S.b);
+      stage.innerHTML = h;
+
+      var c;
+      if (ex.n === 0) c = "Die <b>0</b> bleibt in jedem Zahlensystem <b>0</b>.";
+      else if (s === 0) c = "Wie beim Binärsystem: Teile die Zahl immer wieder durch <b>" + S.b + "</b> und schreibe den Rest auf. Der Rest liegt immer zwischen 0 und " + (S.b - 1) + (S.b === 16 ? " – Reste ab 10 werden zu Buchstaben." : ".");
+      else if (!reading) {
+        var rr = rows[s - 1];
+        c = "<b>" + rr.n + " : " + S.b + " = " + rr.q + " Rest " + rr.r + "</b>";
+        c += rr.q ? " (denn " + rr.q + " · " + S.b + " = " + rr.q * S.b + ", und " + rr.n + " − " + rr.q * S.b + " = " + rr.r + ")." : " (" + rr.n + " ist kleiner als " + S.b + ", passt also 0-mal).";
+        if (rr.r > 9) c += " Rest " + rr.r + " schreibt man als <b>" + DIGITS[rr.r] + "</b>.";
+        c += rr.q ? " Weiter mit " + rr.q + "." : " Das Ergebnis ist 0 – fertig geteilt.";
+      } else {
+        c = "Jetzt die Reste <b>von unten nach oben</b> lesen: <b>" + res + S.sub + "</b>. Probe: " + productTerms(ex.n, S.b) + " = " + ex.n + ".";
+      }
+      caption.innerHTML = c;
+    }
+
+    /* --- X → Dezimal (Stellenwertmethode) --- */
+    function renderX2D(s) {
+      var S = SYS[ex.sys], d = toBase(ex.n, S.b), L = d.length, h = '<div class="pvcols">', sum = 0, parts = [];
+      for (var k = 0; k < L; k++) {
+        var exp = L - 1 - k, pv = Math.pow(S.b, exp), v = digitVal(d[k]), cls = "pvcol";
+        if (k === s - 1 && s <= L) cls += " on";
+        else if (k < s) cls += " done";
+        else if (k === s) cls += " next";
+        var prod = "";
+        if (k < s) {
+          prod = (v > 9 ? d[k] + "=" + v : v) + " · " + pv + "<br><b>= " + v * pv + "</b>";
+          sum += v * pv; parts.push(v * pv);
+        }
+        h += '<div class="' + cls + '"><span class="pv">' + S.b + '<sup>' + exp + '</sup> = ' + pv + '</span>' +
+             '<span class="cb">' + d[k] + '</span><span class="prod">' + prod + '</span></div>';
+      }
+      h += '</div>';
+      if (s > L) h += '<div class="formula">' + parts.join(" + ") + ' = <strong>' + ex.n + '</strong><sub>10</sub></div>';
+      else if (s > 0) h += '<div class="formula">bisher: ' + parts.join(" + ") + ' = ' + sum + '</div>';
+      stage.innerHTML = h;
+
+      var c;
+      if (ex.n === 0) c = "Die <b>0</b> bleibt in jedem Zahlensystem <b>0</b>.";
+      else if (s === 0) c = "Über jede Ziffer kommt ihr Stellenwert: von rechts 1, " + S.b + ", " + S.b * S.b + " … Dann rechnest du <b>Ziffer · Stellenwert</b> und addierst alles.";
+      else if (s <= L) {
+        var dk = d[s - 1], vk = digitVal(dk), pk = Math.pow(S.b, L - s);
+        c = (vk > 9 ? "<b>" + dk + "</b> steht für " + vk + ". " : "") + "<b>" + vk + " · " + pk + " = " + vk * pk + "</b>." +
+            (vk === 0 ? " Eine 0 trägt nichts bei." : "");
+      } else c = "Alles addieren: " + parts.join(" + ") + " = <b>" + ex.n + "</b>. Also " + d + S.sub + " = <b>" + ex.n + "₁₀</b>.";
+      caption.innerHTML = c;
+    }
+
+    /* --- Bitgruppen-Bausteine --- */
+    function gboxHtml(bits, opts) {
+      // opts: digit (string|null), active, padCount, newBits, newDigit, sum
+      var g = bits.length, h = '<div class="gbox' + (opts.active ? " active" : "") + '"><div class="gbits' + (opts.newBits ? " new" : "") + '">';
+      for (var k = 0; k < g; k++) {
+        var b = bits[k], cls = "gb";
+        if (b === "1") cls += " one";
+        if (k < (opts.padCount || 0)) cls += " pad";
+        h += '<span class="' + cls + '"><i>' + Math.pow(2, g - 1 - k) + '</i><b>' + (b === "_" ? "" : b) + '</b></span>';
+      }
+      h += '</div><span class="gsum">' + (opts.sum || "") + '</span>';
+      h += '<span class="gdig' + (opts.digit != null ? " on" : "") + (opts.newDigit ? " new" : "") + '">' + (opts.digit != null ? opts.digit : "?") + '</span></div>';
+      return h;
+    }
+
+    /* --- Binär → X (Gruppieren) --- */
+    function renderB2X(s) {
+      var S = SYS[ex.sys], groups = bitGroups(ex.n, S.g), G = groups.length;
+      var raw = ex.n.toString(2), padN = G * S.g - raw.length, res = toBase(ex.n, S.b);
+      var h = '<div class="groups' + (s === 0 ? " flat" : "") + '">';
+      for (var i = 0; i < G; i++) {
+        var conv = s >= 2 + i, v = parseInt(groups[i], 2);
+        h += gboxHtml(groups[i], {
+          padCount: i === 0 ? padN : 0,
+          active: s === 2 + i,
+          digit: conv ? DIGITS[v] : null,
+          newDigit: s === 2 + i,
+          sum: conv ? (bitSum(groups[i]) === String(v) ? "" + v : bitSum(groups[i]) + " = " + v) : ""
+        });
+      }
+      h += '</div>';
+      if (s > G + 1) h += resultHtml(res, S.b);
+      stage.innerHTML = h;
+
+      var c;
+      if (ex.n === 0) c = "Die <b>0</b> bleibt in jedem Zahlensystem <b>0</b>.";
+      else if (s === 0) c = "Die Binärzahl <b>" + raw + "₂</b> hat " + raw.length + " Stellen. Für " + S.name + " bündelt man immer <b>" + S.g + " Bits</b> zu einer Ziffer, weil 2" + (S.g === 4 ? "⁴ = 16" : "³ = 8") + ".";
+      else if (s === 1) c = "Bilde <b>von rechts</b> Gruppen zu je " + S.g + " Bits." + (padN ? " Links " + (padN > 1 ? "fehlen " + padN + " Stellen" : "fehlt 1 Stelle") + " – die füllst du mit Nullen auf (gestrichelt). Das ändert den Wert nicht." : " Es geht genau auf.");
+      else if (s <= G + 1) {
+        var gi = groups[s - 2], gv = parseInt(gi, 2);
+        c = "Gruppe <b>" + gi + "</b>: " + (gv ? (bitSum(gi) === String(gv) ? "" + gv : bitSum(gi) + " = " + gv) : "keine 1, also 0") + (gv > 9 ? ", und " + gv + " schreibt man als <b>" + DIGITS[gv] + "</b>." : " → <b>" + DIGITS[gv] + "</b>.");
+      } else c = "Die Ziffern der Gruppen hintereinander gelesen: <b>" + groups.join(" ") + "₂ = " + res + S.sub + "</b>.";
+      caption.innerHTML = c;
+    }
+
+    /* --- X → Binär (Aufspalten) --- */
+    function renderX2B(s) {
+      var S = SYS[ex.sys], d = toBase(ex.n, S.b), L = d.length, h = '<div class="groups">', all = "";
+      for (var i = 0; i < L; i++) {
+        var v = digitVal(d[i]), bits = pad(v.toString(2), S.g), open = s >= 1 + i;
+        all += bits;
+        h += gboxHtml(open ? bits : new Array(S.g + 1).join("_"), {
+          digit: d[i], active: s === 1 + i, newBits: s === 1 + i,
+          sum: open ? (bitSum(bits) === String(v) ? "" + v : bitSum(bits) + " = " + v) : ""
+        });
+      }
+      h += '</div>';
+      var lead = all.length - ex.n.toString(2).length;
+      if (s > L) {
+        var spaced = "";
+        for (var j = 0; j < all.length; j++) spaced += (j > 0 && j % S.g === 0 ? " " : "") + all[j];
+        h += resultHtml(spaced, 2, { g: true, lead: lead });
+      }
+      stage.innerHTML = h;
+
+      var c;
+      if (ex.n === 0) c = "Die <b>0</b> bleibt in jedem Zahlensystem <b>0</b>.";
+      else if (s === 0) c = "Jede " + S.ziffer + " wird <b>einzeln</b> in genau <b>" + S.g + " Bits</b> umgewandelt. Die Stellenwerte innerhalb einer Gruppe sind " + (S.g === 4 ? "8, 4, 2, 1" : "4, 2, 1") + ".";
+      else if (s <= L) {
+        var dk = d[s - 1], vk = digitVal(dk), bk = pad(vk.toString(2), S.g);
+        c = "<b>" + digitTxt(dk) + "</b>" + (vk && bitSum(bk) !== String(vk) ? " = " + bitSum(bk) : "") + " → <b>" + bk + "</b>." +
+            (bk[0] === "0" && s > 1 ? " Wichtig: Die führenden Nullen in der Gruppe bleiben stehen, sonst verrutschen alle Stellen." : "");
+      } else c = "Gruppen aneinanderhängen: <b>" + groupStr(all, S.g) + "₂</b>." + (lead ? " Führende Nullen ganz vorne dürfen weg: <b>" + groupStr(ex.n.toString(2), S.g) + "₂</b>." : "");
+      caption.innerHTML = c;
+    }
+
+    function renderEx() {
+      var total = totalSteps();
+      if (ex.mode === "d2x") renderD2X(ex.step);
+      else if (ex.mode === "x2d") renderX2D(ex.step);
+      else if (ex.mode === "b2x") renderB2X(ex.step);
+      else renderX2B(ex.step);
+      $("exBack").disabled = ex.step <= 0;
+      $("exNext").disabled = ex.step >= total;
+      $("exPlay").disabled = total === 0;
+      $("stepInfo").textContent = "Schritt " + ex.step + " / " + total;
+      $("exPlay").textContent = ex.timer ? "⏸ pause" : "▶ abspielen";
+      renderModeChips();
+      renderOverview();
+    }
+
+    function stop() { clearTimeout(ex.timer); ex.timer = null; }
+    function tick() {
+      if (ex.step >= totalSteps()) { stop(); renderEx(); return; }
+      ex.step++; renderEx();
+      ex.timer = setTimeout(tick, 1800);
+      if (ex.step >= totalSteps()) { stop(); renderEx(); }
+    }
+    function setExNumber(n) {
+      stop(); ex.n = n; ex.step = 0;
+      exNum.value = n; exNum.removeAttribute("aria-invalid");
+      renderEx();
+    }
+
+    exNum.addEventListener("input", function () {
+      var v = exNum.value.trim(), n = +v;
+      if (v === "" || !/^\d+$/.test(v) || n > 4095) { exNum.setAttribute("aria-invalid", "true"); return; }
+      exNum.removeAttribute("aria-invalid");
+      stop(); ex.n = n; ex.step = 0; renderEx();
+    });
+    exNum.addEventListener("blur", function () { exNum.value = ex.n; exNum.removeAttribute("aria-invalid"); });
+    $("exRandom").addEventListener("click", function () {
+      var n; do { n = 20 + Math.floor(Math.random() * 1004); } while (n === ex.n);
+      setExNumber(n);
+    });
+    $("sysChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      stop(); ex.sys = c.dataset.sys; ex.step = 0; renderEx();
+    });
+    $("modeChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      stop(); ex.mode = c.dataset.mode; ex.step = 0; renderEx();
+    });
+    $("exNext").addEventListener("click", function () { stop(); if (ex.step < totalSteps()) ex.step++; renderEx(); });
+    $("exBack").addEventListener("click", function () { stop(); if (ex.step > 0) ex.step--; renderEx(); });
+    $("exReset").addEventListener("click", function () { stop(); ex.step = 0; renderEx(); });
+    $("exPlay").addEventListener("click", function () {
+      if (ex.timer) { stop(); renderEx(); return; }
+      if (ex.step >= totalSteps()) ex.step = 0;
+      ex.timer = -1;
+      renderEx();
+      ex.timer = setTimeout(tick, 400);
+    });
+
+    /* =========================================================
+       Üben
+       ========================================================= */
+    var STORE = "hexoktal-ueben";
+    var DIRS = ["d2x", "x2d", "b2x", "x2b"];
+    var pr = { sys: "hex", dir: "d2x", bits: 8, task: null, wrong: 0, done: false, counted: false };
+    var stats = { right: 0, total: 0, streak: 0, best: 0, hist: [] };
+    var answer = $("answer"), form = $("answerForm"), fb = $("feedback");
+    var interacted = false;
+
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORE) || "null");
+      if (saved) {
+        if (["hex", "okt", "mix"].indexOf(saved.sys) !== -1) pr.sys = saved.sys;
+        if (DIRS.concat("mix").indexOf(saved.dir) !== -1) pr.dir = saved.dir;
+        if ([6, 8, 12].indexOf(saved.bits) !== -1) pr.bits = saved.bits;
+        if (saved.stats) stats = Object.assign(stats, saved.stats);
+      }
+    } catch (e) {}
+    function save() {
+      try { localStorage.setItem(STORE, JSON.stringify({ sys: pr.sys, dir: pr.dir, bits: pr.bits, stats: stats })); } catch (e) {}
+    }
+
+    function renderStats() {
+      $("stRight").textContent = stats.right;
+      $("stTotal").textContent = stats.total;
+      $("stStreak").textContent = stats.streak;
+      $("stBest").textContent = stats.best;
+      $("history").innerHTML = stats.hist.length ? stats.hist.map(function (ok) {
+        return '<i class="' + (ok ? "ok" : "") + '" title="' + (ok ? "richtig" : "falsch") + '"></i>';
+      }).join("") : '<span class="history-empty">noch keine</span>';
+    }
+    function record(ok) {
+      stats.total++;
+      if (ok) { stats.right++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); }
+      else stats.streak = 0;
+      stats.hist.push(ok); if (stats.hist.length > 20) stats.hist.shift();
+      save(); renderStats();
+    }
+
+    function renderSettings() {
+      var k = pr.sys === "hex" ? "hex" : pr.sys === "okt" ? "oktal" : "hex/oktal";
+      var labels = { d2x: "dezimal → " + k, x2d: k + " → dezimal", b2x: "binär → " + k, x2b: k + " → binär", mix: "gemischt" };
+      $("dirChips").innerHTML = DIRS.concat("mix").map(function (d) {
+        return '<button class="chip" type="button" data-dir="' + d + '" aria-pressed="' + (d === pr.dir) + '">' + labels[d] + '</button>';
+      }).join("");
+      document.querySelectorAll("#prSysChips .chip").forEach(function (c) { c.setAttribute("aria-pressed", c.dataset.sys === pr.sys ? "true" : "false"); });
+      document.querySelectorAll("#lvlChips .chip").forEach(function (c) { c.setAttribute("aria-pressed", +c.dataset.bits === pr.bits ? "true" : "false"); });
+    }
+
+    function showFb(kind, title, body) {
+      fb.className = "feedback " + kind;
+      fb.innerHTML = '<span class="fb-title">' + title + '</span>' + (body || "");
+      fb.hidden = false;
+    }
+
+    // Zielsystem einer Aufgabe: in welcher Basis wird geantwortet?
+    function answerBase(t) { return t.dir === "x2d" ? 10 : t.dir === "x2b" ? 2 : SYS[t.sys].b; }
+
+    function newTask() {
+      var sys = pr.sys === "mix" ? (Math.random() < 0.5 ? "hex" : "okt") : pr.sys;
+      // mindestens zweistellig im Zielsystem
+      var max = Math.pow(2, pr.bits) - 1, min = SYS[sys].b, n;
+      do { n = min + Math.floor(Math.random() * (max - min + 1)); } while (pr.task && n === pr.task.n);
+      var dir = pr.dir === "mix" ? DIRS[Math.floor(Math.random() * 4)] : pr.dir;
+      var S = SYS[sys];
+      pr.task = { n: n, sys: sys, dir: dir };
+      pr.wrong = 0; pr.done = false; pr.counted = false;
+
+      var q, num, ph;
+      if (dir === "d2x") { q = "wandle ins " + S.name.toLowerCase() + "system um"; num = n + "<sub>10</sub>"; ph = S.b === 16 ? "Ziffern 0–9 und A–F" : "nur Ziffern 0–7"; }
+      else if (dir === "x2d") { q = "wandle ins dezimalsystem um"; num = toBase(n, S.b) + "<sub>" + S.b + "</sub>"; ph = "Dezimalzahl"; }
+      else if (dir === "b2x") { q = "wandle ins " + S.name.toLowerCase() + "system um"; num = n.toString(2) + "<sub>2</sub>"; ph = S.b === 16 ? "Ziffern 0–9 und A–F" : "nur Ziffern 0–7"; }
+      else { q = "wandle ins binärsystem um"; num = toBase(n, S.b) + "<sub>" + S.b + "</sub>"; ph = "nur 0 und 1, Leerzeichen erlaubt"; }
+      $("taskQ").textContent = q;
+      $("taskNum").innerHTML = num;
+      answer.placeholder = ph;
+      answer.inputMode = (dir === "x2d" || dir === "x2b" || sys === "okt") ? "numeric" : "text";
+      answer.value = ""; answer.readOnly = false;
+      form.classList.remove("is-ok", "is-bad");
+      $("checkBtn").textContent = "prüfen";
+      $("solveBtn").disabled = false;
+      fb.hidden = true;
+      if (interacted) answer.focus({ preventScroll: true });
+    }
+
+    function solutionHtml(t) {
+      var S = SYS[t.sys], x = toBase(t.n, S.b), bits = t.n.toString(2);
+      var grouped = bitGroups(t.n, S.g).join(" ");
+      if (t.dir === "d2x") return '<span class="mono">' + t.n + " = " + productTerms(t.n, S.b) + " → <b>" + x + S.sub + "</b></span>";
+      if (t.dir === "x2d") return '<span class="mono">' + x + S.sub + " = " + productTerms(t.n, S.b) + " = <b>" + t.n + "</b></span>";
+      if (t.dir === "b2x") return '<span class="mono">' + bits + "₂ → " + grouped + " → " + x.split("").join(" ") + " → <b>" + x + S.sub + "</b></span>";
+      return '<span class="mono">' + x.split("").join(" ") + " → " + grouped + " → <b>" + groupStr(bits, S.g) + "₂</b></span>";
+    }
+
+    function check(e) {
+      e.preventDefault();
+      interacted = true;
+      if (pr.done) { newTask(); return; }
+      var t = pr.task, S = SYS[t.sys], base = answerBase(t);
+      var raw = answer.value.replace(/\s+/g, "").toUpperCase(), val;
+      form.classList.remove("is-ok", "is-bad");
+
+      if (base === 16) raw = raw.replace(/^(0X|#)/, "");
+      if (base === 8) raw = raw.replace(/^0O/, "");
+      if (!raw) { showFb("", "> Antwort fehlt", "<span>Bitte gib zuerst eine Zahl ein.</span>"); return; }
+      if (base === 2 && !/^[01]+$/.test(raw)) { showFb("", "> Nur 0 und 1", "<span>Eine Binärzahl besteht nur aus den Ziffern 0 und 1.</span>"); return; }
+      if (base === 8 && !/^[0-7]+$/.test(raw)) { showFb("", "> Nur 0 bis 7", "<span>Im Oktalsystem gibt es nur die Ziffern 0 bis 7. Eine 8 oder 9 gibt es nicht.</span>"); return; }
+      if (base === 16 && !/^[0-9A-F]+$/.test(raw)) { showFb("", "> Nur 0–9 und A–F", "<span>Im Hexadezimalsystem gibt es die Ziffern 0–9 und die Buchstaben A–F.</span>"); return; }
+      if (base === 10 && !/^\d+$/.test(raw)) {
+        showFb("", "> Nur Ziffern", "<span>Bitte nur Ziffern von 0 bis 9 eingeben" + (/[A-F]/.test(raw) ? " – gesucht ist die Dezimalzahl, Buchstaben gibt es dort nicht" : "") + ".</span>"); return;
+      }
+      val = parseInt(raw, base);
+
+      var ok = val === t.n;
+      if (!pr.counted) { pr.counted = true; record(ok); }
+
+      if (ok) {
+        pr.done = true;
+        form.classList.add("is-ok");
+        answer.readOnly = true;
+        $("checkBtn").textContent = "weiter ▶";
+        $("solveBtn").disabled = true;
+        showFb("ok", "> richtig!", solutionHtml(t) + '<span class="hint">Enter oder „weiter“ für die nächste Aufgabe.</span>');
+        return;
+      }
+
+      pr.wrong++;
+      form.classList.add("is-bad");
+      form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+      var x = toBase(t.n, S.b), msg = "", hint = "", diff = Math.abs(val - t.n);
+      var wieviel = (diff === 1 ? "ist " : "sind ") + diff + (val < t.n ? " zu wenig." : " zu viel.");
+
+      if (t.dir === "d2x") {
+        msg = 'Deine Eingabe <span class="mono">' + raw.replace(/^0+(?=.)/, "") + S.sub + "</span> entspricht <b>" + val + "</b>. Das " + wieviel;
+        var r0 = t.n % S.b, q0 = Math.floor(t.n / S.b);
+        hint = pr.wrong === 1
+          ? "Tipp: Teile " + t.n + " durch " + S.b + ". Der Rest ist die <b>letzte</b> Ziffer."
+          : "Tipp: " + t.n + " : " + S.b + " = " + q0 + " Rest " + r0 + ", die letzte Ziffer ist also " + DIGITS[r0] + ". Weiter mit " + q0 + " : " + S.b + ".";
+      } else if (t.dir === "x2d") {
+        msg = "<b>" + val + "</b> ist " + (val < t.n ? "zu klein" : "zu groß") + ".";
+        var pvs = []; for (var k = x.length - 1; k >= 0; k--) pvs.push(Math.pow(S.b, k));
+        hint = pr.wrong === 1
+          ? "Tipp: Die Stellenwerte sind von links " + pvs.join(", ") + ". Rechne Ziffer · Stellenwert und addiere."
+          : "Tipp: " + x.split("").map(function (ch, i) { return digitTxt(ch) + " · " + pvs[i]; }).join(" + ");
+      } else if (t.dir === "b2x") {
+        msg = 'Deine Eingabe <span class="mono">' + raw.replace(/^0+(?=.)/, "") + S.sub + "</span> entspricht binär <span class=\"mono\">" + groupStr(val.toString(2), S.g) + "</span>.";
+        hint = pr.wrong === 1
+          ? "Tipp: Bilde <b>von rechts</b> Gruppen zu je " + S.g + " Bits: <span class=\"mono\">" + bitGroups(t.n, S.g).join(" ") + "</span>"
+          : "Tipp: Jede Gruppe einzeln: " + bitGroups(t.n, S.g).map(function (gr) { return '<span class="mono">' + gr + " = " + parseInt(gr, 2) + "</span>"; }).join(", ") + (S.b === 16 ? ". Ab 10 Buchstaben verwenden." : ".");
+      } else {
+        msg = 'Deine Eingabe <span class="mono">' + groupStr(raw.replace(/^0+(?=.)/, ""), S.g) + "₂</span> entspricht <b>" + toBase(val, S.b) + S.sub + "</b>.";
+        var tooShort = raw.replace(/^0+(?=.)/, "").length < t.n.toString(2).length;
+        hint = pr.wrong === 1
+          ? "Tipp: Jede Ziffer wird zu genau " + S.g + " Bits." + (tooShort ? " Deine Zahl ist zu kurz – vergessene Nullen innerhalb einer Gruppe? (z. B. 2 → " + pad("10", S.g) + ")" : "")
+          : "Tipp: " + x.split("").map(function (ch) { return '<span class="mono">' + ch + " → " + pad(digitVal(ch).toString(2), S.g) + "</span>"; }).join(", ");
+      }
+      showFb("bad", "> leider falsch – versuch’s nochmal", "<span>" + msg + '</span><span class="hint">' + hint + "</span>");
+      answer.select();
+    }
+
+    function solve() {
+      interacted = true;
+      if (pr.done) return;
+      if (!pr.counted) { pr.counted = true; record(false); }
+      pr.done = true;
+      answer.readOnly = true;
+      form.classList.remove("is-bad", "is-ok");
+      $("checkBtn").textContent = "weiter ▶";
+      $("solveBtn").disabled = true;
+      showFb("sol", "> lösung", solutionHtml(pr.task) +
+        '<button type="button" class="linkbtn" id="toExplain">Schritt für Schritt ansehen ↑</button>');
+    }
+
+    fb.addEventListener("click", function (e) {
+      if (!e.target.closest("#toExplain")) return;
+      var t = pr.task;
+      ex.sys = t.sys; ex.mode = t.dir;
+      setExNumber(t.n);
+      $("verstehen").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    form.addEventListener("submit", check);
+    $("solveBtn").addEventListener("click", solve);
+    $("newBtn").addEventListener("click", function () { interacted = true; newTask(); });
+    answer.addEventListener("input", function () { form.classList.remove("is-bad"); });
+    $("prSysChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      interacted = true; pr.sys = c.dataset.sys; save(); renderSettings(); newTask();
+    });
+    $("dirChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      interacted = true; pr.dir = c.dataset.dir; save(); renderSettings(); newTask();
+    });
+    $("lvlChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      interacted = true; pr.bits = +c.dataset.bits; save(); renderSettings(); newTask();
+    });
+    $("resetStats").addEventListener("click", function () {
+      stats = { right: 0, total: 0, streak: 0, best: 0, hist: [] };
+      save(); renderStats();
+    });
+
+    /* ---------- Start ---------- */
+    renderEx();
+    renderSettings();
+    renderStats();
+    newTask();
+  })();
+  </script>
+</body>
+</html>

@@ -54,6 +54,14 @@ const EINTRAEGE = [
     fach: "Allgemein"
   },
   {
+    typ: "tool",
+    titel: "Hexadezimal & Oktal",
+    beschreibung: "Hex und Oktal verstehen, umrechnen von/nach Dezimal und Binär, üben",
+    url: "hexoktal.html",
+    fach: "Allgemein",
+    neu: true
+  },
+  {
     typ: "link",
     titel: "Moodle",
     beschreibung: "Kursräume, Aufgaben und Tests.",
