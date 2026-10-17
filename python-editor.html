@@ -754,7 +754,7 @@
         try { sessionStorage.setItem(KEY, "1"); } catch (e) {}
         location.reload();
       }
-      navigator.serviceWorker.register("js/coi-sw.js", { scope: "./python-editor.html" }).then(function (reg) {
+      navigator.serviceWorker.register("coi-sw.js", { scope: "./python-editor.html" }).then(function (reg) {
         if (navigator.serviceWorker.controller) { finishWith(false); return; }
         if (reg.active && !reg.installing && !reg.waiting) { reloadOnce(); return; }
         navigator.serviceWorker.addEventListener("controllerchange", reloadOnce);
