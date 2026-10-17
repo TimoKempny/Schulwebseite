@@ -1,0 +1,8 @@
+Pyodide 314.0.7 (Python 3.14 für WebAssembly)
+Quelle: https://github.com/pyodide/pyodide  ·  npm-Paket "pyodide"
+Lizenz: Mozilla Public License 2.0 (https://mozilla.org/MPL/2.0/)
+
+Enthaltene Dateien sind unverändert aus dem npm-Paket übernommen:
+pyodide.mjs, pyodide.asm.mjs, pyodide.asm.wasm, python_stdlib.zip, pyodide-lock.json
+
+Aktualisieren: neue Version per "npm pack pyodide" holen und diese fünf Dateien ersetzen.

@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python-Editor · Unterricht</title>
+  <meta name="description" content="Python-Programme im Browser schreiben und ausführen – mit Eingabe und verständlichen Fehlermeldungen.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    /* ---------- Farben der Syntax-Hervorhebung ---------- */
+    :root {
+      --syn-kw: #0f766e; --syn-ty: #6d28d9; --syn-str: #a16207; --syn-num: #c2410c;
+      --syn-com: #7b8a87; --syn-pp: #be185d; --syn-fn: #1d4ed8;
+      --mark-err: rgba(185, 28, 28, .12); --mark-warn: rgba(180, 83, 9, .12);
+      --console-bg: #0f1716; --console-fg: #dfe9e7; --console-muted: #8aa09b;
+      --sel: rgba(15, 118, 110, .22);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --syn-kw: #2dd4bf; --syn-ty: #c4b5fd; --syn-str: #fbbf24; --syn-num: #fb923c;
+        --syn-com: #6b7f7b; --syn-pp: #f472b6; --syn-fn: #93c5fd;
+        --mark-err: rgba(248, 113, 113, .14); --mark-warn: rgba(251, 191, 36, .12);
+        --console-bg: #0a100f; --sel: rgba(45, 212, 191, .25);
+      }
+    }
+    :root[data-theme="dark"] {
+      --syn-kw: #2dd4bf; --syn-ty: #c4b5fd; --syn-str: #fbbf24; --syn-num: #fb923c;
+      --syn-com: #6b7f7b; --syn-pp: #f472b6; --syn-fn: #93c5fd;
+      --mark-err: rgba(248, 113, 113, .14); --mark-warn: rgba(251, 191, 36, .12);
+      --console-bg: #0a100f; --sel: rgba(45, 212, 191, .25);
+    }
+
+    main.ide-main { padding-bottom: 24px; }
+    .ide-wrap { padding-top: 14px; max-width: none; padding-left: 16px; padding-right: 16px; }
+
+    /* ---------- Werkzeugleiste ---------- */
+    .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .bar .spacer { flex: 1; }
+    .fname {
+      display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding-left: 10px; min-width: 0;
+    }
+    .fname:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .fname span { font-family: var(--font-mono); font-size: .8rem; color: var(--accent); }
+    .fname input { border: 0; background: transparent; width: 150px; padding: 8px 10px 8px 6px; box-shadow: none; }
+    .btn-run { min-width: 128px; font-size: .9rem; padding: 9px 16px; }
+    .btn-run.stop { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+    .zoom { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--surface); }
+    .zoom button { border: 0; background: transparent; color: var(--muted); font-family: var(--font-mono); font-size: .8rem; padding: 7px 11px; cursor: pointer; }
+    .zoom button:hover { color: var(--text); background: var(--accent-soft); }
+    .zoom span { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); padding: 7px 4px; }
+
+    /* ---------- Arbeitsbereich ---------- */
+    .ide {
+      display: grid; gap: 14px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    @media (min-width: 960px) {
+      .ide { grid-template-columns: minmax(0, calc(var(--split, 50%) - 7px)) 14px minmax(0, 1fr); gap: 0; height: calc(100vh - 130px); min-height: 460px; }
+    }
+    .splitter { display: none; }
+    @media (min-width: 960px) {
+      .splitter { display: flex; justify-content: center; cursor: col-resize; touch-action: none; outline: none; }
+      .splitter::before { content: ""; width: 4px; height: 48px; margin: auto; border-radius: 4px; background: var(--border); transition: background .15s; }
+      .splitter:hover::before, .splitter:focus-visible::before, .splitter.drag::before { background: var(--accent); height: 80px; }
+      body.splitting { cursor: col-resize; user-select: none; }
+    }
+    .pane {
+      display: flex; flex-direction: column; min-height: 0; min-width: 0;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+    }
+    .pane-head {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: .8rem; color: var(--muted); background: var(--surface-2);
+    }
+    .pane-head b { color: var(--text); font-weight: 600; }
+    .pane-head .grow { flex: 1; }
+    .linkish { border: 0; background: none; font: inherit; color: var(--muted); cursor: pointer; padding: 2px 4px; border-radius: 6px; }
+    .linkish:hover { color: var(--accent); }
+
+    /* ---------- Editor ---------- */
+    .ed-scroll { position: relative; flex: 1; overflow: auto; min-height: 360px; background: var(--surface); }
+    @media (min-width: 960px) { .ed-scroll { min-height: 0; } }
+    .ed-inner { display: grid; grid-template-columns: auto minmax(0, 1fr); min-width: max-content; min-height: 100%; }
+    .gutter {
+      position: sticky; left: 0; z-index: 2; background: var(--surface-2); color: var(--muted);
+      text-align: right; padding: var(--ed-pad) 10px var(--ed-pad) 12px; user-select: none; border-right: 1px solid var(--border);
+    }
+    .gutter div { height: var(--ed-lh); }
+    .gutter .e { color: var(--bad); font-weight: 700; }
+    .gutter .w { color: var(--new); font-weight: 700; }
+    .code { position: relative; min-width: max-content; }
+    .ed, .code pre, .code textarea, .gutter {
+      font-family: var(--font-mono); font-size: var(--ed-fs); line-height: var(--ed-lh); tab-size: 4; -moz-tab-size: 4;
+    }
+    .ide { --ed-fs: 14px; --ed-lh: 22px; --ed-pad: 12px; }
+    .code pre {
+      margin: 0; padding: var(--ed-pad) 24px var(--ed-pad) 14px; white-space: pre; color: var(--text);
+      min-height: 100%; pointer-events: none; position: relative; z-index: 1;
+    }
+    .code textarea {
+      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2;
+      margin: 0; border: 0; outline: none; resize: none; overflow: hidden;
+      padding: var(--ed-pad) 24px var(--ed-pad) 14px; white-space: pre; overflow-wrap: normal;
+      background: transparent; color: transparent; caret-color: var(--text);
+    }
+    .code textarea::selection { background: var(--sel); color: transparent; }
+    .marks { position: absolute; left: 0; right: 0; top: 0; z-index: 0; pointer-events: none; }
+    .marks div { position: absolute; left: 0; right: 0; height: var(--ed-lh); }
+    .marks .e { background: var(--mark-err); }
+    .marks .w { background: var(--mark-warn); }
+    .t-kw { color: var(--syn-kw); font-weight: 600; }
+    .t-ty { color: var(--syn-ty); }
+    .t-str { color: var(--syn-str); }
+    .t-num { color: var(--syn-num); }
+    .t-com { color: var(--syn-com); font-style: italic; }
+    .t-pp { color: var(--syn-pp); }
+    .t-fn { color: var(--syn-fn); }
+    .ed-foot { padding: 6px 12px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: .72rem; color: var(--muted); display: flex; gap: 4px 14px; flex-wrap: wrap; }
+    .ed-foot kbd { font-family: var(--font-mono); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--text); background: var(--surface); }
+
+    /* ---------- Konsole ---------- */
+    .console { background: var(--console-bg); }
+    .console .pane-head { background: rgba(255, 255, 255, .04); border-bottom-color: rgba(255, 255, 255, .08); color: var(--console-muted); }
+    .console .pane-head b { color: var(--console-fg); }
+    .console .linkish { color: var(--console-muted); }
+    .console .linkish:hover { color: #2dd4bf; }
+    .pyver { font-size: .72rem; }
+    .status {
+      font-family: var(--font-mono); font-size: .72rem; border-radius: 999px; padding: 2px 9px;
+      border: 1px solid rgba(255, 255, 255, .15); color: var(--console-muted);
+    }
+    .status.run { color: #2dd4bf; border-color: #2dd4bf; }
+    .status.wait { color: #fbbf24; border-color: #fbbf24; animation: blink 1.2s ease-in-out infinite; }
+    .status.err { color: #f87171; border-color: #f87171; }
+    .status.ok { color: #4ade80; border-color: #4ade80; }
+    @keyframes blink { 50% { opacity: .45; } }
+    .out {
+      flex: 1; overflow: auto; margin: 0; padding: 12px 14px; min-height: 260px;
+      font-family: var(--font-mono); font-size: var(--ed-fs); line-height: 1.5; color: var(--console-fg);
+      white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    @media (min-width: 960px) { .out { min-height: 0; } }
+    .out .o-err { color: #fca5a5; }
+    .out .o-in { color: #2dd4bf; }
+    .out .o-sys { color: var(--console-muted); font-size: .85em; }
+    .out .o-placeholder { color: var(--console-muted); }
+    .diag {
+      display: block; white-space: normal; margin: 8px 0; padding: 7px 10px; border-radius: 8px;
+      border-left: 3px solid var(--console-muted); background: rgba(255, 255, 255, .05); cursor: pointer; font-size: .9em;
+    }
+    .diag:hover { background: rgba(255, 255, 255, .09); }
+    .diag .d-pos { color: var(--console-muted); }
+    .diag .d-sev { font-weight: 700; }
+    .diag .d-hint { display: block; color: var(--console-muted); margin-top: 3px; }
+    .diag.error { border-left-color: #f87171; } .diag.error .d-sev { color: #f87171; }
+    .in-row {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid rgba(255, 255, 255, .08);
+      font-family: var(--font-mono); color: var(--console-muted);
+    }
+    .in-row input {
+      flex: 1; min-width: 0; font: inherit; font-size: var(--ed-fs); color: var(--console-fg); background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .12); border-radius: 8px; padding: 7px 10px;
+    }
+    .in-row input:focus { outline: none; border-color: #2dd4bf; box-shadow: 0 0 0 3px rgba(45, 212, 191, .2); }
+    .in-row.wait input { border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251, 191, 36, .2); }
+    .in-row input:disabled { opacity: .45; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+      transition: opacity .18s, transform .18s; background: #142120; color: #e4eeec; font: .82rem/1.4 var(--font-mono);
+      padding: 9px 14px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0, 0, 0, .2); z-index: 50; max-width: calc(100% - 32px);
+    }
+    .toast::before { content: "> "; color: #2dd4bf; }
+    .toast.on { opacity: 1; transform: translate(-50%, 0); }
+    @media (prefers-reduced-motion: reduce) { .toast { transition: none; } .status.wait { animation: none; } }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">python-editor</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+  </header>
+
+  <main class="ide-main">
+    <div class="container ide-wrap">
+      <div class="bar">
+        <button class="btn btn-run" id="runBtn" type="button" title="Strg + Enter">▶ Ausführen</button>
+        <label class="fname" title="Dateiname">
+          <span>datei</span>
+          <input class="inp" id="fileName" value="programm.py" spellcheck="false" autocomplete="off" aria-label="Dateiname">
+        </label>
+        <button class="btn btn-ghost" id="newBtn" type="button" title="Leeres Programm (Strg+Z holt den alten Code zurück)">Neu</button>
+        <button class="btn btn-ghost" id="openBtn" type="button" title=".py-Datei öffnen">Öffnen</button>
+        <button class="btn btn-ghost" id="saveBtn" type="button" title="Als .py-Datei herunterladen (Strg + S)">Speichern</button>
+        <input type="file" id="fileIn" accept=".py,.txt,text/plain,text/x-python" hidden>
+        <span class="spacer"></span>
+        <span class="zoom" role="group" aria-label="Schriftgröße">
+          <button type="button" id="fsDown" aria-label="Schrift kleiner">A−</button>
+          <span id="fsVal">14</span>
+          <button type="button" id="fsUp" aria-label="Schrift größer">A+</button>
+        </span>
+      </div>
+
+      <div class="ide" id="ide">
+        <section class="pane" aria-label="Quelltext">
+          <div class="pane-head"><b># quelltext</b><span class="grow"></span><span id="caretPos">Z 1, S 1</span></div>
+          <div class="ed-scroll" id="edScroll">
+            <div class="ed-inner">
+              <div class="gutter" id="gutter" aria-hidden="true"></div>
+              <div class="code">
+                <div class="marks" id="marks" aria-hidden="true"></div>
+                <pre id="hl" aria-hidden="true"></pre>
+                <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="Python-Quelltext"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="ed-foot">
+            <span><kbd>Strg</kbd>+<kbd>Enter</kbd> ausführen</span>
+            <span><kbd>Strg</kbd>+<kbd>S</kbd> speichern</span>
+            <span><kbd>Tab</kbd> / <kbd>⇧</kbd>+<kbd>Tab</kbd> einrücken</span>
+            <span><kbd>Strg</kbd>+<kbd>#</kbd> Kommentar</span>
+            <span><kbd>Esc</kbd> stoppen</span>
+          </div>
+        </section>
+
+        <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="Breite von Quelltext und Konsole" tabindex="0" title="Ziehen zum Anpassen, Doppelklick = 50/50"></div>
+
+        <section class="pane console" aria-label="Konsole">
+          <div class="pane-head"><b># konsole</b><span class="status" id="status">lädt …</span><span class="grow"></span><span class="pyver" id="pyVer"></span><button class="linkish" id="clearBtn" type="button">leeren</button></div>
+          <pre class="out" id="out" role="log" aria-live="polite"><span class="o-placeholder">Python wird geladen … (beim ersten Mal ca. 13 MB, danach aus dem Browser-Cache)</span></pre>
+          <form class="in-row" id="inForm" autocomplete="off">
+            <span>&gt;</span>
+            <input id="inLine" disabled placeholder="Eingabe für input(), dann Enter" spellcheck="false" aria-label="Eingabe für das Programm">
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/app.js"></script>
+  <script src="js/pyhints.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var $ = function (id) { return document.getElementById(id); };
+    var ta = $("src"), hl = $("hl"), gutter = $("gutter"), marks = $("marks"), scroller = $("edScroll");
+    var out = $("out"), statusEl = $("status"), runBtn = $("runBtn"), inForm = $("inForm"), inLine = $("inLine");
+    var fileName = $("fileName");
+    var STORE = "py-editor";
+    var TEMPLATE = "print(\"Hallo Welt!\")\n";
+
+    /* ---------- Hilfen ---------- */
+    function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    var toastT;
+    function toast(msg) { var t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("on"); }, 2400); }
+    function load(key, def) { try { var v = localStorage.getItem(STORE + "." + key); return v === null ? def : v; } catch (e) { return def; } }
+    function save(key, v) { try { localStorage.setItem(STORE + "." + key, v); } catch (e) {} }
+    function words(s) { var o = {}; s.split(" ").forEach(function (w) { o[w] = true; }); return o; }
+
+    /* ---------- Syntax-Hervorhebung ---------- */
+    var KW = words("and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case");
+    var CONST = words("True False None");
+    var BUILTIN = words("print input int float str bool len range list dict set tuple abs min max sum round sorted reversed enumerate zip map filter open type isinstance ord chr hex bin oct pow divmod any all iter next format repr id hash help super object Exception ValueError TypeError ZeroDivisionError IndexError KeyError NameError self");
+    var TOK = new RegExp([
+      "(#[^\\n]*)",                                                                     // 1 Kommentar
+      "((?:\\b[rRbBuUfF]{1,2})?(?:\"\"\"[\\s\\S]*?(?:\"\"\"|$)|'''[\\s\\S]*?(?:'''|$)))", // 2 Mehrzeiliger String
+      "((?:\\b[rRbBuUfF]{1,2})?(?:\"(?:[^\"\\\\\\n]|\\\\.)*\"?|'(?:[^'\\\\\\n]|\\\\.)*'?))", // 3 String
+      "(@[A-Za-z_][\\w.]*)",                                                            // 4 Dekorator
+      "(\\b(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|\\d[\\d_]*\\.?[\\d_]*(?:[eE][+-]?\\d+)?j?|\\.\\d+(?:[eE][+-]?\\d+)?j?)\\b)", // 5 Zahl
+      "([A-Za-z_]\\w*)"                                                                 // 6 Name
+    ].join("|"), "g");
+    function highlight(code) {
+      var html = "", last = 0, m, prevWord = "";
+      TOK.lastIndex = 0;
+      while ((m = TOK.exec(code))) {
+        html += esc(code.slice(last, m.index));
+        var t = m[0], cls = null;
+        if (m[1]) cls = "t-com";
+        else if (m[2] || m[3]) cls = "t-str";
+        else if (m[4]) cls = "t-pp";
+        else if (m[5]) cls = "t-num";
+        else if (m[6]) {
+          if (KW[t]) cls = "t-kw";
+          else if (CONST[t]) cls = "t-num";
+          else if (prevWord === "def" || prevWord === "class") cls = "t-fn";
+          else if (BUILTIN[t]) cls = "t-ty";
+          else if (/^\s*\(/.test(code.slice(m.index + t.length, m.index + t.length + 20))) cls = "t-fn";
+          prevWord = t;
+        }
+        if (!m[6]) prevWord = "";
+        if (cls) html += t.split("\n").map(function (p) { return p ? '<span class="' + cls + '">' + esc(p) + "</span>" : ""; }).join("\n");
+        else html += esc(t);
+        last = m.index + t.length;
+      }
+      html += esc(code.slice(last));
+      return html;
+    }
+
+    /* ---------- Editor ---------- */
+    var lineCount = 0, diagMarks = [];
+    function lineHeight() { return parseFloat(getComputedStyle($("ide")).getPropertyValue("--ed-lh")) || 22; }
+    function pad() { return parseFloat(getComputedStyle($("ide")).getPropertyValue("--ed-pad")) || 12; }
+    function render() {
+      var code = ta.value;
+      hl.innerHTML = highlight(code) + "\n ";
+      var n = code.split("\n").length;
+      if (n !== lineCount) {
+        var g = "";
+        for (var i = 1; i <= n; i++) g += '<div data-l="' + i + '">' + i + "</div>";
+        gutter.innerHTML = g;
+        lineCount = n;
+        paintMarks();
+      }
+    }
+    function paintMarks() {
+      var lh = lineHeight(), p = pad(), html = "";
+      gutter.querySelectorAll(".e,.w").forEach(function (d) { d.className = ""; });
+      diagMarks.forEach(function (mk) {
+        if (mk.line < 1 || mk.line > lineCount) return;
+        html += '<div class="' + mk.cls + '" style="top:' + (p + (mk.line - 1) * lh) + 'px"></div>';
+        var gd = gutter.children[mk.line - 1];
+        if (gd && gd.className !== "e") gd.className = mk.cls;
+      });
+      marks.innerHTML = html;
+    }
+    function setMarks(list) { diagMarks = list; paintMarks(); }
+
+    function caretInfo() {
+      var pos = ta.selectionStart, before = ta.value.slice(0, pos);
+      return { line: before.split("\n").length, col: pos - before.lastIndexOf("\n") };
+    }
+    function updateCaret() {
+      var c = caretInfo();
+      $("caretPos").textContent = "Z " + c.line + ", S " + c.col;
+      ensureVisible(c.line, c.col);
+    }
+    var charW = 0;
+    function measureChar() {
+      var s = document.createElement("span");
+      s.style.cssText = "position:absolute;visibility:hidden;white-space:pre;font-family:var(--font-mono);font-size:" + getComputedStyle(ta).fontSize;
+      s.textContent = "0000000000";
+      document.body.appendChild(s); charW = s.getBoundingClientRect().width / 10; s.remove();
+    }
+    function ensureVisible(line, col) {
+      var lh = lineHeight(), p = pad();
+      var y = p + (line - 1) * lh, top = scroller.scrollTop, h = scroller.clientHeight;
+      if (y < top) scroller.scrollTop = y - 4;
+      else if (y + lh > top + h) scroller.scrollTop = y + lh - h + 4;
+      if (!charW) measureChar();
+      var gw = gutter.offsetWidth;
+      var lineText = ta.value.split("\n")[line - 1] || "";
+      var vis = lineText.slice(0, col - 1).replace(/\t/g, "    ").length;
+      var x = gw + 14 + vis * charW, left = scroller.scrollLeft, w = scroller.clientWidth;
+      if (x < left + gw + 10) scroller.scrollLeft = Math.max(0, x - gw - 30);
+      else if (x > left + w - 30) scroller.scrollLeft = x - w + 60;
+    }
+    function goTo(line, col) {
+      var lines = ta.value.split("\n"), pos = 0;
+      line = Math.max(1, Math.min(line, lines.length));
+      for (var i = 0; i < line - 1; i++) pos += lines[i].length + 1;
+      pos += Math.max(0, Math.min((col || 1) - 1, lines[line - 1].length));
+      ta.focus({ preventScroll: true });
+      ta.setSelectionRange(pos, pos);
+      updateCaret();
+    }
+
+    // Text einfügen, sodass Strg+Z funktioniert
+    function insertText(text) {
+      ta.focus();
+      var ok = false;
+      try { ok = document.execCommand("insertText", false, text); } catch (e) { ok = false; }
+      if (!ok) { ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, "end"); onEdit(); }
+    }
+    function replaceRange(start, end, text, selStart, selEnd) {
+      ta.setSelectionRange(start, end);
+      insertText(text);
+      if (selStart != null) ta.setSelectionRange(selStart, selEnd);
+    }
+
+    var saveT;
+    function onEdit() {
+      render();
+      if (diagMarks.length) setMarks([]);
+      clearTimeout(saveT);
+      saveT = setTimeout(function () { save("code", ta.value); }, 400);
+      updateCaret();
+    }
+    ta.addEventListener("input", onEdit);
+    ta.addEventListener("keyup", function (e) { if (e.key.indexOf("Arrow") === 0 || e.key === "Home" || e.key === "End" || e.key === "PageUp" || e.key === "PageDown") updateCaret(); });
+    ta.addEventListener("click", updateCaret);
+
+    // Codezeile ohne Kommentar am Ende (grob, Strings mit # werden geschützt)
+    function codePart(line) {
+      return line.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|#.*$/g, function (m, str) { return str || ""; }).replace(/\s+$/, "");
+    }
+
+    ta.addEventListener("keydown", function (e) {
+      var v = ta.value, s = ta.selectionStart, en = ta.selectionEnd;
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) { e.preventDefault(); download(); return; }
+      if ((e.ctrlKey || e.metaKey) && !e.altKey &&
+          (e.key === "/" || e.key === "#" || e.code === "NumpadDivide" || (e.code === "Digit7" && e.shiftKey))) {
+        e.preventDefault(); toggleComment(); return;
+      }
+      if (e.key === "Tab") {
+        e.preventDefault();
+        var ls = v.lastIndexOf("\n", s - 1) + 1;
+        if (s === en && !e.shiftKey) { insertText("    "); return; }
+        var le = v.indexOf("\n", en - (en > s && v[en - 1] === "\n" ? 1 : 0)); if (le < 0) le = v.length;
+        var block = v.slice(ls, le).split("\n");
+        var changed = block.map(function (l) {
+          if (e.shiftKey) return l.replace(/^( {1,4}|\t)/, "");
+          return "    " + l;
+        }).join("\n");
+        replaceRange(ls, le, changed, ls, ls + changed.length);
+        return;
+      }
+      if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        var ls2 = v.lastIndexOf("\n", s - 1) + 1;
+        var line = v.slice(ls2, s);
+        var ind = (/^[ \t]*/.exec(line) || [""])[0];
+        var code = codePart(line).trim();
+        if (/:$/.test(code)) ind += "    ";
+        else if (/^(return|pass|break|continue|raise)\b/.test(code)) ind = ind.slice(0, Math.max(0, ind.length - 4));
+        insertText("\n" + ind);
+        return;
+      }
+      if (e.key === "Backspace" && s === en && s > 0) {
+        var ls4 = v.lastIndexOf("\n", s - 1) + 1, pre = v.slice(ls4, s);
+        if (/^ +$/.test(pre)) {
+          e.preventDefault();
+          var keep = Math.floor((pre.length - 1) / 4) * 4;
+          replaceRange(ls4 + keep, s, "");
+          return;
+        }
+      }
+    });
+    function toggleComment() {
+      var v = ta.value, s = ta.selectionStart, en = ta.selectionEnd;
+      var ls = v.lastIndexOf("\n", s - 1) + 1, le = v.indexOf("\n", Math.max(en - 1, s)); if (le < 0) le = v.length;
+      var lines = v.slice(ls, le).split("\n");
+      var all = lines.filter(function (l) { return l.trim(); }).every(function (l) { return /^\s*#/.test(l); });
+      var res = lines.map(function (l) { if (!l.trim()) return l; return all ? l.replace(/^(\s*)# ?/, "$1") : l.replace(/^(\s*)/, "$1# "); }).join("\n");
+      replaceRange(ls, le, res, ls, ls + res.length);
+    }
+
+    /* ---------- Schriftgröße ---------- */
+    var fs = parseInt(load("fs", "14"), 10) || 14;
+    function applyFs() {
+      fs = Math.max(11, Math.min(26, fs));
+      $("ide").style.setProperty("--ed-fs", fs + "px");
+      $("ide").style.setProperty("--ed-lh", Math.round(fs * 1.57) + "px");
+      $("fsVal").textContent = fs;
+      charW = 0; save("fs", String(fs)); paintMarks();
+    }
+    $("fsDown").addEventListener("click", function () { fs--; applyFs(); });
+    $("fsUp").addEventListener("click", function () { fs++; applyFs(); });
+
+    /* ---------- Dateien ---------- */
+    function cleanName() {
+      var n = fileName.value.trim().replace(/[\\/:*?"<>|]+/g, "-") || "programm.py";
+      if (!/\.py$/i.test(n)) n += ".py";
+      return n;
+    }
+    function download() {
+      var blob = new Blob([ta.value], { type: "text/x-python;charset=utf-8" });
+      var url = URL.createObjectURL(blob), a = document.createElement("a");
+      a.href = url; a.download = cleanName();
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+      toast(cleanName() + " gespeichert");
+    }
+    $("saveBtn").addEventListener("click", download);
+    $("openBtn").addEventListener("click", function () { $("fileIn").click(); });
+    $("fileIn").addEventListener("change", function (e) {
+      var f = e.target.files && e.target.files[0]; if (!f) return;
+      var rd = new FileReader();
+      rd.onload = function () {
+        ta.focus(); ta.select();
+        insertText(String(rd.result).replace(/\r\n?/g, "\n").replace(/\t/g, "    "));
+        fileName.value = f.name; save("name", f.name);
+        goTo(1, 1); scroller.scrollTop = 0; scroller.scrollLeft = 0;
+        toast(f.name + " geöffnet");
+      };
+      rd.readAsText(f, "utf-8");
+      e.target.value = "";
+    });
+    $("newBtn").addEventListener("click", function () {
+      ta.focus(); ta.select(); insertText(TEMPLATE);
+      fileName.value = "programm.py"; save("name", "programm.py");
+      goTo(2, 1);
+      toast("Neues Programm – Strg+Z holt den alten Code zurück");
+    });
+    fileName.addEventListener("change", function () { fileName.value = cleanName(); save("name", fileName.value); });
+
+    /* ---------- Konsole ---------- */
+    var placeholder = true, outLen = 0, MAXOUT = 400000;
+    function clearOut() { out.innerHTML = ""; placeholder = false; outLen = 0; }
+    function showPlaceholder(text) { out.innerHTML = '<span class="o-placeholder">' + esc(text) + "</span>"; placeholder = true; outLen = 0; }
+    function addSpan(text, cls) {
+      if (placeholder) clearOut();
+      var last = out.lastChild;
+      if (last && last.nodeType === 1 && last.className === (cls || "o-out") && last.tagName === "SPAN") last.appendChild(document.createTextNode(text));
+      else { var s = document.createElement("span"); s.className = cls || "o-out"; s.textContent = text; out.appendChild(s); }
+      outLen += text.length;
+      if (outLen > MAXOUT) trimOut();
+      out.scrollTop = out.scrollHeight;
+    }
+    function trimOut() {
+      while (outLen > MAXOUT * 0.7 && out.firstChild) { outLen -= (out.firstChild.textContent || "").length; out.removeChild(out.firstChild); }
+      var note = document.createElement("span"); note.className = "o-sys"; note.textContent = "… (ältere Ausgabe gekürzt)\n";
+      out.insertBefore(note, out.firstChild);
+    }
+    function nl() { var t = out.textContent; return t && t.slice(-1) !== "\n" ? "\n" : ""; }
+    function addDiag(err) {
+      if (placeholder) clearOut();
+      var info = PyHints.erklaere(err.type, err.msg);
+      var sev = err.kind === "syntax" ? (err.type === "SyntaxError" ? "Syntaxfehler" : "Einrückungsfehler") : "Laufzeitfehler";
+      var el = document.createElement("span");
+      el.className = "diag error";
+      var pos = err.line ? cleanName() + ":" + err.line + ": " : "";
+      el.innerHTML = '<span class="d-pos">' + esc(pos) + '</span><span class="d-sev">' + sev + ':</span> ' + esc(info.de) +
+        (info.tipp ? '<span class="d-hint">Tipp: ' + esc(info.tipp) + "</span>" : "");
+      if (err.line) {
+        el.setAttribute("role", "button"); el.tabIndex = 0; el.title = "Zur Zeile " + err.line + " springen";
+        var go = function () { goTo(err.line, err.col); };
+        el.addEventListener("click", go);
+        el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+      }
+      out.appendChild(el);
+      out.scrollTop = out.scrollHeight;
+    }
+    function setStatus(text, cls) { statusEl.textContent = text; statusEl.className = "status" + (cls ? " " + cls : ""); }
+    $("clearBtn").addEventListener("click", function () { clearOut(); });
+
+    /* ---------- Python-Worker ---------- */
+    var worker = null, ready = false, running = false, pendingRun = false, canInput = false, hintShown = false;
+    var sab = null, ctrl = null, data = null, intr = null, stopT = null, startT = 0, tickT = null;
+    var enc = new TextEncoder();
+
+    function startWorker(isolated) {
+      ready = false;
+      if (isolated && typeof SharedArrayBuffer === "function") {
+        sab = new SharedArrayBuffer(16 + 65536);
+        ctrl = new Int32Array(sab, 0, 4);
+        data = new Uint8Array(sab, 16);
+        var isab = new SharedArrayBuffer(4);
+        intr = new Uint8Array(isab);
+      }
+      try {
+        // Start über eine Blob-URL: So erbt der Worker die Isolation der Seite
+        // (eine direkte URL läge außerhalb des Service-Worker-Bereichs).
+        var src = new URL("js/pyworker.js", location.href).href;
+        var boot = URL.createObjectURL(new Blob(["import " + JSON.stringify(src) + ";"], { type: "text/javascript" }));
+        worker = new Worker(boot, { type: "module" });
+      } catch (e) {
+        loadFailed(String(e.message || e)); return;
+      }
+      worker.onmessage = onWorker;
+      worker.onerror = function (e) { if (!ready) loadFailed(e.message || "Worker-Fehler"); };
+      worker.postMessage({ t: "init", sab: sab, intr: intr ? intr.buffer : null });
+    }
+    function loadFailed(msg) {
+      setStatus("Fehler", "err");
+      clearOut();
+      addSpan("Python konnte nicht geladen werden.\n" + msg + "\n", "o-err");
+      if (location.protocol === "file:") addSpan("Hinweis: Die Seite muss über einen Webserver laufen (z. B. GitHub Pages), nicht als lokale Datei.\n", "o-sys");
+    }
+    function restartWorker() {
+      if (worker) worker.terminate();
+      worker = null;
+      setStatus("startet neu …", "wait");
+      startWorker(!!ctrl);
+    }
+
+    function onWorker(ev) {
+      var m = ev.data;
+      if (m.t === "ready") {
+        ready = true; canInput = m.input;
+        $("pyVer").textContent = "Python " + m.python;
+        if (!running) setStatus("bereit", "");
+        if (placeholder) showPlaceholder("Ausgabe erscheint hier. Programm mit ▶ Ausführen starten.");
+        if (!canInput && !hintShown) { hintShown = true; addSpan("Hinweis: In diesem Browserfenster funktioniert input() nicht (z. B. im privaten Modus). Programme ohne Eingabe laufen normal.\n", "o-sys"); }
+        if (pendingRun) { pendingRun = false; run(); }
+      } else if (m.t === "loaderror") {
+        loadFailed(m.msg);
+      } else if (m.t === "out") {
+        addSpan(m.s, m.stream === "err" ? "o-err" : "o-out");
+      } else if (m.t === "input") {
+        setStatus("wartet auf Eingabe", "wait");
+        inForm.classList.add("wait");
+        inLine.focus({ preventScroll: true });
+      } else if (m.t === "done") {
+        finish(m.res);
+      } else if (m.t === "fatal") {
+        finish({ fatal: m.msg });
+        restartWorker();
+      }
+    }
+
+    /* ---------- Ausführen ---------- */
+    function setRunning(on) {
+      running = on;
+      runBtn.textContent = on ? "■ Stopp" : "▶ Ausführen";
+      runBtn.classList.toggle("stop", on);
+      inLine.disabled = !on || !canInput;
+      if (!on) { inForm.classList.remove("wait"); clearInterval(tickT); clearTimeout(stopT); }
+    }
+    function run() {
+      if (running) { stop(); return; }
+      clearOut();
+      setMarks([]);
+      if (!ready) {
+        pendingRun = true;
+        setStatus("lädt …", "wait");
+        addSpan("Python wird noch geladen – das Programm startet automatisch.\n", "o-sys");
+        return;
+      }
+      startT = Date.now();
+      setStatus("läuft", "run");
+      setRunning(true);
+      tickT = setInterval(function () {
+        if (running && !inForm.classList.contains("wait")) { var s = Math.round((Date.now() - startT) / 1000); if (s >= 2) setStatus("läuft " + s + " s", "run"); }
+      }, 500);
+      inLine.value = "";
+      if (canInput) inLine.focus({ preventScroll: true });
+      worker.postMessage({ t: "run", src: ta.value, fname: cleanName() });
+    }
+    function finish(res) {
+      setRunning(false);
+      if (res.fatal) {
+        addSpan(nl() + "Der Python-Interpreter ist abgestürzt (" + res.fatal + ").\n", "o-err");
+        addSpan("Oft steckt eine zu tiefe Rekursion dahinter. Python wird neu gestartet.\n", "o-sys");
+        setStatus("abgestürzt", "err");
+      } else if (res.stopped) {
+        addSpan(nl() + "— Programm gestoppt —\n", "o-sys");
+        setStatus("gestoppt", "");
+      } else if (res.error) {
+        var err = res.error;
+        addSpan(nl() + err.text, "o-err");
+        addDiag(err);
+        if (err.line) { setMarks([{ line: err.line, cls: "e" }]); goTo(err.line, err.col); }
+        setStatus(err.kind === "syntax" ? "Syntaxfehler" : "Laufzeitfehler", "err");
+      } else {
+        addSpan(nl() + "— Programm beendet" + (res.code ? " mit Code " + res.code : "") + (res.waited ? "" : " · " + res.ms + " ms") + " —\n", "o-sys");
+        setStatus(res.code ? "beendet (" + res.code + ")" : "beendet", res.code ? "err" : "ok");
+      }
+    }
+    function stop() {
+      if (!running) return;
+      if (!ctrl) { hardStop(); return; }
+      intr[0] = 2;                       // KeyboardInterrupt auslösen
+      Atomics.store(ctrl, 0, 3);         // wartende input()/sleep() aufwecken
+      Atomics.notify(ctrl, 0);
+      clearTimeout(stopT);
+      stopT = setTimeout(hardStop, 1500); // reagiert Python nicht: Worker neu starten
+    }
+    function hardStop() {
+      if (!running) return;
+      finish({ stopped: true });
+      restartWorker();
+    }
+    runBtn.addEventListener("click", run);
+    inForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!running || !ctrl || !inForm.classList.contains("wait")) return;
+      var line = inLine.value;
+      inLine.value = "";
+      addSpan(line + "\n", "o-in");
+      inForm.classList.remove("wait");
+      setStatus("läuft", "run");
+      var bytes = enc.encode(line);
+      if (bytes.length > data.length) bytes = bytes.slice(0, data.length);
+      data.set(bytes);
+      Atomics.store(ctrl, 1, bytes.length);
+      Atomics.store(ctrl, 0, 1);
+      Atomics.notify(ctrl, 0);
+    });
+    inLine.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && running) stop();
+    });
+
+    /* ---------- Trenner Quelltext | Konsole ---------- */
+    var ide = $("ide"), splitter = $("splitter");
+    function setSplit(pct) {
+      pct = Math.min(80, Math.max(20, Math.round(pct)));
+      ide.style.setProperty("--split", pct + "%");
+      splitter.setAttribute("aria-valuenow", pct);
+      save("split", String(pct));
+      charW = 0; paintMarks();
+    }
+    splitter.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      splitter.setPointerCapture(e.pointerId);
+      splitter.classList.add("drag"); document.body.classList.add("splitting");
+    });
+    splitter.addEventListener("pointermove", function (e) {
+      if (!splitter.hasPointerCapture(e.pointerId)) return;
+      var r = ide.getBoundingClientRect();
+      setSplit((e.clientX - r.left) / r.width * 100);
+    });
+    function endDrag() { splitter.classList.remove("drag"); document.body.classList.remove("splitting"); }
+    splitter.addEventListener("pointerup", endDrag);
+    splitter.addEventListener("pointercancel", endDrag);
+    splitter.addEventListener("dblclick", function () { setSplit(50); });
+    splitter.addEventListener("keydown", function (e) {
+      var v = parseFloat(load("split", "50"));
+      if (e.key === "ArrowLeft") { e.preventDefault(); setSplit(v - 2); }
+      if (e.key === "ArrowRight") { e.preventDefault(); setSplit(v + 2); }
+    });
+    setSplit(parseFloat(load("split", "50")));
+
+    /* ---------- Cross-Origin-Isolation (für input) ----------
+       GitHub Pages setzt keine COOP/COEP-Header. coi-sw.js ergänzt sie;
+       beim allerersten Besuch lädt die Seite dafür einmal neu. */
+    function isolate(cb) {
+      var KEY = "py-editor.coi-reload", done = false;
+      function finishWith(ok) { if (!done) { done = true; cb(ok); } }
+      if (window.crossOriginIsolated) { try { sessionStorage.removeItem(KEY); } catch (e) {} finishWith(true); return; }
+      var tried = false;
+      try { tried = sessionStorage.getItem(KEY) === "1"; } catch (e) {}
+      if (tried || !window.isSecureContext || !("serviceWorker" in navigator)) { finishWith(false); return; }
+      function reloadOnce() {
+        if (done) return; done = true;
+        try { sessionStorage.setItem(KEY, "1"); } catch (e) {}
+        location.reload();
+      }
+      navigator.serviceWorker.register("coi-sw.js", { scope: "./python-editor.html" }).then(function (reg) {
+        if (navigator.serviceWorker.controller) { finishWith(false); return; }
+        if (reg.active && !reg.installing && !reg.waiting) { reloadOnce(); return; }
+        navigator.serviceWorker.addEventListener("controllerchange", reloadOnce);
+      }).catch(function () { finishWith(false); });
+      setTimeout(function () { finishWith(false); }, 5000);
+    }
+
+    /* ---------- Start ---------- */
+    ta.value = load("code", TEMPLATE);
+    fileName.value = load("name", "programm.py");
+    applyFs();
+    render();
+    updateCaret();
+    window.addEventListener("resize", function () { charW = 0; paintMarks(); });
+    isolate(startWorker);
+  })();
+  </script>
+</body>
+</html>
