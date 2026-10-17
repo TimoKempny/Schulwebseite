@@ -62,6 +62,14 @@ const EINTRAEGE = [
     neu: true
   },
   {
+    typ: "tool",
+    titel: "IPv4 & Subnetze",
+    beschreibung: "IP-Adressen, Subnetzmasken und Subnetting verstehen und üben",
+    url: "ipv4.html",
+    fach: "Kom1",
+    neu: true
+  },
+  {
     typ: "link",
     titel: "Moodle",
     beschreibung: "Kursräume, Aufgaben und Tests.",

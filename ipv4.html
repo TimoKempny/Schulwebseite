@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IPv4 &amp; Subnetze · Unterricht</title>
+  <meta name="description" content="IPv4-Adressen, Subnetzmasken, CIDR und Subnetting Schritt für Schritt verstehen und mit Zufallsaufgaben üben.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    /* ---------- Farben für Host- und Subnetzbits ---------- */
+    :root { --host: #b45309; --host-soft: #fbeedd; --sub: #6d28d9; --sub-soft: #ede9fe; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) { --host: #fbbf24; --host-soft: rgba(251, 191, 36, .14); --sub: #c4b5fd; --sub-soft: rgba(196, 181, 253, .16); }
+    }
+    :root[data-theme="dark"] { --host: #fbbf24; --host-soft: rgba(251, 191, 36, .14); --sub: #c4b5fd; --sub-soft: rgba(196, 181, 253, .16); }
+
+    /* ---------- Seitenaufbau ---------- */
+    .bn-section { margin-top: 36px; scroll-margin-top: 80px; }
+    .stack { display: grid; gap: 16px; }
+    .panel p { margin: 0; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    code {
+      font-family: var(--font-mono); font-size: .9em;
+      background: var(--surface-2); padding: 1px 6px; border-radius: 5px; white-space: nowrap;
+    }
+    .two { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 860px) { .two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+    .idee { display: grid; gap: 12px; align-content: start; }
+    .muted { color: var(--muted); }
+    .small { font-size: .88rem; }
+    .net-t { color: var(--accent); font-weight: 700; }
+    .host-t { color: var(--host); font-weight: 700; }
+    .sub-t { color: var(--sub); font-weight: 700; }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--font-mono); font-size: .75rem; color: var(--muted); }
+    .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+    .legend .ln { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+    .legend .lh { background: var(--host-soft); box-shadow: inset 0 0 0 1px var(--host); }
+    .legend .ls { background: var(--sub-soft); box-shadow: inset 0 0 0 1px var(--sub); }
+
+    .mtable { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: .85rem; }
+    .mtable th { text-align: left; font-size: .72rem; font-weight: 600; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    .mtable td { padding: 6px 8px; border-bottom: 1px dashed var(--border); }
+    .mtable td b { color: var(--accent); }
+    .mtable tr.dim td { color: var(--muted); }
+    .tscroll { overflow-x: auto; }
+    .deflist { display: grid; gap: 8px; }
+    .def { display: grid; grid-template-columns: 150px 1fr; gap: 4px 12px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+    .def b { font-family: var(--font-mono); font-size: .85rem; color: var(--accent); }
+    .def span { font-size: .92rem; }
+    @media (max-width: 520px) { .def { grid-template-columns: 1fr; } }
+
+    /* ---------- Bitzeilen ---------- */
+    .brows { display: grid; gap: 10px; }
+    .brow { display: grid; grid-template-columns: 84px auto 1fr; align-items: center; gap: 6px 14px; }
+    .brow.new { animation: slideIn .4s ease both; }
+    .blabel { font-family: var(--font-mono); font-size: .78rem; color: var(--muted); }
+    .octs { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+    .oct { display: flex; gap: 2px; }
+    .bt {
+      position: relative; display: inline-grid; place-items: center;
+      width: 17px; height: 24px; border-radius: 4px;
+      font: 600 .8rem/1 var(--font-mono); font-style: normal;
+      color: var(--muted); background: var(--surface); border: 1px solid var(--border);
+    }
+    .bt.one { color: var(--text); }
+    .bt.n { background: var(--accent-soft); border-color: transparent; }
+    .bt.n.one { color: var(--accent); }
+    .bt.h { background: var(--host-soft); border-color: transparent; }
+    .bt.h.one { color: var(--host); }
+    .bt.s { background: var(--sub-soft); border-color: transparent; }
+    .bt.s.one { color: var(--sub); }
+    .bt.cut::before { content: ""; position: absolute; left: -3px; top: -6px; bottom: -6px; width: 2px; border-radius: 2px; background: var(--text); }
+    .bdec { font: 700 1.02rem var(--font-mono); }
+    .bdec small { font-weight: 400; color: var(--muted); }
+    @media (max-width: 640px) {
+      .brow { grid-template-columns: 1fr; gap: 4px; }
+      .bt { width: 15px; height: 22px; font-size: .72rem; }
+      .numbox, #ipInp { min-width: 0; }
+      #ipInp { width: 150px; }
+      .octs { gap: 4px 8px; }
+    }
+
+    /* ---------- Oktett-Kästchen (Schnellweg) ---------- */
+    .obrows { display: grid; gap: 10px; }
+    .obrow { display: grid; grid-template-columns: 84px 1fr; align-items: center; gap: 4px 14px; }
+    .obrow.new { animation: slideIn .4s ease both; }
+    .oboxes { display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); flex-wrap: wrap; }
+    .ob {
+      min-width: 58px; height: 40px; padding: 0 6px; display: grid; place-items: center;
+      border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+      font-weight: 700; font-size: 1.1rem;
+    }
+    .ob.n { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+    .ob.h { background: var(--host-soft); color: var(--host); border-color: transparent; }
+    .ob.i { border: 2px solid var(--accent); background: var(--surface); color: var(--text); }
+    .oboxes .dot { color: var(--muted); font-weight: 700; }
+    @media (max-width: 640px) { .obrow { grid-template-columns: 1fr; } .ob { min-width: 48px; height: 36px; font-size: 1rem; } }
+
+    .nline-wrap { display: grid; gap: 6px; }
+    .nline { display: flex; gap: 2px; width: 100%; max-width: 660px; }
+    .seg {
+      flex: 1 1 0; min-width: 0; height: 36px; border-radius: 4px;
+      background: var(--surface-2); color: var(--muted);
+      display: flex; align-items: flex-end; padding: 2px 4px;
+      font: .7rem var(--font-mono); overflow: hidden;
+    }
+    .seg.on { background: var(--accent); color: var(--on-accent); font-weight: 700; animation: pop .4s ease both; }
+    .nell { flex: 0 0 auto; align-self: center; color: var(--muted); font-family: var(--font-mono); padding: 0 4px; }
+    .nlabel { font-family: var(--font-mono); font-size: .85rem; color: var(--muted); }
+    .nlabel b { color: var(--accent); }
+
+    /* ---------- Ergebniskacheln ---------- */
+    .facts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); animation: slideIn .4s ease both; }
+    .fact { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; display: grid; gap: 2px; }
+    .fact span { font-size: .72rem; color: var(--muted); font-family: var(--font-mono); }
+    .fact b { font: 700 1.02rem var(--font-mono); word-break: break-all; }
+    .fact.key { border-color: var(--accent); }
+    .fact.key b { color: var(--accent); }
+    @media (max-width: 520px) { .facts { grid-template-columns: 1fr 1fr; } .fact { padding: 7px 9px; } .fact b { font-size: .86rem; } }
+
+    .stbl { border-collapse: collapse; font-family: var(--font-mono); font-size: .88rem; min-width: 560px; }
+    .stbl th { text-align: left; font-size: .72rem; color: var(--muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+    .stbl td { padding: 6px 10px; border-bottom: 1px dashed var(--border); }
+    .stbl td:nth-child(2) { color: var(--accent); font-weight: 700; }
+    .stbl tr { animation: slideIn .35s ease both; animation-delay: calc(var(--d) * 70ms); }
+    .stbl tr.res td { color: var(--muted); font-weight: 400; }
+
+    /* ---------- Erklärteil ---------- */
+    .explainer { display: grid; gap: 14px; }
+    .numbox {
+      display: flex; align-items: center;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding-left: 12px;
+    }
+    .numbox:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .numbox span { font-family: var(--font-mono); font-size: .8rem; color: var(--accent); white-space: nowrap; }
+    .numbox .inp { border: 0; background: transparent; box-shadow: none; font-size: 1.05rem; font-family: var(--font-mono); }
+    .numbox .inp[aria-invalid="true"] { color: var(--bad); box-shadow: none; }
+    #ipInp { width: 170px; }
+    #countInp { width: 64px; }
+    .pfx-box { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 6px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; max-width: 100%; }
+    .pfx-box input[type="range"] { width: 150px; max-width: 45vw; accent-color: var(--accent); }
+    .pfx-box output { font-family: var(--font-mono); font-size: .9rem; white-space: nowrap; }
+    .pfx-box output b { color: var(--accent); }
+    .stage {
+      min-height: 300px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 18px;
+      overflow-x: auto;
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    .caption {
+      font-size: 1rem;
+      border-left: 3px solid var(--accent);
+      padding: 6px 0 6px 12px;
+      min-height: 3.2em;
+    }
+    .caption b { font-family: var(--font-mono); color: var(--accent); }
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .stepinfo { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); margin-left: auto; }
+    .warn { color: var(--bad); font-family: var(--font-mono); }
+
+    /* ---------- Üben ---------- */
+    .settings { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-bottom: 16px; }
+    .setting { display: grid; gap: 6px; }
+    .pr-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 860px) { .pr-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
+    .task { display: grid; gap: 14px; align-content: start; }
+    .task-num { font: 700 clamp(1.4rem, 6vw, 2.4rem)/1.25 var(--font-mono); word-break: break-word; }
+    .task-num .pfx { color: var(--muted); }
+    .task-num small { display: block; font-size: .5em; color: var(--muted); font-weight: 600; margin-top: 2px; }
+    .task-num .line { display: block; }
+    .task-num .line + .line { margin-top: 4px; }
+    .task-sub { font-size: 1.02rem; }
+    .answer-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .answer-row .inp { flex: 1 1 220px; font-size: 1.2rem; padding: 11px 14px; font-family: var(--font-mono); }
+    .answer-row .btn { font-size: .9rem; padding: 10px 18px; }
+    .answer-row.shake { animation: shake .4s ease; }
+    .answer-row.is-ok .inp { border-color: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+    .answer-row.is-bad .inp { border-color: var(--bad); box-shadow: 0 0 0 3px var(--bad-soft); }
+    .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+    .choices .btn { font-size: .95rem; padding: 11px 18px; }
+    .choices .btn.ok { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+    .choices .btn.bad { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+    .feedback {
+      border-radius: 10px; padding: 12px 14px;
+      border-left: 4px solid var(--muted); background: var(--surface-2);
+      display: grid; gap: 8px;
+    }
+    .feedback .fb-title { font-family: var(--font-mono); font-weight: 700; }
+    .feedback.ok { border-color: var(--ok); background: var(--ok-soft); animation: pop .35s ease; }
+    .feedback.ok .fb-title { color: var(--ok); }
+    .feedback.bad { border-color: var(--bad); background: var(--bad-soft); }
+    .feedback.bad .fb-title { color: var(--bad); }
+    .feedback.sol { border-color: var(--accent); background: var(--accent-soft); }
+    .feedback.sol .fb-title { color: var(--accent); }
+    .feedback .mono { font-family: var(--font-mono); }
+    .feedback .hint { color: var(--muted); font-size: .92rem; }
+    .linkbtn {
+      justify-self: start; font-family: var(--font-mono); font-size: .82rem;
+      color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .stats { display: grid; gap: 14px; align-content: start; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; }
+    .stat strong { font: 700 1.5rem/1.1 var(--font-mono); }
+    .stat span { font-size: .78rem; color: var(--muted); }
+    .history { display: flex; flex-wrap: wrap; gap: 4px; min-height: 14px; }
+    .history i { width: 14px; height: 14px; border-radius: 4px; background: var(--bad); }
+    .history i.ok { background: var(--ok); }
+    .history-empty { font-size: .8rem; color: var(--muted); }
+
+    /* ---------- Animationen ---------- */
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+    @keyframes pop { 0% { transform: scale(.6); opacity: 0; } 70% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+    @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+    @media (max-width: 520px) { .stage { padding: 16px 10px; } }
+    @media (prefers-reduced-motion: reduce) {
+      .stage *, .task *, .feedback, .facts { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">ipv4</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">tool · netzwerktechnik</p>
+      <h1>IPv4 &amp; Subnetze</h1>
+      <p>IP-Adressen, Subnetzmasken und Subnetting verstehen: Netzadresse, Broadcast und Hostbereich Schritt für Schritt berechnen und danach mit Zufallsaufgaben üben.</p>
+    </div>
+  </header>
+
+  <nav class="ref-bar" aria-label="Abschnitte">
+    <div class="container toolbar">
+      <div class="chips">
+        <a class="chip" href="#grundlagen">grundlagen</a>
+        <a class="chip" href="#verstehen">berechnen</a>
+        <a class="chip" href="#ueben">üben</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- ================= Grundlagen ================= -->
+    <section class="container bn-section" id="grundlagen">
+      <div class="section-head"><h2>Grundlagen</h2></div>
+      <div class="stack">
+        <div class="stack">
+          <div class="panel idee">
+            <span class="flabel">aufbau einer ipv4-adresse</span>
+            <p>Eine IPv4-Adresse ist eine <b>32-Bit-Zahl</b>. Damit man sie lesen kann, teilt man sie in <b>4 Oktette</b> zu je 8 Bit
+               und schreibt jedes als Dezimalzahl von <b>0 bis 255</b>, getrennt durch Punkte. Das Umrechnen der Oktette kannst du auf der Seite
+               <a href="binaer.html">Dezimal ↔ Binär</a> üben.</p>
+            <div class="brows" id="gAufbau"></div>
+            <p class="small muted">Insgesamt gibt es 2<sup>32</sup> ≈ 4,3 Milliarden Adressen – zu wenig für alle Geräte der Welt. Deshalb gibt es private Adressen, NAT und den Nachfolger IPv6.</p>
+          </div>
+
+          <div class="panel idee">
+            <span class="flabel">netzanteil, hostanteil, subnetzmaske</span>
+            <p>Jede Adresse besteht aus zwei Teilen – wie eine Anschrift aus Straße und Hausnummer:
+               Der <span class="net-t">Netzanteil</span> sagt, in welchem Netz das Gerät steht. Der <span class="host-t">Hostanteil</span> ist die Nummer des Geräts in diesem Netz.</p>
+            <p>Wo die Grenze liegt, legt die <b>Subnetzmaske</b> fest: <b>1</b> = Netzbit, <b>0</b> = Hostbit. Die Einsen stehen immer lückenlos links.
+               Kurzschreibweise (CIDR): <code>/26</code> = 26 Einsen.</p>
+            <div class="brows" id="gMaske"></div>
+            <div class="legend"><span><i class="ln"></i>netzanteil</span><span><i class="lh"></i>hostanteil</span></div>
+          </div>
+        </div>
+
+        <div class="two">
+          <div class="panel idee">
+            <span class="flabel">besondere adressen in jedem netz</span>
+            <div class="deflist">
+              <div class="def"><b>Netzadresse</b><span>Alle Hostbits <b>0</b>. Bezeichnet das Netz selbst, kein Gerät darf sie bekommen.</span></div>
+              <div class="def"><b>Broadcast</b><span>Alle Hostbits <b>1</b>. Eine Nachricht an diese Adresse erreicht alle Geräte im Netz.</span></div>
+              <div class="def"><b>Hostbereich</b><span>Alles dazwischen. Nutzbar sind 2<sup>Hostbits</sup> − 2 Adressen.</span></div>
+              <div class="def"><b>Gateway</b><span>Der Router ins nächste Netz. Üblich (aber nicht Pflicht) ist die erste oder letzte Hostadresse.</span></div>
+            </div>
+            <span class="flabel">präfixe im letzten oktett</span>
+            <div class="tscroll">
+              <table class="mtable" id="gTabelle"></table>
+            </div>
+          </div>
+
+          <div class="panel idee">
+            <span class="flabel">private und spezielle bereiche</span>
+            <p>Private Adressen werden im Internet nicht weitergeleitet. Zu Hause und in Firmen nutzt man sie intern, der Router übersetzt per <b>NAT</b> auf eine öffentliche Adresse.</p>
+            <div class="tscroll">
+              <table class="mtable">
+                <thead><tr><th>bereich</th><th>von – bis</th><th>zweck</th></tr></thead>
+                <tbody>
+                  <tr><td><b>10.0.0.0/8</b></td><td>10.0.0.0 – 10.255.255.255</td><td>privat</td></tr>
+                  <tr><td><b>172.16.0.0/12</b></td><td>172.16.0.0 – 172.31.255.255</td><td>privat</td></tr>
+                  <tr><td><b>192.168.0.0/16</b></td><td>192.168.0.0 – 192.168.255.255</td><td>privat</td></tr>
+                  <tr class="dim"><td>127.0.0.0/8</td><td>127.0.0.1 usw.</td><td>Loopback (eigener Rechner)</td></tr>
+                  <tr class="dim"><td>169.254.0.0/16</td><td>169.254.x.x</td><td>APIPA (kein DHCP erreichbar)</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <span class="flabel">adressklassen (historisch)</span>
+            <p class="small">Früher war die Netzgröße an das erste Oktett gebunden. Heute gilt CIDR mit beliebigen Präfixen, die Klassen tauchen aber noch in Prüfungen auf.</p>
+            <div class="tscroll">
+              <table class="mtable">
+                <thead><tr><th>klasse</th><th>1. oktett</th><th>standardmaske</th></tr></thead>
+                <tbody>
+                  <tr><td><b>A</b></td><td>1 – 126</td><td>255.0.0.0 (/8)</td></tr>
+                  <tr><td><b>B</b></td><td>128 – 191</td><td>255.255.0.0 (/16)</td></tr>
+                  <tr><td><b>C</b></td><td>192 – 223</td><td>255.255.255.0 (/24)</td></tr>
+                  <tr class="dim"><td>D / E</td><td>224 – 255</td><td>Multicast / reserviert</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel idee">
+          <span class="flabel">gleiches netz oder router nötig?</span>
+          <p>Zwei Geräte können sich nur <b>direkt</b> erreichen, wenn sie im selben Netz liegen, also dieselbe Netzadresse haben.
+             Sonst schickt der Absender das Paket an sein <b>Gateway</b> (Router). Prüfen: Für beide Adressen die Netzadresse berechnen und vergleichen.</p>
+          <p class="small"><code>192.168.1.10/24</code> und <code>192.168.1.200/24</code> → beide im Netz 192.168.1.0 → direkt.
+             <code>192.168.1.10/24</code> und <code>192.168.2.10/24</code> → Netze 192.168.1.0 und 192.168.2.0 → über den Router.
+             Achtung bei kleineren Netzen: <code>10.0.0.60/26</code> und <code>10.0.0.70/26</code> liegen in <b>verschiedenen</b> Netzen (10.0.0.0 und 10.0.0.64).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Berechnen ================= -->
+    <section class="container bn-section" id="verstehen">
+      <div class="section-head"><h2>Berechnen</h2></div>
+      <div class="panel explainer">
+        <div class="row">
+          <label class="numbox">
+            <span>ip</span>
+            <input class="inp" id="ipInp" value="192.168.10.37" spellcheck="false" autocomplete="off" inputmode="decimal" aria-label="IPv4-Adresse">
+          </label>
+          <label class="pfx-box">
+            <input type="range" id="pRange" min="8" max="30" value="26" aria-label="Präfixlänge">
+            <output id="pOut"></output>
+          </label>
+          <label class="numbox" id="countBox" hidden>
+            <span>teilen in</span>
+            <input class="inp" id="countInp" type="number" min="2" max="64" value="4" inputmode="numeric" aria-label="Anzahl Subnetze">
+          </label>
+          <button class="btn btn-ghost" type="button" id="exRandom">zufällig</button>
+        </div>
+        <div class="chips" id="modeChips" role="group" aria-label="Rechenweg">
+          <button class="chip" type="button" data-mode="bit" aria-pressed="true">bitweise (UND)</button>
+          <button class="chip" type="button" data-mode="block" aria-pressed="false">schnellweg (blockgröße)</button>
+          <button class="chip" type="button" data-mode="sub" aria-pressed="false">subnetze bilden</button>
+        </div>
+
+        <div class="stage" id="stage"></div>
+        <p class="caption" id="caption" aria-live="polite"></p>
+
+        <div class="controls">
+          <button class="btn btn-ghost" type="button" id="exReset">⟲ von vorn</button>
+          <button class="btn btn-ghost" type="button" id="exBack">◀ zurück</button>
+          <button class="btn" type="button" id="exNext">weiter ▶</button>
+          <button class="btn btn-ghost" type="button" id="exPlay">▶ abspielen</button>
+          <span class="stepinfo" id="stepInfo"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Üben ================= -->
+    <section class="container bn-section" id="ueben">
+      <div class="section-head"><h2>Üben</h2></div>
+
+      <div class="settings">
+        <div class="setting">
+          <span class="flabel">aufgabentyp</span>
+          <div class="chips" id="typeChips" role="group" aria-label="Aufgabentyp">
+            <button class="chip" type="button" data-type="adr">netz &amp; broadcast</button>
+            <button class="chip" type="button" data-type="hosts">anzahl hosts</button>
+            <button class="chip" type="button" data-type="mask">maske ↔ präfix</button>
+            <button class="chip" type="button" data-type="same">gleiches netz?</button>
+            <button class="chip" type="button" data-type="priv">privat?</button>
+            <button class="chip" type="button" data-type="sub">subnetting</button>
+            <button class="chip" type="button" data-type="mix">gemischt</button>
+          </div>
+        </div>
+        <div class="setting">
+          <span class="flabel">stufe</span>
+          <div class="chips" id="lvlChips" role="group" aria-label="Schwierigkeit">
+            <button class="chip" type="button" data-lvl="1">leicht · /8 /16 /24</button>
+            <button class="chip" type="button" data-lvl="2">mittel · /24 – /30</button>
+            <button class="chip" type="button" data-lvl="3">schwer · /9 – /30</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pr-grid">
+        <div class="panel task">
+          <span class="flabel" id="taskQ">aufgabe</span>
+          <div class="task-num" id="taskNum"></div>
+          <p class="task-sub" id="taskSub"></p>
+          <form class="answer-row" id="answerForm" autocomplete="off" novalidate>
+            <label class="visually-hidden" for="answer">Deine Antwort</label>
+            <input class="inp" id="answer" autocomplete="off" spellcheck="false">
+            <button class="btn" type="submit" id="checkBtn">prüfen</button>
+          </form>
+          <div class="choices" id="choices" hidden></div>
+          <div class="feedback" id="feedback" role="status" aria-live="polite" hidden></div>
+          <div class="row">
+            <button class="btn btn-ghost" type="button" id="solveBtn">Lösung zeigen</button>
+            <button class="btn btn-ghost" type="button" id="newBtn">neue Aufgabe</button>
+          </div>
+        </div>
+
+        <aside class="panel stats" aria-label="Statistik">
+          <span class="flabel">statistik</span>
+          <div class="stat-grid">
+            <div class="stat"><strong id="stRight">0</strong><span>beim 1. Versuch richtig</span></div>
+            <div class="stat"><strong id="stTotal">0</strong><span>Aufgaben</span></div>
+            <div class="stat"><strong id="stStreak">0</strong><span>Serie</span></div>
+            <div class="stat"><strong id="stBest">0</strong><span>beste Serie</span></div>
+          </div>
+          <span class="flabel">letzte aufgaben</span>
+          <div class="history" id="history"></div>
+          <button class="btn btn-ghost" type="button" id="resetStats" style="justify-self:start">zurücksetzen</button>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var $ = function (id) { return document.getElementById(id); };
+
+    /* =========================================================
+       Rechenfunktionen (32-Bit, ohne Vorzeichen)
+       ========================================================= */
+    function pad(s, w) { while (s.length < w) s = "0" + s; return s; }
+    function ipToInt(s) { var p = s.split("."); return ((+p[0] << 24) >>> 0) + (+p[1] << 16) + (+p[2] << 8) + (+p[3]); }
+    function intToIp(n) { return [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join("."); }
+    function octs(n) { return [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]; }
+    function maskOf(p) { return p === 0 ? 0 : (0xFFFFFFFF << (32 - p)) >>> 0; }
+    function netOf(ip, p) { return (ip & maskOf(p)) >>> 0; }
+    function bcOf(ip, p) { return (netOf(ip, p) | (~maskOf(p) >>> 0)) >>> 0; }
+    function hostsOf(p) { return Math.pow(2, 32 - p) - 2; }
+    function bits(n) { return pad(n.toString(2), 32); }
+    function bin8(v) { return pad(v.toString(2), 8); }
+    function fmt(n) { return n.toLocaleString("de-DE"); }
+    function pow2(e) { return "2<sup>" + e + "</sup>"; }
+    function parseIp(s) {
+      var m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(s);
+      if (!m) return null;
+      for (var i = 1; i <= 4; i++) if (+m[i] > 255) return null;
+      return ipToInt(s);
+    }
+    function isMask(n) { return /^1*0*$/.test(bits(n)); }
+    function prefixOfMask(n) { return (bits(n).match(/1/g) || []).length; }
+    function isPrivate(ip) {
+      var o = octs(ip);
+      return o[0] === 10 || (o[0] === 172 && o[1] >= 16 && o[1] <= 31) || (o[0] === 192 && o[1] === 168);
+    }
+    // Interessantes Oktett (0-basiert) und Blockgröße für ein Präfix, das nicht auf 8 endet
+    function blockInfo(p) {
+      var io = Math.floor(p / 8), r = p % 8;
+      if (r === 0) return { io: io, r: 0, mo: 255, B: 256 };
+      var mo = octs(maskOf(p))[io];
+      return { io: io, r: r, mo: mo, B: 256 - mo };
+    }
+    var ORD = ["1.", "2.", "3.", "4."];
+
+    /* ---------- Bausteine ---------- */
+    function bitRow(label, n, o) {
+      o = o || {};
+      var b = bits(n), h = '<div class="brow' + (o.isNew ? " new" : "") + '"><span class="blabel">' + label + '</span><div class="octs">';
+      for (var k = 0; k < 4; k++) {
+        h += '<span class="oct">';
+        for (var i = 0; i < 8; i++) {
+          var idx = k * 8 + i, c = "bt" + (b[idx] === "1" ? " one" : "");
+          if (o.p != null) c += idx < o.p ? " n" : " h";
+          if (o.sub && idx >= o.sub[0] && idx < o.sub[1]) c += " s";
+          if (o.cuts && o.cuts.indexOf(idx) !== -1) c += " cut";
+          h += '<i class="' + c + '">' + b[idx] + '</i>';
+        }
+        h += '</span>';
+      }
+      return h + '</div><span class="bdec">' + (o.dec || intToIp(n)) + '</span></div>';
+    }
+    function factsHtml(ip, p, key) {
+      var net = netOf(ip, p), bc = bcOf(ip, p), h = hostsOf(p);
+      var items = [
+        ["netz", "netzadresse", intToIp(net) + "/" + p],
+        ["first", "erster host", intToIp(net + 1)],
+        ["last", "letzter host", intToIp(bc - 1)],
+        ["bc", "broadcast", intToIp(bc)],
+        ["hosts", "nutzbare hosts", "2" + "<sup>" + (32 - p) + "</sup> − 2 = " + fmt(h)],
+        ["mask", "subnetzmaske", intToIp(maskOf(p))]
+      ];
+      return '<div class="facts">' + items.map(function (it) {
+        return '<div class="fact' + (key === "all" || key === it[0] ? " key" : "") + '"><span>' + it[1] + '</span><b>' + it[2] + '</b></div>';
+      }).join("") + '</div>';
+    }
+
+    /* =========================================================
+       Grundlagen-Grafiken
+       ========================================================= */
+    (function () {
+      var ip = ipToInt("192.168.10.37");
+      $("gAufbau").innerHTML = bitRow("adresse", ip) +
+        '<div class="small muted mono">' + octs(ip).map(function (v) { return v + " = " + bin8(v); }).join(" · ") + '</div>';
+      $("gMaske").innerHTML = bitRow("ip", ip, { p: 26, cuts: [26] }) + bitRow("maske /26", maskOf(26), { p: 26, cuts: [26] });
+      var t = '<thead><tr><th>präfix</th><th>maske</th><th>letztes oktett</th><th>blockgröße</th><th>hosts</th></tr></thead><tbody>';
+      for (var p = 24; p <= 30; p++) {
+        var mo = octs(maskOf(p))[3];
+        t += '<tr><td><b>/' + p + '</b></td><td>255.255.255.' + mo + '</td><td>' + bin8(mo) + '</td><td>' + (256 - mo) + '</td><td>' + hostsOf(p) + '</td></tr>';
+      }
+      $("gTabelle").innerHTML = t + '</tbody>';
+    })();
+
+    /* =========================================================
+       Erklärteil
+       ========================================================= */
+    var ex = { ip: ipToInt("192.168.10.37"), p: 26, mode: "bit", count: 4, step: 0, timer: null };
+    var stage = $("stage"), caption = $("caption"), ipInp = $("ipInp"), pRange = $("pRange"), countInp = $("countInp");
+
+    function subInfo() {
+      var n = 0; while (Math.pow(2, n) < ex.count) n++;
+      return { n: n, np: ex.p + n, base: netOf(ex.ip, ex.p) };
+    }
+    function totalSteps() {
+      if (ex.mode === "bit") return 4;
+      if (ex.mode === "block") return ex.p % 8 ? 4 : 2;
+      var si = subInfo();
+      return si.np > 30 || ex.count < 2 ? 0 : 4;
+    }
+
+    /* --- bitweise --- */
+    function renderBit(s) {
+      var ip = ex.ip, p = ex.p, m = maskOf(p), net = netOf(ip, p), bc = bcOf(ip, p), cut = p < 32 ? [p] : [];
+      var col = s >= 1 ? p : null, h = '<div class="brows">';
+      h += bitRow("ip", ip, { p: col, cuts: s >= 1 ? cut : [] });
+      if (s >= 1) h += bitRow("maske /" + p, m, { p: p, cuts: cut, isNew: s === 1 });
+      if (s >= 2) h += bitRow("netz", net, { p: p, cuts: cut, isNew: s === 2 });
+      if (s >= 3) h += bitRow("broadcast", bc, { p: p, cuts: cut, isNew: s === 3 });
+      h += '</div>';
+      if (s >= 1) h += '<div class="legend"><span><i class="ln"></i>netzanteil (' + p + ' bit)</span><span><i class="lh"></i>hostanteil (' + (32 - p) + ' bit)</span></div>';
+      if (s >= 4) h += factsHtml(ip, p, null);
+      stage.innerHTML = h;
+
+      var c;
+      if (s === 0) c = "Jedes Oktett wird in 8 Bits umgewandelt: " + octs(ip).map(function (v) { return v + " = " + bin8(v); }).join(", ") + ". Zusammen sind das <b>32 Bits</b>.";
+      else if (s === 1) c = "<b>/" + p + "</b> heißt: Die ersten " + p + " Bits sind Netzanteil (Maske = 1), die restlichen " + (32 - p) + " Bits Hostanteil (Maske = 0). Als Dezimalzahl: <b>" + intToIp(m) + "</b>.";
+      else if (s === 2) c = "<b>Netzadresse = IP UND Maske</b>: Wo die Maske 1 hat, wird das IP-Bit übernommen, wo sie 0 hat, entsteht 0. Alle Hostbits werden also 0 → <b>" + intToIp(net) + "</b>.";
+      else if (s === 3) c = "<b>Broadcast</b>: Netzanteil übernehmen und alle " + (32 - p) + " Hostbits auf 1 setzen → <b>" + intToIp(bc) + "</b>.";
+      else c = "Nutzbar ist alles dazwischen: <b>" + intToIp(net + 1) + "</b> bis <b>" + intToIp(bc - 1) + "</b>. Anzahl: " + pow2(32 - p) + " − 2 = <b>" + fmt(hostsOf(p)) + "</b> (Netz- und Broadcastadresse fallen weg).";
+      caption.innerHTML = c;
+    }
+
+    /* --- Schnellweg --- */
+    function oboxRow(label, values, classes, isNew) {
+      var h = '<div class="obrow' + (isNew ? " new" : "") + '"><span class="blabel">' + label + '</span><div class="oboxes">';
+      for (var k = 0; k < 4; k++) {
+        if (k) h += '<span class="dot">.</span>';
+        h += '<span class="ob ' + (classes[k] || "") + '">' + values[k] + '</span>';
+      }
+      return h + '</div></div>';
+    }
+    function nlineHtml(v, B) {
+      var cnt = 256 / B, a = Math.floor(v / B), from = 0, to = cnt - 1, h = '<div class="nline-wrap"><div class="nline">';
+      if (cnt > 16) { from = Math.max(0, a - 3); to = Math.min(cnt - 1, from + 7); from = Math.max(0, to - 7); }
+      if (from > 0) h += '<span class="nell">…</span>';
+      for (var i = from; i <= to; i++) h += '<span class="seg' + (i === a ? " on" : "") + '">' + i * B + '</span>';
+      if (to < cnt - 1) h += '<span class="nell">… 256</span>';
+      h += '</div><span class="nlabel">' + cnt + ' Blöcke à ' + B + ' · <b>' + v + '</b> liegt im Block <b>' + a * B + '–' + (a * B + B - 1) + '</b></span></div>';
+      return h;
+    }
+    function renderBlock(s) {
+      var ip = ex.ip, p = ex.p, bi = blockInfo(p), o = octs(ip), mo = octs(maskOf(p));
+      var net = netOf(ip, p), bc = bcOf(ip, p), cls = [];
+      var full = Math.floor(p / 8);
+      for (var k = 0; k < 4; k++) cls.push(k < full ? "n" : (k === full && bi.r ? "i" : "h"));
+      var h = '<div class="obrows">' + oboxRow("ip /" + p, o, cls);
+      var c;
+
+      if (bi.r === 0) {
+        if (s >= 1) {
+          h += oboxRow("maske", mo, cls, s === 1);
+          h += oboxRow("netz", octs(net), cls, s === 1);
+          h += oboxRow("broadcast", octs(bc), cls, s === 1);
+        }
+        h += '</div>';
+        if (s >= 2) h += factsHtml(ip, p, null);
+        stage.innerHTML = h;
+        if (s === 0) c = "<b>/" + p + "</b> = " + full + " · 8. Die Grenze liegt genau zwischen zwei Oktetten: die ersten " + full + " Oktette sind Netz, der Rest ist Host. Ein „interessantes Oktett“ gibt es hier nicht.";
+        else if (s === 1) c = "Maske: " + full + "-mal 255, dann 0. <b>Netzadresse</b>: Hostoktette auf 0 → <b>" + intToIp(net) + "</b>. <b>Broadcast</b>: Hostoktette auf 255 → <b>" + intToIp(bc) + "</b>.";
+        else c = "Hostbereich <b>" + intToIp(net + 1) + "</b> bis <b>" + intToIp(bc - 1) + "</b>, das sind " + pow2(32 - p) + " − 2 = <b>" + fmt(hostsOf(p)) + "</b> Hosts.";
+        caption.innerHTML = c;
+        return;
+      }
+
+      if (s >= 1) h += oboxRow("maske", mo, cls, s === 1);
+      if (s >= 3) {
+        h += oboxRow("netz", octs(net), cls, s === 3);
+        h += oboxRow("broadcast", octs(bc), cls, s === 3);
+      }
+      h += '</div>';
+      if (s >= 2) h += nlineHtml(o[bi.io], bi.B);
+      if (s >= 4) h += factsHtml(ip, p, null);
+      stage.innerHTML = h;
+
+      var v = o[bi.io], start = Math.floor(v / bi.B) * bi.B;
+      if (s === 0) {
+        c = "<b>/" + p + "</b> = " + (full ? full + " · 8 + " : "") + bi.r + ". " +
+            (full ? "Die ersten " + full + " Oktette gehören komplett zum Netz und bleiben unverändert. " : "") +
+            "Die Grenze liegt im <b>" + ORD[bi.io] + " Oktett</b> – das ist das interessante Oktett (umrandet)." +
+            (bi.io < 3 ? " Alles rechts davon ist reiner Hostanteil." : "");
+      } else if (s === 1) {
+        c = "Im interessanten Oktett gehören " + bi.r + " Bit" + (bi.r > 1 ? "s" : "") + " zum Netz: <b>" + bin8(bi.mo) + " = " + bi.mo + "</b>. Maske also <b>" + intToIp(maskOf(p)) + "</b>.";
+      } else if (s === 2) {
+        var starts = []; for (var x = 0; x < 256 && starts.length < 6; x += bi.B) starts.push(x);
+        c = "<b>Blockgröße = 256 − " + bi.mo + " = " + bi.B + "</b>. Die Netze beginnen im " + ORD[bi.io] + " Oktett bei " + starts.join(", ") + (256 / bi.B > 6 ? ", …" : "") + ". " +
+            v + " liegt im Block " + start + "–" + (start + bi.B - 1) + ".";
+      } else if (s === 3) {
+        c = "<b>Netzadresse</b>: Blockanfang " + start + (bi.io < 3 ? ", Oktette rechts davon 0" : "") + " → <b>" + intToIp(net) + "</b>. " +
+            "<b>Broadcast</b>: Blockende " + (start + bi.B - 1) + (bi.io < 3 ? ", Oktette rechts davon 255" : "") + " → <b>" + intToIp(bc) + "</b>.";
+      } else {
+        c = "Hostbereich <b>" + intToIp(net + 1) + "</b> bis <b>" + intToIp(bc - 1) + "</b>, das sind " + pow2(32 - p) + " − 2 = <b>" + fmt(hostsOf(p)) + "</b> Hosts.";
+      }
+      caption.innerHTML = c;
+    }
+
+    /* --- Subnetze bilden --- */
+    function renderSub(s) {
+      var si = subInfo(), p = ex.p, np = si.np, base = si.base, c;
+      if (ex.count < 2 || np > 30) {
+        stage.innerHTML = '<p class="warn">Das geht nicht: /' + p + ' in ' + ex.count + ' Subnetze ergäbe /' + np + '. Kleiner als /30 ergibt keine sinnvollen Netze mehr.</p>';
+        caption.innerHTML = "Wähle ein kleineres Präfix (größeres Ausgangsnetz) oder weniger Subnetze.";
+        return;
+      }
+      var h = '<div class="brows">';
+      h += bitRow("netz /" + p, base, { p: p, cuts: [p] });
+      if (s >= 1) h += bitRow("maske /" + np, maskOf(np), { p: np, sub: [p, np], cuts: [p, np], isNew: s === 1 });
+      h += '</div>';
+      if (s >= 1) h += '<div class="legend"><span><i class="ln"></i>altes netz</span><span><i class="ls"></i>geliehene bits</span><span><i class="lh"></i>hostanteil</span></div>';
+      var bi = blockInfo(np), bio = bi.r ? bi.io : bi.io - 1, B = bi.r ? bi.B : 1;
+      if (s >= 2) {
+        h += '<div class="facts">' +
+          '<div class="fact key"><span>neues präfix</span><b>/' + np + '</b></div>' +
+          '<div class="fact"><span>neue maske</span><b>' + intToIp(maskOf(np)) + '</b></div>' +
+          '<div class="fact"><span>subnetze</span><b>' + Math.pow(2, si.n) + '</b></div>' +
+          '<div class="fact"><span>hosts je subnetz</span><b>' + fmt(hostsOf(np)) + '</b></div>' +
+          (s >= 3 ? '<div class="fact key"><span>blockgröße (' + ORD[bio] + ' oktett)</span><b>' + B + '</b></div>' : '') +
+          '</div>';
+      }
+      if (s >= 4) {
+        var size = Math.pow(2, 32 - np), total = Math.pow(2, si.n), show = Math.min(total, 16);
+        h += '<div class="tscroll"><table class="stbl"><thead><tr><th>nr</th><th>netzadresse</th><th>erster host</th><th>letzter host</th><th>broadcast</th></tr></thead><tbody>';
+        for (var k = 0; k < show; k++) {
+          var nk = base + k * size;
+          h += '<tr' + (k >= ex.count ? ' class="res"' : '') + ' style="--d:' + k + '"><td>' + (k + 1) + '</td><td>' + intToIp(nk) + '/' + np + '</td><td>' + intToIp(nk + 1) +
+               '</td><td>' + intToIp(nk + size - 2) + '</td><td>' + intToIp(nk + size - 1) + '</td></tr>';
+        }
+        h += '</tbody></table></div>';
+        if (total > show) h += '<p class="small muted">… insgesamt ' + total + ' Subnetze, hier die ersten ' + show + '.</p>';
+      }
+      stage.innerHTML = h;
+
+      if (s === 0) c = "Das Netz <b>" + intToIp(base) + "/" + p + "</b> soll in <b>" + ex.count + "</b> gleich große Subnetze geteilt werden. Dafür <b>leiht</b> man sich Bits aus dem Hostanteil und macht sie zu Netzbits.";
+      else if (s === 1) {
+        var pw = []; for (var i = 1; i <= si.n; i++) pw.push(pow2(i) + " = " + Math.pow(2, i));
+        c = "Wie viele Bits? " + pw.join(", ") + " → <b>" + si.n + " Bit" + (si.n > 1 ? "s" : "") + "</b> reichen für " + ex.count + " Subnetze" +
+            (Math.pow(2, si.n) > ex.count ? " (es entstehen " + Math.pow(2, si.n) + ", " + (Math.pow(2, si.n) - ex.count) + (Math.pow(2, si.n) - ex.count === 1 ? " bleibt" : " bleiben") + " als Reserve)" : "") + ".";
+      } else if (s === 2) c = "Neues Präfix: /" + p + " + " + si.n + " = <b>/" + np + "</b>, Maske <b>" + intToIp(maskOf(np)) + "</b>. Pro Subnetz bleiben " + (32 - np) + " Hostbits: " + pow2(32 - np) + " − 2 = <b>" + fmt(hostsOf(np)) + "</b> Hosts.";
+      else if (s === 3) c = bi.r ? "<b>Blockgröße = 256 − " + bi.mo + " = " + B + "</b> im " + ORD[bio] + " Oktett. Jedes Subnetz beginnt " + B + " nach dem vorherigen."
+                                 : "Das Präfix /" + np + " endet genau an einer Oktettgrenze: Die Subnetze zählen im " + ORD[bio] + " Oktett in Einerschritten hoch.";
+      else c = "Alle Subnetze: Netzadresse = Blockanfang, Broadcast = eins vor dem nächsten Netz." + (Math.pow(2, si.n) > ex.count ? " Grau = Reserve." : "");
+      caption.innerHTML = c;
+    }
+
+    function renderEx() {
+      var total = totalSteps();
+      if (ex.step > total) ex.step = total;
+      if (ex.mode === "bit") renderBit(ex.step);
+      else if (ex.mode === "block") renderBlock(ex.step);
+      else renderSub(ex.step);
+      $("exBack").disabled = ex.step <= 0;
+      $("exNext").disabled = ex.step >= total;
+      $("exPlay").disabled = total === 0;
+      $("stepInfo").textContent = "Schritt " + ex.step + " / " + total;
+      $("exPlay").textContent = ex.timer ? "⏸ pause" : "▶ abspielen";
+      $("pOut").innerHTML = "<b>/" + ex.p + "</b> · " + intToIp(maskOf(ex.p));
+      $("countBox").hidden = ex.mode !== "sub";
+      document.querySelectorAll("#modeChips .chip").forEach(function (c) { c.setAttribute("aria-pressed", c.dataset.mode === ex.mode ? "true" : "false"); });
+    }
+    function stop() { clearTimeout(ex.timer); ex.timer = null; }
+    function tick() {
+      if (ex.step >= totalSteps()) { stop(); renderEx(); return; }
+      ex.step++; renderEx();
+      ex.timer = setTimeout(tick, 2200);
+      if (ex.step >= totalSteps()) { stop(); renderEx(); }
+    }
+    function setEx(o) {
+      stop();
+      if (o.ip != null) { ex.ip = o.ip; ipInp.value = intToIp(o.ip); ipInp.removeAttribute("aria-invalid"); }
+      if (o.p != null) { ex.p = o.p; pRange.value = o.p; }
+      if (o.count != null) { ex.count = o.count; countInp.value = o.count; }
+      if (o.mode) ex.mode = o.mode;
+      ex.step = 0; renderEx();
+    }
+
+    ipInp.addEventListener("input", function () {
+      var v = parseIp(ipInp.value.trim());
+      if (v === null) { ipInp.setAttribute("aria-invalid", "true"); return; }
+      ipInp.removeAttribute("aria-invalid");
+      stop(); ex.ip = v; ex.step = 0; renderEx();
+    });
+    ipInp.addEventListener("blur", function () { ipInp.value = intToIp(ex.ip); ipInp.removeAttribute("aria-invalid"); });
+    pRange.addEventListener("input", function () { stop(); ex.p = +pRange.value; ex.step = 0; renderEx(); });
+    countInp.addEventListener("input", function () {
+      var v = +countInp.value;
+      if (!/^\d+$/.test(countInp.value) || v < 2 || v > 64) return;
+      stop(); ex.count = v; ex.step = 0; renderEx();
+    });
+    countInp.addEventListener("blur", function () { countInp.value = ex.count; });
+    $("exRandom").addEventListener("click", function () {
+      var p = ex.mode === "sub" ? pick([16, 20, 22, 24, 24, 24]) : rnd(16, 30);
+      setEx({ ip: randHostIp(p), p: p, count: ex.mode === "sub" ? rnd(2, 12) : null });
+    });
+    $("modeChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      if (c.dataset.mode === "sub" && ex.p > 28) { ex.p = 24; pRange.value = 24; }
+      stop(); ex.mode = c.dataset.mode; ex.step = 0; renderEx();
+    });
+    $("exNext").addEventListener("click", function () { stop(); if (ex.step < totalSteps()) ex.step++; renderEx(); });
+    $("exBack").addEventListener("click", function () { stop(); if (ex.step > 0) ex.step--; renderEx(); });
+    $("exReset").addEventListener("click", function () { stop(); ex.step = 0; renderEx(); });
+    $("exPlay").addEventListener("click", function () {
+      if (ex.timer) { stop(); renderEx(); return; }
+      if (ex.step >= totalSteps()) ex.step = 0;
+      ex.timer = -1; renderEx();
+      ex.timer = setTimeout(tick, 400);
+    });
+
+    /* =========================================================
+       Üben
+       ========================================================= */
+    function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+    function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+    function randIp() {
+      var r = Math.random();
+      if (r < 0.4) return ipToInt("192.168." + rnd(0, 255) + "." + rnd(0, 255));
+      if (r < 0.65) return ipToInt("10." + rnd(0, 255) + "." + rnd(0, 255) + "." + rnd(0, 255));
+      if (r < 0.8) return ipToInt("172." + rnd(16, 31) + "." + rnd(0, 255) + "." + rnd(0, 255));
+      var a; do { a = rnd(1, 223); } while (a === 10 || a === 127 || a === 172 || a === 192 || a === 169);
+      return ipToInt(a + "." + rnd(0, 255) + "." + rnd(0, 255) + "." + rnd(0, 255));
+    }
+    function randHostIp(p) {
+      var ip; do { ip = randIp(); } while (ip === netOf(ip, p) || ip === bcOf(ip, p));
+      return ip;
+    }
+
+    var STORE = "ipv4-ueben", TYPES = ["adr", "hosts", "mask", "same", "priv", "sub"];
+    var pr = { type: "adr", lvl: 2, task: null, wrong: 0, done: false, counted: false };
+    var stats = { right: 0, total: 0, streak: 0, best: 0, hist: [] };
+    var answer = $("answer"), form = $("answerForm"), fb = $("feedback"), choices = $("choices");
+    var interacted = false;
+
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORE) || "null");
+      if (saved) {
+        if (TYPES.concat("mix").indexOf(saved.type) !== -1) pr.type = saved.type;
+        if ([1, 2, 3].indexOf(saved.lvl) !== -1) pr.lvl = saved.lvl;
+        if (saved.stats) stats = Object.assign(stats, saved.stats);
+      }
+    } catch (e) {}
+    function save() { try { localStorage.setItem(STORE, JSON.stringify({ type: pr.type, lvl: pr.lvl, stats: stats })); } catch (e) {} }
+
+    function randPrefix() {
+      if (pr.lvl === 1) return pick([8, 16, 24]);
+      if (pr.lvl === 2) return rnd(24, 30);
+      var p; do { p = rnd(9, 30); } while (p % 8 === 0);
+      return p;
+    }
+    function ipP(ip, p, useMask) {
+      return '<span class="line">' + intToIp(ip) + (useMask ? '<small>Maske ' + intToIp(maskOf(p)) + '</small>' : '<span class="pfx">/' + p + '</span>') + '</span>';
+    }
+
+    var ADR = {
+      netz:  { q: "netzadresse bestimmen", name: "Netzadresse", the: "die Netzadresse" },
+      bc:    { q: "broadcastadresse bestimmen", name: "Broadcastadresse", the: "die Broadcastadresse" },
+      first: { q: "erste nutzbare hostadresse", name: "erste Hostadresse", the: "die erste nutzbare Hostadresse" },
+      last:  { q: "letzte nutzbare hostadresse", name: "letzte Hostadresse", the: "die letzte nutzbare Hostadresse" }
+    };
+    function adrValues(ip, p) {
+      var net = netOf(ip, p), bc = bcOf(ip, p);
+      return { netz: net, bc: bc, first: net + 1, last: bc - 1 };
+    }
+
+    function genTask(type) {
+      var t = { type: type };
+      if (type === "adr") {
+        var p = randPrefix(), ip = randHostIp(p), k = pick(["netz", "bc", "first", "last"]), useMask = pr.lvl > 1 && Math.random() < 0.3;
+        t.ip = ip; t.p = p; t.kind = k;
+        t.q = ADR[k].q; t.html = ipP(ip, p, useMask); t.sub = "Gesucht: " + ADR[k].the + ".";
+        t.ans = "ip"; t.value = adrValues(ip, p)[k];
+      } else if (type === "hosts") {
+        var p2 = randPrefix(), m = Math.random() < 0.4;
+        t.p = p2; t.q = "anzahl nutzbarer hosts";
+        t.html = m ? '<span class="line">' + intToIp(maskOf(p2)) + '</span>' : '<span class="line">/' + p2 + '</span>';
+        t.sub = "Wie viele Geräte können in einem Netz mit " + (m ? "dieser Subnetzmaske" : "diesem Präfix") + " eine Adresse bekommen?";
+        t.ans = "num"; t.value = hostsOf(p2); t.useMask = m;
+      } else if (type === "mask") {
+        var p3 = randPrefix(); t.p = p3;
+        t.dir = Math.random() < 0.5 ? "p2m" : "m2p";
+        t.q = t.dir === "p2m" ? "präfix → subnetzmaske" : "subnetzmaske → präfix";
+        t.html = '<span class="line">' + (t.dir === "p2m" ? "/" + p3 : intToIp(maskOf(p3))) + '</span>';
+        t.sub = t.dir === "p2m" ? "Schreibe die Subnetzmaske in Punktschreibweise." : "Gib die Präfixlänge an (z. B. /24).";
+        t.ans = t.dir === "p2m" ? "mask" : "prefix"; t.value = t.dir === "p2m" ? maskOf(p3) : p3;
+      } else if (type === "same") {
+        var p4 = randPrefix(), a = randHostIp(p4), same = Math.random() < 0.5, b, size = Math.pow(2, 32 - p4);
+        var net = netOf(a, p4);
+        if (same && size >= 4) { do { b = net + rnd(1, size - 2); } while (b === a); }
+        else { same = false; b = (a + (a + size <= 0xFFFFFFFF && (Math.random() < 0.5 || a < size) ? size : -size)) >>> 0; }
+        // bei /24-Netzen gern das „Nachbarnetz“ im 3. Oktett
+        t.p = p4; t.a = a; t.b = b; t.value = netOf(a, p4) === netOf(b, p4);
+        t.q = "gleiches netz?";
+        t.html = ipP(a, p4) + ipP(b, p4);
+        t.sub = "Können sich die beiden Geräte direkt erreichen, ohne Router?";
+        t.ans = "choice"; t.choices = [["ja", "ja – gleiches Netz"], ["nein", "nein – verschiedene Netze"]];
+      } else if (type === "priv") {
+        var ipv, r = Math.random();
+        if (r < 0.5) ipv = pick([
+          function () { return "10." + rnd(0, 255) + "." + rnd(0, 255) + "." + rnd(1, 254); },
+          function () { return "172." + rnd(16, 31) + "." + rnd(0, 255) + "." + rnd(1, 254); },
+          function () { return "192.168." + rnd(0, 255) + "." + rnd(1, 254); }
+        ])();
+        else ipv = pick([
+          function () { return "172." + pick([12, 15, 32, 33, 64, 168]) + "." + rnd(0, 255) + "." + rnd(1, 254); },
+          function () { return "192." + pick([167, 169, 0, 186]) + "." + rnd(0, 255) + "." + rnd(1, 254); },
+          function () { return pick([9, 11, 100, 101]) + "." + rnd(0, 255) + "." + rnd(0, 255) + "." + rnd(1, 254); },
+          function () { return pick(["8.8.8.8", "1.1.1.1", "142.250." + rnd(0, 255) + "." + rnd(1, 254), "85." + rnd(0, 255) + "." + rnd(0, 255) + "." + rnd(1, 254)]); }
+        ])();
+        t.ip = ipToInt(ipv); t.value = isPrivate(t.ip);
+        t.q = "privat oder öffentlich?";
+        t.html = '<span class="line">' + ipv + '</span>';
+        t.sub = "Ist das eine private Adresse (nur im lokalen Netz) oder eine öffentliche (im Internet erreichbar)?";
+        t.ans = "choice"; t.choices = [["privat", "privat"], ["oeff", "öffentlich"]];
+      } else {
+        var bp, cnt;
+        if (pr.lvl === 1) { bp = 24; cnt = pick([2, 4]); }
+        else if (pr.lvl === 2) { bp = 24; cnt = rnd(2, 16); }
+        else { bp = pick([16, 16, 20, 22]); cnt = rnd(3, 32); }
+        var base = netOf(randIp(), bp), n = 0; while (Math.pow(2, n) < cnt) n++;
+        var np = bp + n, kind = pick(["prefix", "hosts", "netz"]);
+        t.base = base; t.bp = bp; t.count = cnt; t.n = n; t.np = np; t.kind = kind;
+        t.q = "subnetting";
+        t.html = '<span class="line">' + intToIp(base) + '<span class="pfx">/' + bp + '</span></span>';
+        if (kind === "prefix") { t.sub = "Das Netz soll in <b>" + cnt + "</b> gleich große Subnetze geteilt werden. Welches Präfix haben die Subnetze?"; t.ans = "prefix"; t.value = np; }
+        else if (kind === "hosts") { t.sub = "Das Netz soll in <b>" + cnt + "</b> gleich große Subnetze geteilt werden. Wie viele Hosts sind pro Subnetz nutzbar?"; t.ans = "num"; t.value = hostsOf(np); }
+        else {
+          t.k = rnd(2, Math.max(2, cnt));
+          t.sub = "Das Netz soll in <b>" + cnt + "</b> gleich große Subnetze geteilt werden. Wie lautet die Netzadresse des <b>" + t.k + ". Subnetzes</b>?";
+          t.ans = "ip"; t.value = base + (t.k - 1) * Math.pow(2, 32 - np);
+        }
+      }
+      return t;
+    }
+
+    var PH = { ip: "z. B. 192.168.1.0", prefix: "z. B. /24", mask: "z. B. 255.255.255.0", num: "Anzahl" };
+
+    function renderStats() {
+      $("stRight").textContent = stats.right;
+      $("stTotal").textContent = stats.total;
+      $("stStreak").textContent = stats.streak;
+      $("stBest").textContent = stats.best;
+      $("history").innerHTML = stats.hist.length ? stats.hist.map(function (ok) {
+        return '<i class="' + (ok ? "ok" : "") + '" title="' + (ok ? "richtig" : "falsch") + '"></i>';
+      }).join("") : '<span class="history-empty">noch keine</span>';
+    }
+    function record(ok) {
+      stats.total++;
+      if (ok) { stats.right++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); }
+      else stats.streak = 0;
+      stats.hist.push(ok); if (stats.hist.length > 20) stats.hist.shift();
+      save(); renderStats();
+    }
+    function renderSettings() {
+      document.querySelectorAll("#typeChips .chip").forEach(function (c) { c.setAttribute("aria-pressed", c.dataset.type === pr.type ? "true" : "false"); });
+      document.querySelectorAll("#lvlChips .chip").forEach(function (c) { c.setAttribute("aria-pressed", +c.dataset.lvl === pr.lvl ? "true" : "false"); });
+    }
+    function showFb(kind, title, body) {
+      fb.className = "feedback " + kind;
+      fb.innerHTML = '<span class="fb-title">' + title + '</span>' + (body || "");
+      fb.hidden = false;
+    }
+
+    function newTask() {
+      var type = pr.type === "mix" ? pick(TYPES) : pr.type, t;
+      do { t = genTask(type); } while (pr.task && pr.task.html === t.html);
+      pr.task = t; pr.wrong = 0; pr.done = false; pr.counted = false;
+      $("taskQ").textContent = t.q;
+      $("taskNum").innerHTML = t.html;
+      $("taskSub").innerHTML = t.sub;
+      var isChoice = t.ans === "choice";
+      form.hidden = isChoice; choices.hidden = !isChoice;
+      if (isChoice) {
+        choices.innerHTML = t.choices.map(function (c) { return '<button type="button" class="btn btn-ghost" data-c="' + c[0] + '">' + c[1] + '</button>'; }).join("");
+      } else {
+        answer.placeholder = PH[t.ans];
+        answer.inputMode = t.ans === "num" ? "numeric" : "decimal";
+        answer.value = ""; answer.readOnly = false;
+        form.classList.remove("is-ok", "is-bad");
+        $("checkBtn").textContent = "prüfen";
+      }
+      $("solveBtn").disabled = false;
+      fb.hidden = true;
+      if (interacted && !isChoice) answer.focus({ preventScroll: true });
+    }
+
+    function blockHintText(ip, p) {
+      var bi = blockInfo(p);
+      if (!bi.r) return "Bei /" + p + " bleiben die ersten " + p / 8 + " Oktette unverändert, die übrigen sind Host (Netz: 0, Broadcast: 255).";
+      return "Das interessante Oktett ist das " + ORD[bi.io] + " (/" + p + " = " + Math.floor(p / 8) * 8 + " + " + bi.r + "). Maske dort " + bi.mo + ", Blockgröße 256 − " + bi.mo + " = " + bi.B + ".";
+    }
+    function solutionHtml(t) {
+      if (t.type === "adr") {
+        var v = adrValues(t.ip, t.p);
+        return '<span class="mono">' + intToIp(t.ip) + "/" + t.p + " → " + ["netz", "first", "last", "bc"].map(function (k) {
+          var s = ADR[k].name + " " + intToIp(v[k]);
+          return k === t.kind ? "<b>" + s + "</b>" : s;
+        }).join(" · ") + "</span>";
+      }
+      if (t.type === "hosts") return '<span class="mono">/' + t.p + " → " + (32 - t.p) + " Hostbits → " + pow2(32 - t.p) + " − 2 = <b>" + fmt(t.value) + "</b></span>";
+      if (t.type === "mask") {
+        var b = bits(maskOf(t.p)).match(/.{8}/g).join(".");
+        return '<span class="mono">/' + t.p + " = " + b + " = <b>" + (t.dir === "p2m" ? intToIp(maskOf(t.p)) : "/" + t.p) + "</b></span>";
+      }
+      if (t.type === "same") {
+        return '<span class="mono">Netz von ' + intToIp(t.a) + ": " + intToIp(netOf(t.a, t.p)) + "/" + t.p + "<br>Netz von " + intToIp(t.b) + ": " + intToIp(netOf(t.b, t.p)) + "/" + t.p +
+               "<br>→ <b>" + (t.value ? "gleiches Netz, direkt erreichbar" : "verschiedene Netze, Router nötig") + "</b></span>";
+      }
+      if (t.type === "priv") {
+        var o = octs(t.ip), why;
+        if (o[0] === 10) why = "liegt in 10.0.0.0/8";
+        else if (o[0] === 172 && o[1] >= 16 && o[1] <= 31) why = "liegt in 172.16.0.0/12 (172.16 bis 172.31)";
+        else if (o[0] === 192 && o[1] === 168) why = "liegt in 192.168.0.0/16";
+        else if (o[0] === 172) why = "172." + o[1] + " liegt außerhalb von 172.16–172.31";
+        else if (o[0] === 192) why = "nur 192.168.x.x ist privat, nicht 192." + o[1] + ".x.x";
+        else why = "liegt in keinem der drei privaten Bereiche";
+        return '<span class="mono">' + intToIp(t.ip) + " " + why + " → <b>" + (t.value ? "privat" : "öffentlich") + "</b></span>";
+      }
+      var size = Math.pow(2, 32 - t.np), bi = blockInfo(t.np);
+      var s = "2<sup>" + t.n + "</sup> = " + Math.pow(2, t.n) + " ≥ " + t.count + " → " + t.n + " Bits leihen → /" + t.bp + " + " + t.n + " = <b>/" + t.np + "</b>";
+      if (t.kind === "hosts") s += " → " + (32 - t.np) + " Hostbits → " + pow2(32 - t.np) + " − 2 = <b>" + fmt(t.value) + "</b>";
+      if (t.kind === "netz") s += " → Blockgröße " + (bi.r ? bi.B + " im " + ORD[bi.io] : "1 im " + ORD[bi.io - 1]) + " Oktett → " + t.k + ". Subnetz: <b>" + intToIp(t.value) + "</b>";
+      return '<span class="mono">' + s + "</span>";
+    }
+    function explainLink(t) {
+      return (t.type === "adr" || t.type === "sub") ? '<button type="button" class="linkbtn" id="toExplain">Schritt für Schritt ansehen ↑</button>' : "";
+    }
+
+    function finish(ok, title) {
+      if (!pr.counted) { pr.counted = true; record(ok); }
+      pr.done = true;
+      $("solveBtn").disabled = true;
+    }
+
+    function check(e) {
+      e.preventDefault();
+      interacted = true;
+      if (pr.done) { newTask(); return; }
+      var t = pr.task, raw = answer.value.trim().replace(/\s+/g, ""), val;
+      form.classList.remove("is-ok", "is-bad");
+      if (!raw) { showFb("", "> Antwort fehlt", "<span>Bitte gib zuerst eine Antwort ein.</span>"); return; }
+
+      if (t.ans === "ip") {
+        val = parseIp(raw);
+        if (val === null) { showFb("", "> Keine gültige IP-Adresse", "<span>Schreibweise: vier Zahlen von 0 bis 255 mit Punkten, z. B. 192.168.1.0 – ohne /Präfix.</span>"); return; }
+      } else if (t.ans === "mask") {
+        if (/^\/?\d{1,2}$/.test(raw)) { showFb("", "> Maske in Punktschreibweise", "<span>Gesucht ist die Maske wie 255.255.255.0, nicht das Präfix.</span>"); return; }
+        val = parseIp(raw);
+        if (val === null) { showFb("", "> Keine gültige Maske", "<span>Schreibweise: vier Zahlen von 0 bis 255 mit Punkten.</span>"); return; }
+        if (!isMask(val)) { showFb("", "> Keine gültige Subnetzmaske", "<span>Die Einsen müssen lückenlos links stehen. Erlaubte Werte je Oktett: 0, 128, 192, 224, 240, 248, 252, 254, 255.</span>"); return; }
+      } else if (t.ans === "prefix") {
+        var m = /^\/?(\d{1,2})$/.exec(raw);
+        if (!m || +m[1] > 32) { showFb("", "> Präfix angeben", "<span>Gesucht ist die Präfixlänge, z. B. /26 oder 26.</span>"); return; }
+        val = +m[1];
+      } else {
+        var digits = raw.replace(/[.,']/g, "");
+        if (!/^\d+$/.test(digits)) { showFb("", "> Nur eine Zahl", "<span>Bitte nur die Anzahl als Zahl eingeben.</span>"); return; }
+        val = +digits;
+      }
+
+      var ok = val === t.value;
+      if (!pr.counted) { pr.counted = true; record(ok); }
+      if (ok) {
+        pr.done = true;
+        form.classList.add("is-ok"); answer.readOnly = true;
+        $("checkBtn").textContent = "weiter ▶"; $("solveBtn").disabled = true;
+        showFb("ok", "> richtig!", solutionHtml(t) + '<span class="hint">Enter oder „weiter“ für die nächste Aufgabe.</span>');
+        return;
+      }
+
+      pr.wrong++;
+      form.classList.add("is-bad");
+      form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+      var msg = "", hint = "";
+      if (t.type === "adr") {
+        var v = adrValues(t.ip, t.p), other = null;
+        for (var k in v) if (k !== t.kind && v[k] === val) other = k;
+        if (other) msg = "Das ist " + ADR[other].the + " – gesucht ist " + ADR[t.kind].the + ".";
+        else if (netOf(val, t.p) !== v.netz) msg = "Diese Adresse liegt gar nicht im Netz von " + intToIp(t.ip) + "/" + t.p + ".";
+        else msg = "Das liegt zwar im richtigen Netz, ist aber nicht " + ADR[t.kind].the + ".";
+        var bi = blockInfo(t.p), rule = { netz: "Netzadresse = Blockanfang (alle Hostbits 0)", bc: "Broadcast = Blockende (alle Hostbits 1)", first: "erste Hostadresse = Netzadresse + 1", last: "letzte Hostadresse = Broadcast − 1" }[t.kind];
+        if (pr.wrong === 1) hint = "Tipp: " + blockHintText(t.ip, t.p);
+        else if (bi.r) { var ov = octs(t.ip)[bi.io], st = Math.floor(ov / bi.B) * bi.B; hint = "Tipp: " + ov + " liegt im Block " + st + "–" + (st + bi.B - 1) + ". " + rule + "."; }
+        else hint = "Tipp: " + rule + ".";
+      } else if (t.type === "hosts") {
+        var hb = 32 - t.p;
+        if (val === Math.pow(2, hb)) msg = "Fast! Das sind alle Adressen im Netz. Netz- und Broadcastadresse kann kein Gerät bekommen.";
+        else if (val === Math.pow(2, hb) - 1) msg = "Fast! Es fallen <b>zwei</b> Adressen weg: Netz- und Broadcastadresse.";
+        else msg = "<b>" + fmt(val) + "</b> stimmt nicht.";
+        hint = pr.wrong === 1
+          ? "Tipp: " + (t.useMask ? "Zähle erst die Einsen der Maske (= Präfix). " : "") + "Hostbits = 32 − Präfix. Nutzbare Hosts = 2<sup>Hostbits</sup> − 2."
+          : "Tipp: Präfix /" + t.p + " → " + hb + " Hostbits → " + pow2(hb) + " = " + fmt(Math.pow(2, hb)) + ".";
+      } else if (t.type === "mask") {
+        if (t.dir === "p2m") {
+          msg = "Deine Maske entspricht /" + prefixOfMask(val) + ".";
+          var full = Math.floor(t.p / 8), r = t.p % 8;
+          hint = pr.wrong === 1
+            ? "Tipp: /" + t.p + " = " + full + " volle Oktette (255)" + (r ? " und " + r + " Einsen im nächsten Oktett" : "") + ", der Rest 0."
+            : "Tipp: " + bits(maskOf(t.p)).match(/.{8}/g).join(".");
+        } else {
+          msg = "/" + val + " wäre " + intToIp(maskOf(val)) + ".";
+          var mo = octs(maskOf(t.p)).filter(function (x) { return x !== 255 && x !== 0; })[0];
+          hint = pr.wrong === 1
+            ? "Tipp: Zähle die Einsen. Jedes 255 sind 8 Einsen."
+            : "Tipp: " + (mo ? mo + " = " + bin8(mo) + " → " + prefixOfMask(mo << 24 >>> 0) + " Einsen. " : "") + octs(maskOf(t.p)).filter(function (x) { return x === 255; }).length + "-mal 255 = " + octs(maskOf(t.p)).filter(function (x) { return x === 255; }).length * 8 + " Einsen.";
+        }
+      } else {
+        var bi2 = blockInfo(t.np);
+        if (t.kind === "prefix") {
+          msg = val === t.bp + t.count ? "Nicht die Anzahl der Subnetze addieren, sondern die Anzahl der <b>geliehenen Bits</b>." : "/" + val + " stimmt nicht.";
+          hint = pr.wrong === 1 ? "Tipp: Suche die kleinste Zahl n mit 2<sup>n</sup> ≥ " + t.count + ". So viele Bits leihst du dir." : "Tipp: " + pow2(t.n) + " = " + Math.pow(2, t.n) + " ≥ " + t.count + " → /" + t.bp + " + " + t.n + ".";
+        } else if (t.kind === "hosts") {
+          msg = "<b>" + fmt(val) + "</b> stimmt nicht.";
+          hint = pr.wrong === 1 ? "Tipp: Bestimme zuerst das neue Präfix (2<sup>n</sup> ≥ " + t.count + "), dann Hosts = 2<sup>Hostbits</sup> − 2." : "Tipp: Neues Präfix /" + t.np + " → " + (32 - t.np) + " Hostbits.";
+        } else {
+          msg = "Das ist nicht die Netzadresse des " + t.k + ". Subnetzes.";
+          var bo = bi2.r ? bi2.io : bi2.io - 1, B = bi2.r ? bi2.B : 1;
+          hint = pr.wrong === 1 ? "Tipp: Neues Präfix /" + t.np + ", Blockgröße " + B + " im " + ORD[bo] + " Oktett." : "Tipp: Das 1. Subnetz beginnt bei " + intToIp(t.base) + ", jedes weitere " + B + " später im " + ORD[bo] + " Oktett. Das " + t.k + ". also " + (t.k - 1) + " · " + B + " = " + (t.k - 1) * B + " später" +
+                  ((t.k - 1) * B >= 256 ? " – Achtung: Alle 256 springt das " + ORD[bo - 1] + " Oktett um eins weiter." : ".");
+        }
+      }
+      showFb("bad", "> leider falsch – versuch’s nochmal", "<span>" + msg + '</span><span class="hint">' + hint + "</span>");
+      answer.select();
+    }
+
+    choices.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-c]"); if (!b || pr.done) return;
+      interacted = true;
+      var t = pr.task, pickYes = b.dataset.c === "ja" || b.dataset.c === "privat", ok = pickYes === t.value;
+      finish(ok);
+      choices.querySelectorAll("button").forEach(function (x) {
+        var yes = x.dataset.c === "ja" || x.dataset.c === "privat";
+        if (yes === t.value) x.classList.add("ok"); else if (x === b) x.classList.add("bad");
+        x.disabled = true;
+      });
+      showFb(ok ? "ok" : "bad", ok ? "> richtig!" : "> leider falsch", solutionHtml(t) + '<span class="hint">„neue Aufgabe“ für die nächste.</span>');
+      $("newBtn").focus({ preventScroll: true });
+    });
+
+    function solve() {
+      interacted = true;
+      if (pr.done) return;
+      finish(false);
+      var t = pr.task;
+      if (t.ans === "choice") {
+        choices.querySelectorAll("button").forEach(function (x) {
+          var yes = x.dataset.c === "ja" || x.dataset.c === "privat";
+          if (yes === t.value) x.classList.add("ok"); x.disabled = true;
+        });
+      } else {
+        answer.readOnly = true; form.classList.remove("is-bad", "is-ok");
+        $("checkBtn").textContent = "weiter ▶";
+      }
+      showFb("sol", "> lösung", solutionHtml(t) + explainLink(t));
+    }
+
+    fb.addEventListener("click", function (e) {
+      if (!e.target.closest("#toExplain")) return;
+      var t = pr.task;
+      if (t.type === "adr") setEx({ ip: t.ip, p: t.p, mode: t.p % 8 ? "block" : "bit" });
+      else setEx({ ip: t.base, p: t.bp, count: t.count, mode: "sub" });
+      $("verstehen").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    form.addEventListener("submit", check);
+    $("solveBtn").addEventListener("click", solve);
+    $("newBtn").addEventListener("click", function () { interacted = true; newTask(); });
+    answer.addEventListener("input", function () { form.classList.remove("is-bad"); });
+    $("typeChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      interacted = true; pr.type = c.dataset.type; save(); renderSettings(); newTask();
+    });
+    $("lvlChips").addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      interacted = true; pr.lvl = +c.dataset.lvl; save(); renderSettings(); newTask();
+    });
+    $("resetStats").addEventListener("click", function () {
+      stats = { right: 0, total: 0, streak: 0, best: 0, hist: [] };
+      save(); renderStats();
+    });
+
+    /* ---------- Start ---------- */
+    renderEx();
+    renderSettings();
+    renderStats();
+    newTask();
+  })();
+  </script>
+</body>
+</html>
