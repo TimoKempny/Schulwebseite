@@ -66,7 +66,7 @@ const EINTRAEGE = [
     titel: "IPv4 & Subnetze",
     beschreibung: "IP-Adressen, Subnetzmasken und Subnetting verstehen und üben",
     url: "ipv4.html",
-    fach: "Kom1",
+    fach: "ITS",
     neu: true
   },
   {
