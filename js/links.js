@@ -46,6 +46,14 @@ const EINTRAEGE = [
     url: "c-editor.html",
     fach: "Prog"
   },
+    {
+    typ: "tool",
+    titel: "Python-Editor",
+    beschreibung: "Python-Programme im Browser schreiben und ausführen – mit input() und Fehlertipps",
+    url: "python-editor.html",
+    fach: "Prog",
+    neu: true
+  },
   {
     typ: "tool",
     titel: "Binär <-> Dezimal",
