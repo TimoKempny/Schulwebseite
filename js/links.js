@@ -56,6 +56,14 @@ const EINTRAEGE = [
   },
   {
     typ: "tool",
+    titel: "Das Netz der Netze",
+    beschreibung: "Vom weltweiten Internet bis ins Schulnetz hineinzoomen und den Weg eines Datenpakets verfolgen",
+    url: "netzkarte.html",
+    fach: "ITS",
+    neu: true
+  },
+  {
+    typ: "tool",
     titel: "PDF-Editor",
     beschreibung: "PDFs zusammenfügen, teilen, ordnen, schützen, unterschreiben und schwärzen – alles im Browser",
     url: "pdf-editor.html",

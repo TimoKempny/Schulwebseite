@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Das Netz der Netze · Unterricht</title>
+  <meta name="description" content="Vom weltweiten Internet bis ins Schulnetz: Schritt für Schritt in eine vereinfachte Karte des Internets hineinzoomen.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    /* ---------- Werkzeug-spezifische Farben ---------- */
+    :root {
+      --meer: #e2eef0;
+      --land: #ffffff;
+      --land-rand: #c9d6d3;
+      --nachbar: #eef2f1;
+      --l-see: #2563eb;
+      --l-backbone: var(--accent);
+      --l-glas: #d97706;
+      --l-kupfer: #9a6a3a;
+      --l-lan: #475569;
+      --l-wlan: #7c3aed;
+      --l-funk: #db2777;
+      --tour: #e11d48;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --meer: #0b1a1c;
+        --land: #1b2624;
+        --land-rand: #2f403d;
+        --nachbar: #141d1c;
+        --l-see: #60a5fa;
+        --l-glas: #fbbf24;
+        --l-kupfer: #d6a06a;
+        --l-lan: #94a3b8;
+        --l-wlan: #a78bfa;
+        --l-funk: #f472b6;
+        --tour: #fb7185;
+      }
+    }
+    :root[data-theme="dark"] {
+      --meer: #0b1a1c;
+      --land: #1b2624;
+      --land-rand: #2f403d;
+      --nachbar: #141d1c;
+      --l-see: #60a5fa;
+      --l-glas: #fbbf24;
+      --l-kupfer: #d6a06a;
+      --l-lan: #94a3b8;
+      --l-wlan: #a78bfa;
+      --l-funk: #f472b6;
+      --tour: #fb7185;
+    }
+
+    /* ---------- Layout ---------- */
+    .nk-section { margin-top: 24px; }
+    .nk-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    @media (min-width: 980px) {
+      .nk-grid { grid-template-columns: minmax(0, 1fr) 320px; }
+    }
+    .small { font-size: .88rem; }
+    .muted { color: var(--muted); }
+
+    .crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 12px; }
+    .crumbs .sep { color: var(--muted); font-family: var(--font-mono); font-size: .8rem; }
+    .crumbs .chip:disabled { cursor: default; }
+
+    .karte-box { padding: 10px; }
+    .karte {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1000 / 600;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--meer);
+    }
+    .karte.schema { background: var(--surface-2); }
+    .karte svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transition: opacity .45s ease;
+    }
+    .karte-leiste { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
+    .karte-leiste .hint { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); margin-right: auto; }
+
+    /* Karte */
+    .land { fill: var(--land); stroke: var(--land-rand); stroke-width: .8; vector-effect: non-scaling-stroke; }
+    .land.nachbar { fill: var(--nachbar); }
+    .ziel-gruppe { cursor: pointer; }
+    .ziel-gruppe .land { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+    .ziel-gruppe:hover .land, .ziel-gruppe:focus-visible .land { fill: color-mix(in srgb, var(--accent) 30%, var(--land)); }
+    .ziel-gruppe:focus { outline: none; }
+    .ziel-label {
+      font: 700 calc(14px * var(--k, 1)) var(--font-mono);
+      fill: var(--accent-strong);
+      paint-order: stroke;
+      stroke: var(--land);
+      stroke-width: calc(4px * var(--k, 1));
+      pointer-events: none;
+    }
+    .beschr {
+      font: italic calc(12px * var(--k, 1)) var(--font-sans);
+      fill: var(--muted);
+      pointer-events: none;
+      text-anchor: middle;
+    }
+    .beschr.meer { letter-spacing: .15em; }
+
+    /* Leitungen */
+    .link { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linecap: round; opacity: .85; }
+    .link.see { stroke: var(--l-see); stroke-width: 2.2; }
+    .link.backbone { stroke: var(--l-backbone); stroke-width: 2.6; }
+    .link.glas { stroke: var(--l-glas); stroke-width: 2.4; }
+    .link.kupfer { stroke: var(--l-kupfer); stroke-dasharray: 2 4; }
+    .link.lan { stroke: var(--l-lan); }
+    .link.wlan { stroke: var(--l-wlan); stroke-dasharray: 5 5; }
+    .link.funk { stroke: var(--l-funk); stroke-dasharray: 5 5; }
+    .link.extern { stroke-dasharray: 6 5; opacity: .6; }
+    .link.dim { opacity: .18; }
+    .link.hell { opacity: 1; stroke-width: 4; }
+    .link.route { stroke: var(--tour); stroke-width: 4.5; opacity: 1; stroke-dasharray: none; }
+
+    .paket { pointer-events: none; }
+    .paket.tour { fill: var(--tour); stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
+
+    /* Knoten */
+    .knoten { cursor: pointer; }
+    .knoten .sk { transform: scale(var(--k, 1)); }
+    .knoten .punkt { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+    .knoten.gross .punkt { fill: var(--accent); stroke: var(--surface); }
+    .knoten.lande .punkt { stroke: var(--l-see); }
+    .knoten.extern .punkt { fill: var(--surface-2); stroke: var(--muted); stroke-dasharray: 2 2; }
+    .knoten .ico-bg { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+    .knoten .ico { fill: none; stroke: var(--text); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .knoten.ziel .ico-bg { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+    .knoten.ziel .ico { stroke: var(--accent-strong); }
+    .knoten.extern .ico-bg { fill: var(--surface-2); stroke-dasharray: 3 3; }
+    .knoten.extern .ico { stroke: var(--muted); }
+    .knoten .name {
+      font: 600 12px var(--font-sans);
+      fill: var(--text);
+      paint-order: stroke;
+      stroke: var(--surface);
+      stroke-width: 3.5px;
+      stroke-linejoin: round;
+    }
+    .knoten.extern .name { fill: var(--muted); font-style: italic; font-weight: 400; }
+    .knoten:hover .punkt, .knoten.aktiv .punkt { stroke: var(--tour); }
+    .knoten:hover .ico-bg, .knoten.aktiv .ico-bg { stroke: var(--tour); stroke-width: 2.5; }
+    .knoten:focus { outline: none; }
+    .knoten:focus-visible .ico-bg, .knoten:focus-visible .punkt { stroke: var(--tour); stroke-width: 3; }
+    @media (max-width: 640px) {
+      .knoten.klein .name { display: none; }
+    }
+
+    /* Schema-Hintergründe */
+    .flaeche { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+    .flaeche.raum { fill: var(--bg); }
+    .fluss { fill: none; stroke: color-mix(in srgb, var(--l-see) 35%, transparent); stroke-width: 9; stroke-linecap: round; }
+    .huegel { fill: color-mix(in srgb, var(--ok) 14%, transparent); }
+    .raum-label { font: 600 calc(12px * var(--k, 1)) var(--font-mono); fill: var(--muted); }
+
+    /* Infoleiste */
+    .info { display: grid; gap: 14px; align-content: start; }
+    .info h2 { margin: 0; font-size: 1.25rem; }
+    .info p { margin: 0; }
+    .legende { display: grid; gap: 6px; font-size: .86rem; }
+    .legende .z { display: flex; align-items: center; gap: 10px; }
+    .legende svg { flex: none; }
+    .karte-info { border-top: 1px solid var(--border); padding-top: 14px; display: grid; gap: 8px; }
+    .karte-info .typ { font-family: var(--font-mono); font-size: .75rem; color: var(--accent); text-transform: lowercase; }
+    .karte-info h3 { margin: 0; font-size: 1.05rem; }
+    .karte-info .ip { font-family: var(--font-mono); font-size: .85rem; background: var(--surface-2); border-radius: 6px; padding: 2px 8px; justify-self: start; }
+
+    .tour-box { border-top: 1px solid var(--border); padding-top: 14px; display: grid; gap: 10px; }
+    .tour-box .tour-text { font-size: .95rem; }
+    .hops {
+      margin: 0;
+      padding: 10px 12px;
+      list-style: none;
+      counter-reset: hop;
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      background: var(--surface-2);
+      border-radius: 8px;
+      max-height: 220px;
+      overflow: auto;
+    }
+    .hops li { counter-increment: hop; display: flex; gap: 8px; }
+    .hops li::before { content: counter(hop); color: var(--tour); min-width: 2ch; text-align: right; }
+    .hops li span { color: var(--muted); margin-left: auto; }
+
+    .quelle { font-size: .78rem; color: var(--muted); margin-top: 10px; }
+    .quelle a { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">netzkarte</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">tool · netzwerktechnik</p>
+      <h1>Das Netz der Netze</h1>
+      <p>Das Internet ist kein einzelnes Netz, sondern viele Netze, die miteinander verbunden sind. Zoome Schritt für Schritt hinein: von der Welt über Europa, Deutschland, Baden-Württemberg und Reutlingen bis ins Netz der Steinbeisschule.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="container nk-section">
+      <nav class="crumbs" id="crumbs" aria-label="Zoomstufen"></nav>
+
+      <div class="nk-grid">
+        <div class="panel karte-box">
+          <div class="karte" id="karte" role="application" aria-label="Karte des Netzes"></div>
+          <div class="karte-leiste">
+            <span class="hint" id="hint"></span>
+            <button class="btn btn-ghost" id="btnPakete" type="button" aria-pressed="true">pakete: an</button>
+            <button class="btn btn-ghost" id="btnZurueck" type="button">− herauszoomen</button>
+            <button class="btn" id="btnTour" type="button">▶ Weg eines Datenpakets</button>
+          </div>
+        </div>
+
+        <aside class="panel info" aria-live="polite">
+          <div>
+            <span class="flabel" id="infoStufe"></span>
+            <h2 id="infoTitel"></h2>
+          </div>
+          <p id="infoText"></p>
+          <div class="legende" id="legende"></div>
+          <div class="karte-info" id="knotenInfo" hidden></div>
+          <div class="tour-box" id="tourBox" hidden></div>
+        </aside>
+      </div>
+
+      <p class="quelle">
+        Vereinfachte Darstellung zur Veranschaulichung – Knoten, Leitungen und Adressen sind Beispiele und entsprechen nicht dem echten Internet oder dem echten Schulnetz.
+        Kartengrundlage: <a href="https://www.naturalearthdata.com" target="_blank" rel="noopener">Natural Earth</a> (gemeinfrei);
+        Länder- und Kreisgrenzen: © <a href="https://www.bkg.bund.de" target="_blank" rel="noopener">BKG</a> (2026)
+        <a href="https://www.govdata.de/dlde/by-2-0" target="_blank" rel="noopener">dl-de/by-2-0</a>, Datenquellen:
+        <a href="https://sgx.geodatenzentrum.de/web_public/gdz/datenquellen/datenquellen_vg_nuts.pdf" target="_blank" rel="noopener">datenquellen_vg_nuts.pdf</a>; Daten vereinfacht und verändert.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/netzkarte-daten.js"></script>
+  <script src="js/netzkarte.js"></script>
+</body>
+</html>
