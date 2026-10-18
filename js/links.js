@@ -48,6 +48,14 @@ const EINTRAEGE = [
   },
   {
     typ: "tool",
+    titel: "Python Editor",
+    beschreibung: "Python Programme im Browser schreiben und interpretieren",
+    url: "python-editor.html",
+    fach: "SAE", 
+    neu: true
+  },
+  {
+    typ: "tool",
     titel: "Binär <-> Dezimal",
     beschreibung: "Umrechnung Binär <-> Dezimal lernen und üben",
     url: "binaer.html",
