@@ -56,6 +56,14 @@ const EINTRAEGE = [
   },
   {
     typ: "tool",
+    titel: "PDF-Editor",
+    beschreibung: "PDFs zusammenfügen, teilen, ordnen, schützen, unterschreiben und schwärzen – alles im Browser",
+    url: "pdf-editor.html",
+    fach: "Allgemein",
+    neu: true
+  },
+  {
+    typ: "tool",
     titel: "Binär <-> Dezimal",
     beschreibung: "Umrechnung Binär <-> Dezimal lernen und üben",
     url: "binaer.html",

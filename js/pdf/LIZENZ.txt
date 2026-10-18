@@ -1,0 +1,11 @@
+Bibliotheken für den PDF-Editor (pdf-editor.html)
+Alle Dateien sind unverändert aus den jeweiligen npm-Paketen übernommen.
+
+pdf-lib.min.js          pdf-lib 1.17.1          MIT-Lizenz          https://github.com/Hopding/pdf-lib
+pdf.min.js,
+pdf.worker.min.js       pdfjs-dist 3.11.174     Apache-2.0          https://github.com/mozilla/pdf.js
+fflate.min.js           fflate 0.8.2 (umd)      MIT-Lizenz          https://github.com/101arrowz/fflate
+qpdf.js, qpdf.wasm      @neslinesli93/qpdf-wasm 0.3.0 (QPDF 12.2.0)
+                        ISC / QPDF: Apache-2.0  https://github.com/neslinesli93/qpdf-wasm
+
+Aktualisieren: neue Version per "npm pack <paket>" holen und die Dateien ersetzen.
