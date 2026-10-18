@@ -48,10 +48,10 @@ const EINTRAEGE = [
   },
   {
     typ: "tool",
-    titel: "Python Editor",
-    beschreibung: "Python Programme im Browser schreiben und interpretieren",
+    titel: "Python-Editor",
+    beschreibung: "Python-Programme im Browser schreiben und ausführen – mit input() und Fehlertipps",
     url: "python-editor.html",
-    fach: "SAE", 
+    fach: "SAE",
     neu: true
   },
   {
