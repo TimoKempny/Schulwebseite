@@ -15,6 +15,7 @@
              oder ein Symbol aus ICONS (Schema)
        lp    Lage der Beschriftung: r (Standard) | l | t | b
        zoom  true = Klick zoomt in die nächste Stufe
+       mini  true = kleines Symbol ohne Beschriftung (Geräte im Gebäudenetz)
      Leitungen: [von, nach, typ, { kurve, knick }]
        typ   see | backbone | glas | kupfer | lan | wlan | funk
      ========================================================== */
@@ -40,7 +41,7 @@
       ],
       knoten: {
         newyork: { name: "New York", art: "ixp", lon: -74, lat: 40.7, lp: "t", info: "Großer Internetknoten an der Ostküste der USA. Hier kommen viele Seekabel aus Europa an." },
-        ashburn: { name: "Ashburn", art: "rz", lon: -77.5, lat: 39, lp: "l", info: "In Ashburn (Virginia) stehen so viele Rechenzentren wie kaum irgendwo sonst. Viele Webseiten und Cloud-Dienste laufen hier." },
+        ashburn: { name: "Ashburn", art: "rz", lon: -77.5, lat: 39, lp: "b", info: "In Ashburn (Virginia) stehen so viele Rechenzentren wie kaum irgendwo sonst. Viele Webseiten und Cloud-Dienste laufen hier." },
         siliconvalley: { name: "Silicon Valley", art: "ixp", lon: -122, lat: 37.4, lp: "b", info: "Sitz vieler großer Tech-Firmen und Rechenzentren an der Westküste der USA. Von hier führen Seekabel über den Pazifik." },
         miami: { name: "Miami", art: "lande", lon: -80.2, lat: 25.8, lp: "l", info: "Landestation für Seekabel nach Südamerika und in die Karibik." },
         fortaleza: { name: "Fortaleza", art: "lande", lon: -38.5, lat: -3.7, info: "An der Nordostspitze Brasiliens landen Seekabel aus Nordamerika, Europa und Afrika." },
@@ -57,7 +58,19 @@
         singapur: { name: "Singapur", art: "ixp", lon: 103.8, lat: 1.35, lp: "b", info: "Drehkreuz Südostasiens: Hier treffen sich Dutzende Seekabel." },
         hongkong: { name: "Hongkong", art: "ixp", lon: 114.2, lat: 22.3, lp: "l", info: "Großer Internetknoten in Ostasien." },
         tokio: { name: "Tokio", art: "ixp", lon: 139.7, lat: 35.7, lp: "t", info: "Internetknoten in Japan. Seekabel führen von hier über den Pazifik in die USA." },
-        sydney: { name: "Sydney", art: "lande", lon: 151.2, lat: -33.9, lp: "l", info: "Australien ist fast nur über Seekabel mit dem Rest der Welt verbunden." }
+        sydney: { name: "Sydney", art: "lande", lon: 151.2, lat: -33.9, lp: "l", info: "Australien ist fast nur über Seekabel mit dem Rest der Welt verbunden." },
+        chicago: { name: "Chicago", art: "knoten", lon: -87.6, lat: 41.9, lp: "l", info: "Knoten im Mittleren Westen der USA. Hier kreuzen sich die Fernleitungen zwischen Ost- und Westküste." },
+        seattle: { name: "Seattle", art: "lande", lon: -122.3, lat: 47.6, lp: "l", info: "Landestation an der Nordwestküste der USA für Seekabel nach Japan und Asien." },
+        hawaii: { name: "Hawaii", art: "lande", lon: -158, lat: 21.3, lp: "t", info: "Zwischenstation mitten im Pazifik: Viele Seekabel zwischen Amerika, Asien und Australien legen hier einen Halt ein." },
+        guam: { name: "Guam", art: "lande", lon: 144.8, lat: 13.4, lp: "r", info: "Kleine Insel im Westpazifik – ein wichtiges Drehkreuz für Seekabel nach Asien und Australien." },
+        shanghai: { name: "Shanghai", art: "ixp", lon: 121.5, lat: 31.2, lp: "t", info: "Großer Internetknoten in China. Von hier führen Seekabel nach Japan, in die USA und nach Südostasien." },
+        moskau: { name: "Moskau", art: "knoten", lon: 37.6, lat: 55.8, info: "Knoten in Russland. Über Landleitungen geht es quer durch Asien bis nach China." },
+        dschibuti: { name: "Dschibuti", art: "lande", lon: 43.1, lat: 11.6, info: "Am Ausgang des Roten Meeres: Hier landen viele Seekabel zwischen Europa, Afrika und Asien." },
+        mombasa: { name: "Mombasa", art: "lande", lon: 39.7, lat: -4, info: "Wichtigste Landestation Ostafrikas in Kenia." },
+        chennai: { name: "Chennai", art: "lande", lon: 80.3, lat: 13.1, info: "Landestation an der Ostküste Indiens für Seekabel nach Südostasien." },
+        perth: { name: "Perth", art: "lande", lon: 115.9, lat: -32, lp: "l", info: "Landestation an der Westküste Australiens mit Seekabeln nach Singapur." },
+        auckland: { name: "Auckland", art: "lande", lon: 174.8, lat: -36.8, lp: "b", info: "Neuseeland ist über Seekabel mit Australien und Amerika verbunden." },
+        buenosaires: { name: "Buenos Aires", art: "knoten", lon: -58.4, lat: -34.6, lp: "b", info: "Internetknoten in Argentinien, über Land und Seekabel mit Brasilien verbunden." }
       },
       links: [
         ["newyork", "london", "see", { kurve: -0.12 }],
@@ -81,7 +94,30 @@
         ["singapur", "sydney", "see"],
         ["london", "lagos", "see", { kurve: 0.2 }],
         ["lagos", "kapstadt", "see", { kurve: 0.15 }],
-        ["kapstadt", "mumbai", "see", { kurve: 0.1 }]
+        ["kapstadt", "mumbai", "see", { kurve: 0.1 }],
+        ["newyork", "chicago", "backbone"],
+        ["chicago", "siliconvalley", "backbone"],
+        ["seattle", "siliconvalley", "backbone"],
+        ["seattle", "tokio", "see"],
+        ["siliconvalley", "hawaii", "see"],
+        ["hawaii", "guam", "see"],
+        ["guam", "hongkong", "see"],
+        ["hawaii", "auckland", "see"],
+        ["auckland", "sydney", "see"],
+        ["tokio", "shanghai", "see"],
+        ["shanghai", "hongkong", "backbone"],
+        ["frankfurt", "moskau", "backbone"],
+        ["moskau", "shanghai", "backbone"],
+        ["kairo", "dschibuti", "see"],
+        ["dschibuti", "mumbai", "see"],
+        ["dschibuti", "mombasa", "see"],
+        ["mombasa", "kapstadt", "see", { kurve: 0.1 }],
+        ["mumbai", "chennai", "backbone"],
+        ["chennai", "singapur", "see"],
+        ["singapur", "perth", "see"],
+        ["perth", "sydney", "backbone"],
+        ["saopaulo", "buenosaires", "backbone"],
+        ["fortaleza", "lagos", "see"]
       ]
     },
 
@@ -118,7 +154,17 @@
         ex_amerika: { name: "→ Nordamerika", art: "extern", lon: -19, lat: 51.5, lp: "b", info: "Seekabel durch den Atlantik nach New York und Virginia." },
         ex_suedamerika: { name: "→ Südamerika", art: "extern", lon: -19, lat: 37.5, lp: "b", info: "Seekabel nach Brasilien." },
         ex_asien_see: { name: "→ Afrika & Asien", art: "extern", lon: 28, lat: 35.3, lp: "l", info: "Seekabel durch das Mittelmeer nach Ägypten und weiter nach Asien." },
-        ex_asien: { name: "→ Osteuropa & Asien", art: "extern", lon: 40, lat: 56.5, lp: "b", info: "Landleitungen nach Osten." }
+        ex_asien: { name: "→ Osteuropa & Asien", art: "extern", lon: 40, lat: 56.5, lp: "b", info: "Landleitungen nach Osten." },
+        berlin: { name: "Berlin", art: "knoten", lon: 13.4, lat: 52.5, info: "Knoten in Ostdeutschland, Verbindung nach Polen." },
+        oslo: { name: "Oslo", art: "knoten", lon: 10.75, lat: 59.9, lp: "l", info: "Knoten in Norwegen." },
+        helsinki: { name: "Helsinki", art: "knoten", lon: 24.9, lat: 60.2, info: "Knoten in Finnland. Ein Seekabel durch die Ostsee führt direkt nach Deutschland." },
+        budapest: { name: "Budapest", art: "knoten", lon: 19, lat: 47.5, info: "Knoten in Ungarn." },
+        bukarest: { name: "Bukarest", art: "knoten", lon: 26.1, lat: 44.4, info: "Knoten in Rumänien, Verbindung Richtung Türkei." },
+        athen: { name: "Athen", art: "lande", lon: 23.7, lat: 38, lp: "b", info: "Landestation für Seekabel im östlichen Mittelmeer." },
+        palermo: { name: "Palermo", art: "lande", lon: 13.4, lat: 38.1, lp: "l", info: "Sizilien liegt mitten im Mittelmeer – viele Seekabel zwischen Europa, Afrika und Asien landen hier." },
+        barcelona: { name: "Barcelona", art: "knoten", lon: 2.2, lat: 41.4, lp: "b", info: "Knoten in Spanien am Mittelmeer." },
+        bilbao: { name: "Bilbao", art: "lande", lon: -2.9, lat: 43.3, lp: "t", info: "Hier landet ein modernes Seekabel aus den USA (Virginia)." },
+        ex_tuerkei: { name: "→ Türkei & Nahost", art: "extern", lon: 34, lat: 41, lp: "b", info: "Landleitungen über die Türkei in den Nahen Osten." }
       },
       links: [
         ["london", "amsterdam", "backbone"],
@@ -145,7 +191,25 @@
         ["lissabon", "ex_suedamerika", "see"],
         ["marseille", "ex_asien_see", "see", { kurve: 0.06 }],
         ["warschau", "ex_asien", "backbone"],
-        ["stockholm", "ex_asien", "backbone"]
+        ["stockholm", "ex_asien", "backbone"],
+        ["frankfurt", "berlin", "backbone"],
+        ["berlin", "warschau", "backbone"],
+        ["kopenhagen", "oslo", "backbone"],
+        ["oslo", "stockholm", "backbone"],
+        ["stockholm", "helsinki", "see"],
+        ["helsinki", "ex_asien", "backbone"],
+        ["wien", "budapest", "backbone"],
+        ["budapest", "bukarest", "backbone"],
+        ["bukarest", "ex_tuerkei", "backbone"],
+        ["bukarest", "athen", "backbone"],
+        ["athen", "ex_asien_see", "see"],
+        ["mailand", "palermo", "backbone"],
+        ["marseille", "palermo", "see"],
+        ["palermo", "ex_asien_see", "see"],
+        ["madrid", "barcelona", "backbone"],
+        ["barcelona", "marseille", "backbone"],
+        ["madrid", "bilbao", "backbone"],
+        ["bilbao", "ex_amerika", "see"]
       ]
     },
 
@@ -178,19 +242,31 @@
         wien: { name: "→ Wien", art: "extern", lon: 16.4, lat: 48.2, lp: "b", info: "Verbindung nach Österreich." },
         prag: { name: "→ Prag", art: "extern", lon: 14.4, lat: 50.1, info: "Verbindung nach Tschechien." },
         warschau: { name: "→ Warschau", art: "extern", lon: 20.9, lat: 52.2, lp: "l", info: "Verbindung nach Polen." },
-        kopenhagen: { name: "→ Kopenhagen", art: "extern", lon: 12.6, lat: 55.15, info: "Verbindung nach Dänemark und Skandinavien." }
+        kopenhagen: { name: "→ Kopenhagen", art: "extern", lon: 12.6, lat: 55.15, info: "Verbindung nach Dänemark und Skandinavien." },
+        bremen: { name: "Bremen", art: "knoten", lon: 8.8, lat: 53.1, lp: "l", info: "Knoten im Nordwesten." },
+        rostock: { name: "Rostock", art: "lande", lon: 12.1, lat: 54.1, lp: "t", info: "Hier landet ein Seekabel, das durch die Ostsee direkt nach Finnland führt." },
+        kassel: { name: "Kassel", art: "knoten", lon: 9.5, lat: 51.3, info: "Knoten in der Mitte Deutschlands zwischen Hannover und Frankfurt." },
+        erfurt: { name: "Erfurt", art: "knoten", lon: 11.03, lat: 50.98, lp: "b", info: "Knoten in Thüringen." },
+        dresden: { name: "Dresden", art: "knoten", lon: 13.74, lat: 51.05, info: "Knoten in Sachsen, Verbindung nach Tschechien." },
+        karlsruhe: { name: "Karlsruhe", art: "knoten", lon: 8.4, lat: 49, lp: "l", info: "Knoten am Oberrhein, Verbindung nach Frankreich." },
+        bruessel: { name: "→ Brüssel", art: "extern", lon: 4.35, lat: 50.85, lp: "b", info: "Verbindung nach Belgien." },
+        helsinki: { name: "→ Helsinki", art: "extern", lon: 15.5, lat: 54.75, info: "Seekabel durch die Ostsee nach Finnland." }
       },
       links: [
         ["hamburg", "berlin", "backbone"],
         ["hamburg", "hannover", "backbone"],
         ["hannover", "berlin", "backbone"],
         ["hannover", "duesseldorf", "backbone"],
-        ["hannover", "frankfurt", "backbone"],
+        ["hannover", "kassel", "backbone"],
+        ["kassel", "frankfurt", "backbone"],
         ["duesseldorf", "koeln", "backbone"],
         ["duesseldorf", "frankfurt", "backbone"],
         ["koeln", "frankfurt", "backbone"],
         ["berlin", "leipzig", "backbone"],
-        ["leipzig", "frankfurt", "backbone"],
+        ["kassel", "erfurt", "backbone"],
+        ["erfurt", "frankfurt", "backbone"],
+        ["erfurt", "leipzig", "backbone"],
+        ["erfurt", "nuernberg", "backbone"],
         ["leipzig", "nuernberg", "backbone"],
         ["frankfurt", "nuernberg", "backbone"],
         ["nuernberg", "muenchen", "backbone"],
@@ -202,7 +278,20 @@
         ["muenchen", "wien", "backbone"],
         ["nuernberg", "prag", "backbone"],
         ["berlin", "warschau", "backbone"],
-        ["hamburg", "kopenhagen", "backbone"]
+        ["hamburg", "kopenhagen", "backbone"],
+        ["hamburg", "bremen", "backbone"],
+        ["bremen", "hannover", "backbone"],
+        ["bremen", "duesseldorf", "backbone"],
+        ["hamburg", "rostock", "backbone"],
+        ["rostock", "berlin", "backbone"],
+        ["rostock", "helsinki", "see"],
+        ["leipzig", "dresden", "backbone"],
+        ["dresden", "berlin", "backbone"],
+        ["dresden", "prag", "backbone"],
+        ["frankfurt", "karlsruhe", "backbone"],
+        ["karlsruhe", "stuttgart", "backbone"],
+        ["karlsruhe", "paris", "backbone"],
+        ["koeln", "bruessel", "backbone"]
       ]
     },
 
@@ -238,7 +327,16 @@
         reutlingen: { name: "Reutlingen", art: "knoten", lon: 9.21, lat: 48.49, lp: "r", zoom: true, info: "Hier liegt die Steinbeisschule." },
         ex_frankfurt: { name: "→ Frankfurt", art: "extern", lon: 8.65, lat: 49.78, info: "Fernleitung zum DE-CIX nach Frankfurt." },
         muenchen: { name: "→ München", art: "extern", lon: 11.58, lat: 48.14, lp: "l", info: "Fernleitung nach Bayern." },
-        zuerich: { name: "→ Zürich", art: "extern", lon: 8.54, lat: 47.5, lp: "r", info: "Verbindung in die Schweiz." }
+        zuerich: { name: "→ Zürich", art: "extern", lon: 8.54, lat: 47.5, lp: "r", info: "Verbindung in die Schweiz." },
+        offenburg: { name: "Offenburg", art: "knoten", lon: 7.94, lat: 48.47, lp: "l", info: "Knoten in der Ortenau, Verbindung nach Straßburg." },
+        villingen: { name: "Villingen-Schwenningen", art: "knoten", lon: 8.46, lat: 48.06, info: "Knoten im Schwarzwald-Baar-Kreis." },
+        goeppingen: { name: "Göppingen", art: "knoten", lon: 9.65, lat: 48.7, info: "Knoten im Filstal zwischen Stuttgart und Ulm." },
+        schwaebischhall: { name: "Schwäbisch Hall", art: "knoten", lon: 9.74, lat: 49.11, lp: "b", info: "Knoten im Nordosten des Landes." },
+        aalen: { name: "Aalen", art: "knoten", lon: 10.09, lat: 48.84, info: "Knoten auf der Ostalb." },
+        ex_strassburg: { name: "→ Straßburg", art: "extern", lon: 7.75, lat: 48.58, lp: "l", info: "Verbindung nach Frankreich." },
+        ex_basel: { name: "→ Basel", art: "extern", lon: 7.59, lat: 47.56, lp: "l", info: "Verbindung in die Schweiz." },
+        ex_wuerzburg: { name: "→ Würzburg", art: "extern", lon: 9.93, lat: 49.79, info: "Verbindung nach Nordbayern." },
+        ex_nuernberg: { name: "→ Nürnberg", art: "extern", lon: 11.08, lat: 49.45, lp: "b", info: "Verbindung zu den Rechenzentren in Nürnberg." }
       },
       links: [
         ["stuttgart", "karlsruhe", "backbone"],
@@ -248,7 +346,8 @@
         ["heilbronn", "stuttgart", "backbone"],
         ["karlsruhe", "pforzheim", "backbone"],
         ["pforzheim", "stuttgart", "backbone"],
-        ["karlsruhe", "freiburg", "backbone"],
+        ["karlsruhe", "offenburg", "backbone"],
+        ["offenburg", "freiburg", "backbone"],
         ["freiburg", "konstanz", "backbone"],
         ["konstanz", "ravensburg", "backbone"],
         ["ravensburg", "ulm", "backbone"],
@@ -259,7 +358,20 @@
         ["stuttgart", "ex_frankfurt", "backbone"],
         ["mannheim", "ex_frankfurt", "backbone"],
         ["ulm", "muenchen", "backbone"],
-        ["konstanz", "zuerich", "backbone"]
+        ["konstanz", "zuerich", "backbone"],
+        ["offenburg", "ex_strassburg", "backbone"],
+        ["freiburg", "ex_basel", "backbone"],
+        ["freiburg", "villingen", "backbone"],
+        ["villingen", "konstanz", "backbone"],
+        ["villingen", "tuebingen", "backbone"],
+        ["stuttgart", "goeppingen", "backbone"],
+        ["goeppingen", "ulm", "backbone"],
+        ["heilbronn", "schwaebischhall", "backbone"],
+        ["schwaebischhall", "aalen", "backbone"],
+        ["aalen", "ulm", "backbone"],
+        ["aalen", "ex_nuernberg", "backbone"],
+        ["heilbronn", "ex_wuerzburg", "backbone"],
+        ["reutlingen", "ulm", "glas"]
       ]
     },
 
@@ -268,22 +380,38 @@
       kurz: "reutlingen",
       weiter: "lan",
       hint: "Klicke auf die Steinbeisschule, um hineinzuzoomen.",
-      text: "In der Stadt verteilt der <b>Netzknoten des Providers</b> (PoP, Point of Presence) das Internet. Firmen, Schulen und die Hochschule bekommen meist eine eigene Glasfaser. Wohnhäuser hängen über einen <b>Kabelverzweiger</b> am Straßenrand am Netz – per Kupferkabel (DSL) oder Glasfaser bis ins Haus. Handys nutzen Mobilfunkmasten, die selbst per Glasfaser angebunden sind.",
+      text: "In der Stadt verteilt der <b>Netzknoten des Providers</b> (PoP, Point of Presence) das Internet. Firmen, Schulen und die Hochschule bekommen meist eine eigene Glasfaser. Wohnhäuser hängen über einen <b>Kabelverzweiger</b> am Straßenrand am Netz – per Kupferkabel (DSL) oder Glasfaser bis ins Haus. Handys nutzen Mobilfunkmasten, die selbst per Glasfaser angebunden sind. In Hochschule, Klinikum und Schule hängen alle Geräte an einem zentralen <b>Switch</b> – eine <b>Stern-Topologie</b>.",
       hintergrund: "stadt",
       knoten: {
         pop: { name: "Netzknoten (PoP)", art: "rz", x: 500, y: 290, lp: "r", info: "Point of Presence: Hier kommen die Leitungen aus der Stadt zusammen und gehen ins Netz des Providers über – Richtung Stuttgart und Tübingen." },
         ex_stuttgart: { name: "→ Stuttgart", art: "extern", x: 920, y: 70, lp: "l", info: "Backbone-Leitung zum großen Knoten nach Stuttgart." },
         ex_tuebingen: { name: "→ Tübingen", art: "extern", x: 80, y: 70, lp: "r", info: "Zweite Leitung nach Tübingen. Fällt eine Leitung aus, läuft der Verkehr über die andere (Redundanz)." },
-        hochschule: { name: "Hochschule", art: "schule", x: 250, y: 180, lp: "b", info: "Die Hochschule Reutlingen ist mit eigener Glasfaser angeschlossen." },
+        hochschule: { name: "Hochschule", art: "schule", x: 250, y: 180, lp: "b", info: "Die Hochschule Reutlingen ist mit eigener Glasfaser angeschlossen. Innen verteilt ein Switch die Daten sternförmig an die Geräte." },
         rathaus: { name: "Rathaus", art: "gebaeude", x: 540, y: 120, lp: "r", info: "Die Stadtverwaltung betreibt ein eigenes Netz für ihre Gebäude." },
-        klinik: { name: "Klinikum", art: "klinik", x: 790, y: 210, lp: "b", info: "Krankenhäuser brauchen besonders ausfallsichere Leitungen." },
+        klinik: { name: "Klinikum", art: "klinik", x: 790, y: 210, lp: "b", info: "Krankenhäuser brauchen besonders ausfallsichere Leitungen. Innen verteilt ein Switch die Daten sternförmig an die Geräte." },
         firma: { name: "Gewerbegebiet", art: "firma", x: 810, y: 390, lp: "r", info: "Firmen haben oft Glasfaser mit garantierter Bandbreite." },
         mast: { name: "Mobilfunkmast", art: "mast", x: 640, y: 440, lp: "r", info: "Funkt per 4G/5G zu den Handys. Der Mast selbst ist per Glasfaser am Netzknoten angeschlossen." },
         handy: { name: "Smartphone", art: "handy", x: 760, y: 510, lp: "r", klein: true, info: "Verbindet sich per Funk mit dem nächsten Mobilfunkmast." },
         kvz: { name: "Kabelverzweiger", art: "kvz", x: 420, y: 440, lp: "b", info: "Der graue Kasten am Straßenrand: Hier werden die Leitungen zu den einzelnen Häusern verteilt." },
-        haus1: { name: "Wohnhaus (DSL)", art: "haus", x: 310, y: 530, lp: "l", klein: true, info: "Altes Kupfer-Telefonkabel bis ins Haus (DSL). Je länger die Leitung, desto langsamer." },
+        haus1: { name: "Wohnhaus (DSL)", art: "haus", x: 310, y: 530, lp: "b", klein: true, info: "Altes Kupfer-Telefonkabel bis ins Haus (DSL). Je länger die Leitung, desto langsamer." },
         haus2: { name: "Wohnhaus (Glasfaser)", art: "haus", x: 530, y: 530, lp: "r", klein: true, info: "Glasfaser bis ins Haus (FTTH, Fiber to the Home) – deutlich schneller als DSL." },
-        schule: { name: "Steinbeisschule", art: "schule", x: 200, y: 390, lp: "b", zoom: true, info: "Die Schule ist per Glasfaser am Netzknoten angeschlossen. Klicke, um ins Schulnetz zu zoomen." }
+        schule: { name: "Steinbeisschule", art: "schule", x: 200, y: 390, lp: "l", zoom: true, info: "Die Schule ist per Glasfaser am Netzknoten angeschlossen. Klicke, um ins Schulnetz zu zoomen." },
+        // Lokale Netze als Stern: Gebäude → Switch → Geräte
+        hs_sw: { name: "Switch (Hochschule)", art: "switch", x: 150, y: 205, mini: true, info: "Zentraler Switch im Netz der Hochschule. Alle Geräte hängen mit einem eigenen Kabel an ihm – eine Stern-Topologie. Fällt ein Kabel aus, ist nur ein Gerät betroffen." },
+        hs_pc1: { name: "PC im Labor", art: "pc", x: 150, y: 150, mini: true, info: "Ein PC im Rechnerlabor der Hochschule." },
+        hs_pc2: { name: "PC in der Bibliothek", art: "pc", x: 98, y: 180, mini: true, info: "Ein Recherche-PC in der Bibliothek." },
+        hs_server: { name: "Server (Hochschule)", art: "server", x: 98, y: 232, mini: true, info: "Server der Hochschule, z. B. für die Lernplattform und E-Mail." },
+        hs_ap: { name: "Access Point (Hochschule)", art: "ap", x: 150, y: 260, mini: true, info: "WLAN für Studierende im Hörsaal." },
+        kl_sw: { name: "Switch (Klinikum)", art: "switch", x: 885, y: 180, mini: true, info: "Zentraler Switch im Netz des Klinikums. Alle Geräte hängen sternförmig an ihm (Stern-Topologie)." },
+        kl_pc1: { name: "PC auf Station", art: "pc", x: 842, y: 138, mini: true, info: "PC im Stationszimmer für Patientenakten." },
+        kl_server: { name: "Server (Klinikum)", art: "server", x: 922, y: 135, mini: true, info: "Hier liegen die Patientendaten – besonders gut geschützt." },
+        kl_pc2: { name: "PC in der Aufnahme", art: "pc", x: 938, y: 195, mini: true, info: "PC an der Patientenaufnahme." },
+        kl_drucker: { name: "Drucker (Klinikum)", art: "drucker", x: 895, y: 235, mini: true, info: "Netzwerkdrucker im Klinikum." },
+        sb_sw: { name: "Switch (Steinbeisschule)", art: "switch", x: 200, y: 480, mini: true, info: "Im Schulnetz laufen alle Leitungen sternförmig an Switches zusammen (Stern-Topologie). Wie das genau aussieht, siehst du, wenn du auf die Steinbeisschule klickst." },
+        sb_pc1: { name: "PC (Steinbeisschule)", art: "pc", x: 145, y: 455, mini: true, info: "Ein PC im Computerraum." },
+        sb_pc2: { name: "Lehrer-PC (Steinbeisschule)", art: "pc", x: 140, y: 512, mini: true, info: "Der PC am Lehrerpult." },
+        sb_drucker: { name: "Drucker (Steinbeisschule)", art: "drucker", x: 182, y: 540, mini: true, info: "Netzwerkdrucker der Schule." },
+        sb_ap: { name: "Access Point (Steinbeisschule)", art: "ap", x: 242, y: 532, mini: true, info: "WLAN im Klassenzimmer." }
       },
       links: [
         ["pop", "ex_stuttgart", "backbone"],
@@ -297,7 +425,22 @@
         ["pop", "schule", "glas"],
         ["kvz", "haus1", "kupfer"],
         ["kvz", "haus2", "glas"],
-        ["mast", "handy", "funk"]
+        ["mast", "handy", "funk"],
+        ["hochschule", "hs_sw", "lan"],
+        ["hs_sw", "hs_pc1", "lan"],
+        ["hs_sw", "hs_pc2", "lan"],
+        ["hs_sw", "hs_server", "lan"],
+        ["hs_sw", "hs_ap", "lan"],
+        ["klinik", "kl_sw", "lan"],
+        ["kl_sw", "kl_pc1", "lan"],
+        ["kl_sw", "kl_server", "lan"],
+        ["kl_sw", "kl_pc2", "lan"],
+        ["kl_sw", "kl_drucker", "lan"],
+        ["schule", "sb_sw", "lan"],
+        ["sb_sw", "sb_pc1", "lan"],
+        ["sb_sw", "sb_pc2", "lan"],
+        ["sb_sw", "sb_drucker", "lan"],
+        ["sb_sw", "sb_ap", "lan"]
       ]
     },
 
@@ -575,18 +718,18 @@
     for (const [kid, kn] of Object.entries(st.knoten)) {
       const [x, y] = position(st, kn);
       const schema = !st.karte;
-      const groesse = schema ? (kn.zoom ? 22 : 17) : (kn.art === "ixp" ? 7 : 5);
+      const groesse = schema ? (kn.zoom ? 22 : kn.mini ? 11 : 17) : (kn.art === "ixp" ? 7 : 5);
       let symbol;
       if (schema) {
         symbol = [s("circle", { class: "ico-bg", r: groesse }),
-          s("path", { class: "ico", d: ICONS[kn.art] || ICONS.extern, transform: `translate(-12,-12)` })];
+          s("path", { class: "ico", d: ICONS[kn.art] || ICONS.extern, transform: kn.mini ? "scale(0.62) translate(-12,-12)" : "translate(-12,-12)" })];
       } else if (kn.art === "rz") {
         symbol = s("rect", { class: "punkt", x: -5.5, y: -5.5, width: 11, height: 11, rx: 2 });
       } else {
         symbol = s("circle", { class: "punkt", r: groesse });
       }
       const lp = kn.lp || "r", abstand = groesse + 5;
-      const text = s("text", {
+      const text = kn.mini ? null : s("text", {
         class: "name",
         x: lp === "r" ? abstand : lp === "l" ? -abstand : 0,
         y: lp === "t" ? -abstand - 1 : lp === "b" ? abstand + 11 : 4,
@@ -823,14 +966,14 @@
       l.el.classList.toggle("dim", !dran);
       if (dran) nachbarn.push(st.knoten[l.a === id ? l.b : l.a].name.replace("→ ", ""));
     });
-    knotenInfo.replaceChildren(
+    knotenInfo.replaceChildren(...[
       h("span", { class: "typ", text: KNOTENTYPEN[kn.art] || "" }),
       h("h3", { text: kn.name }),
       kn.ip ? h("span", { class: "ip", text: "IP: " + kn.ip }) : null,
       h("p", { text: kn.info }),
       nachbarn.length ? h("p", { class: "small muted", text: "Verbunden mit: " + nachbarn.join(", ") }) : null,
       h("button", { class: "btn btn-ghost", type: "button", text: "auswahl aufheben", onclick: hebeAuswahlAuf })
-    );
+    ].filter(Boolean));
     knotenInfo.hidden = false;
   }
 
