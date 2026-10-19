@@ -51,8 +51,7 @@ const EINTRAEGE = [
     titel: "Python-Editor",
     beschreibung: "Python-Programme im Browser schreiben und ausführen – mit input() und Fehlertipps",
     url: "python-editor.html",
-    fach: ["SAE"],
-    neu: true
+    fach: ["SAE"]
   },
   {
     typ: "tool",
@@ -75,8 +74,7 @@ const EINTRAEGE = [
     titel: "PDF-Editor",
     beschreibung: "PDFs zusammenfügen, teilen, ordnen, schützen, unterschreiben und schwärzen – alles im Browser",
     url: "pdf-editor.html",
-    fach: ["Allgemein"],
-    neu: true
+    fach: ["Allgemein"]
   },
   {
     typ: "tool",
@@ -90,16 +88,14 @@ const EINTRAEGE = [
     titel: "Hexadezimal & Oktal",
     beschreibung: "Hex und Oktal verstehen, umrechnen von/nach Dezimal und Binär, üben",
     url: "hexoktal.html",
-    fach: ["Informatik"],
-    neu: true
+    fach: ["Informatik"]
   },
   {
     typ: "tool",
     titel: "IPv4 & Subnetze",
     beschreibung: "IP-Adressen, Subnetzmasken und Subnetting verstehen und üben",
     url: "ipv4.html",
-    fach: ["ITS"],
-    neu: true
+    fach: ["ITS"]
   },
   {
     typ: "link",
