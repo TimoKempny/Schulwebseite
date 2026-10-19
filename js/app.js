@@ -52,8 +52,14 @@
 
   function istExtern(url) { return /^https?:\/\//i.test(url); }
 
+  // fach ist eine Liste; ein einzelner Text geht aber auch
+  function faecher(eintrag) {
+    if (!eintrag.fach) return [];
+    return Array.isArray(eintrag.fach) ? eintrag.fach : [eintrag.fach];
+  }
+
   function suchtext(eintrag) {
-    return [eintrag.titel, eintrag.beschreibung, eintrag.fach, (eintrag.klassen || []).join(" ")]
+    return [eintrag.titel, eintrag.beschreibung, faecher(eintrag).join(" "), (eintrag.klassen || []).join(" ")]
       .join(" ").toLowerCase();
   }
 
@@ -67,7 +73,7 @@
     a.dataset.suche = suchtext(eintrag);
 
     var top = el("div", "card-top");
-    top.appendChild(el("span", "card-fach", eintrag.fach || ""));
+    top.appendChild(el("span", "card-fach", faecher(eintrag).join(", ")));
     if (eintrag.neu) top.appendChild(el("span", "badge-neu", "neu"));
     a.appendChild(top);
 
