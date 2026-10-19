@@ -261,6 +261,15 @@ a:hover { color: var(--accent-strong); }
   padding: 6px 12px;
   cursor: pointer;
 }
+/* Fach-Filter in eigener Zeile unter Suche und Typ-Filter */
+.chips-fach { flex-basis: 100%; align-items: center; }
+.chips-fach::before {
+  content: "fach:";
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  color: var(--muted);
+}
+
 .chip:hover { color: var(--text); border-color: var(--accent); }
 .chip[aria-pressed="true"] {
   background: var(--accent);

@@ -39,9 +39,11 @@
   if (!ziel || typeof EINTRAEGE === "undefined") return;
 
   var chipsBox = document.getElementById("chips");
+  var fachBox = document.getElementById("faecher");
   var suche = document.getElementById("suche");
   var leer = document.getElementById("leer");
   var aktiverTyp = "alle";
+  var aktivesFach = "alle";
 
   function el(tag, klasse, text) {
     var e = document.createElement(tag);
@@ -71,6 +73,7 @@
       a.rel = "noopener";
     }
     a.dataset.suche = suchtext(eintrag);
+    a.dataset.faecher = faecher(eintrag).join("|");
 
     var top = el("div", "card-top");
     top.appendChild(el("span", "card-fach", faecher(eintrag).join(", ")));
@@ -121,6 +124,22 @@
     chipsBox.appendChild(chip);
   });
 
+  // Fach-Chips aus allen vorkommenden Fächern, alphabetisch
+  var alleFaecher = [];
+  EINTRAEGE.forEach(function (e) {
+    faecher(e).forEach(function (f) {
+      if (alleFaecher.indexOf(f) === -1) alleFaecher.push(f);
+    });
+  });
+  alleFaecher.sort(function (a, b) { return a.localeCompare(b, "de"); });
+  alleFaecher.forEach(function (f) {
+    var chip = el("button", "chip", f);
+    chip.type = "button";
+    chip.dataset.fach = f;
+    chip.setAttribute("aria-pressed", "false");
+    fachBox.appendChild(chip);
+  });
+
   function aktualisiere() {
     var q = (suche.value || "").trim().toLowerCase();
     var gesamt = 0;
@@ -129,7 +148,9 @@
       var typPasst = aktiverTyp === "alle" || aktiverTyp === ab.typ;
       var sichtbar = 0;
       ab.section.querySelectorAll(".card").forEach(function (karte) {
-        var zeigen = typPasst && (!q || karte.dataset.suche.indexOf(q) !== -1);
+        var fachPasst = aktivesFach === "alle" ||
+          karte.dataset.faecher.split("|").indexOf(aktivesFach) !== -1;
+        var zeigen = typPasst && fachPasst && (!q || karte.dataset.suche.indexOf(q) !== -1);
         karte.hidden = !zeigen;
         if (zeigen) sichtbar++;
       });
@@ -146,6 +167,16 @@
     if (!chip) return;
     aktiverTyp = chip.dataset.typ;
     chipsBox.querySelectorAll(".chip").forEach(function (c) {
+      c.setAttribute("aria-pressed", c === chip ? "true" : "false");
+    });
+    aktualisiere();
+  });
+
+  fachBox.addEventListener("click", function (ev) {
+    var chip = ev.target.closest(".chip");
+    if (!chip) return;
+    aktivesFach = chip.dataset.fach;
+    fachBox.querySelectorAll(".chip").forEach(function (c) {
       c.setAttribute("aria-pressed", c === chip ? "true" : "false");
     });
     aktualisiere();
