@@ -59,7 +59,7 @@ const EINTRAEGE = [
     titel: "Das Netz der Netze",
     beschreibung: "Vom weltweiten Internet bis ins Schulnetz hineinzoomen und den Weg eines Datenpakets verfolgen",
     url: "netzkarte.html",
-    fach: "ITS",
+    fach: "ITS, Kom1",
     neu: true
   },
   {
@@ -67,7 +67,7 @@ const EINTRAEGE = [
     titel: "Was passiert beim Aufruf einer Webseite?",
     beschreibung: "Schritt für Schritt vom Browser über Schulnetz und Internet bis zum Webserver – mit DNS, TCP, TLS und HTTP",
     url: "webseitenaufruf.html",
-    fach: "ITS",
+    fach: "ITS, Kom1",
     neu: true
   },
   {
@@ -83,14 +83,14 @@ const EINTRAEGE = [
     titel: "Binär <-> Dezimal",
     beschreibung: "Umrechnung Binär <-> Dezimal lernen und üben",
     url: "binaer.html",
-    fach: "Allgemein"
+    fach: "Informatik"
   },
   {
     typ: "tool",
     titel: "Hexadezimal & Oktal",
     beschreibung: "Hex und Oktal verstehen, umrechnen von/nach Dezimal und Binär, üben",
     url: "hexoktal.html",
-    fach: "Allgemein",
+    fach: "Informatik",
     neu: true
   },
   {
