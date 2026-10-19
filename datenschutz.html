@@ -41,7 +41,7 @@
     <article class="container prose">
       <div class="kurz">
         <p><strong>Kurz gesagt:</strong> Diese Seite setzt keine Cookies, verwendet kein Tracking und keine Analyse-Werkzeuge und hat keine Formulare, die Daten verschicken.
-           Der Anbieter GitHub erfasst beim Aufruf technisch bedingt Ihre IP-Adresse. Einstellungen und Ihr Code im C-Editor bleiben auf Ihrem eigenen Gerät.</p>
+           Der Anbieter GitHub erfasst beim Aufruf technisch bedingt Ihre IP-Adresse. Einstellungen, Ihr Code in den Editoren und Ihre PDF-Dateien im PDF-Editor bleiben auf Ihrem eigenen Gerät.</p>
       </div>
 
       <h2>1. Verantwortlicher</h2>
@@ -60,20 +60,28 @@
       <p>Dabei können Daten in die USA übermittelt werden. GitHub verweist in seiner Datenschutzerklärung auf das EU-U.S. Data Privacy Framework.
          Weitere Informationen: <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement">Datenschutzerklärung von GitHub</a>.</p>
 
-      <h2>3. Speicherung im Browser (localStorage)</h2>
+      <h2>3. Speicherung im Browser (localStorage, Service Worker)</h2>
       <p>Einige Werkzeuge merken sich Einstellungen im Speicher Ihres Browsers (localStorage), zum Beispiel:</p>
       <ul>
         <li>das gewählte Farbschema (hell/dunkel),</li>
         <li>Ihren Code, den Dateinamen und die Schriftgröße im C-Editor,</li>
-        <li>Einstellungen und Statistik im Binär-Trainer,</li>
+        <li>Ihren Code, den Dateinamen, die Schriftgröße, die Fensteraufteilung und die zuletzt eingegebenen Befehle der Konsole im Python-Editor,</li>
+        <li>Einstellungen und Statistik in den Übungen „Dezimal ↔ Binär“, „Hexadezimal &amp; Oktal“ und „IPv4 &amp; Subnetze“,</li>
         <li>die zuletzt gewählte Farbe im Farbwähler und den Stand im Struktogramm-Editor.</li>
       </ul>
       <p>Diese Daten bleiben auf Ihrem Gerät und werden nicht an mich oder Dritte übertragen. Sie können sie jederzeit über die Einstellungen Ihres Browsers löschen
          („Websitedaten löschen“). Die Speicherung ist für die von Ihnen gewünschte Funktion erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+      <p>Der Python-Editor registriert außerdem beim ersten Aufruf einen sogenannten Service Worker (ein kleines Skript, das Ihr Browser für diese eine Seite speichert)
+         und setzt dafür kurzzeitig einen Merker im sessionStorage. Der Service Worker ergänzt beim Laden des Python-Editors technische Sicherheitsangaben,
+         damit Eingaben mit <code>input()</code> funktionieren. Er sammelt und überträgt keine Daten und wirkt nur auf der Seite des Python-Editors.
+         Auch dies ist für die gewünschte Funktion erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Sie können ihn ebenfalls über „Websitedaten löschen“ entfernen.</p>
 
-      <h2>4. C-Editor und weitere Werkzeuge</h2>
-      <p>Programme im C-Editor werden vollständig in Ihrem Browser übersetzt und ausgeführt. Ihr Quelltext und Ihre Eingaben werden nicht über das Internet übertragen.
-         Dasselbe gilt für alle anderen Werkzeuge dieser Seite. Alle Schriften und Programmbibliotheken liegen auf dieser Seite selbst, es werden keine Inhalte von fremden Servern nachgeladen.</p>
+      <h2>4. Editoren, PDF-Editor und weitere Werkzeuge</h2>
+      <p>Programme im C-Editor und im Python-Editor werden vollständig in Ihrem Browser übersetzt und ausgeführt; Python läuft dabei mit Pyodide, das auf dieser Seite selbst liegt.
+         Ihr Quelltext und Ihre Eingaben werden nicht über das Internet übertragen.</p>
+      <p>Der PDF-Editor verarbeitet Ihre Dateien ebenfalls ausschließlich in Ihrem Browser. PDF-Dateien, Unterschriften, Schwärzungen und Passwörter werden
+         nicht hochgeladen, nicht an mich oder Dritte übertragen und nicht gespeichert. Nach dem Schließen der Seite sind sie aus dem Werkzeug verschwunden.</p>
+      <p>Dasselbe gilt für alle anderen Werkzeuge dieser Seite, zum Beispiel die Netzkarte und die Animation zum Webseitenaufruf. Alle Schriften und Programmbibliotheken liegen auf dieser Seite selbst, es werden keine Inhalte von fremden Servern nachgeladen.</p>
 
       <h2>5. Links zu anderen Seiten</h2>
       <p>Die Übersicht enthält Links zu externen Angeboten, z. B. Moodle, der Schulhomepage oder den Prüfwerkzeugen des W3C. Erst wenn Sie einen solchen Link anklicken,

@@ -20,6 +20,7 @@
     .prose h2 { font-family: var(--font-mono); font-size: 1rem; }
     .prose h2::before { content: "// "; color: var(--accent); }
     .prose address { font-style: normal; line-height: 1.7; }
+    .prose li { margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -55,7 +56,10 @@
 
       <h2>Haftung für Inhalte</h2>
       <p>Die Inhalte wurden mit Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität kann ich jedoch keine Gewähr übernehmen.
-         Die Werkzeuge (z. B. der C-Editor) dienen dem Lernen. Ihre Ergebnisse können in Einzelfällen von anderen Programmen abweichen.</p>
+         Die Werkzeuge (z. B. der C- und der Python-Editor) dienen dem Lernen. Ihre Ergebnisse können in Einzelfällen von anderen Programmen abweichen.
+         Netzkarte und Webseitenaufruf sind vereinfachte Darstellungen mit Beispieladressen.</p>
+      <p>Mit dem PDF-Editor bearbeitete Dateien – insbesondere geschwärzte oder mit Passwort geschützte PDFs – prüfen Sie bitte vor der Weitergabe selbst.
+         Für die vollständige Entfernung geschwärzter Inhalte kann ich keine Gewähr übernehmen.</p>
 
       <h2>Haftung für Links</h2>
       <p>Diese Seite enthält Links zu externen Webseiten. Auf deren Inhalte habe ich keinen Einfluss, für sie ist der jeweilige Anbieter verantwortlich.
@@ -64,7 +68,17 @@
       <h2>Urheberrecht</h2>
       <p>Die Inhalte dieser Seite unterliegen dem deutschen Urheberrecht. Schülerinnen und Schüler dürfen sie im Rahmen des Unterrichts frei nutzen.
          Eine Weitergabe oder Veröffentlichung außerhalb des Unterrichts bedarf meiner Zustimmung.</p>
-      <p>Verwendete Fremdsoftware: <a href="https://github.com/parallax/jsPDF">jsPDF</a> (MIT-Lizenz) für den PDF-Export im Struktogramm-Editor.</p>
+      <h2>Verwendete Fremdsoftware und Kartendaten</h2>
+      <ul>
+        <li><a href="https://github.com/parallax/jsPDF">jsPDF</a> (MIT-Lizenz) – PDF-Export im Struktogramm-Editor</li>
+        <li><a href="https://github.com/pyodide/pyodide">Pyodide</a> (Mozilla Public License 2.0) mit der Python-Standardbibliothek (PSF-Lizenz) – Python-Editor</li>
+        <li><a href="https://github.com/Hopding/pdf-lib">pdf-lib</a> (MIT-Lizenz), <a href="https://github.com/mozilla/pdf.js">PDF.js</a> (Apache-Lizenz 2.0),
+          <a href="https://github.com/101arrowz/fflate">fflate</a> (MIT-Lizenz) und <a href="https://github.com/neslinesli93/qpdf-wasm">qpdf-wasm</a>
+          (ISC-Lizenz; enthält <a href="https://qpdf.sourceforge.io">QPDF</a>, Apache-Lizenz 2.0) – PDF-Editor</li>
+        <li>Kartengrundlage der Netzkarte: <a href="https://www.naturalearthdata.com">Natural Earth</a> (gemeinfrei);
+          Länder- und Kreisgrenzen: © <a href="https://www.bkg.bund.de">BKG</a> (2026), <a href="https://www.govdata.de/dlde/by-2-0">dl-de/by-2-0</a>, Daten vereinfacht und verändert</li>
+      </ul>
+      <p>Die Bibliotheken werden unverändert verwendet und liegen auf dieser Seite selbst.</p>
 
       <p><a href="datenschutz.html">Zur Datenschutzerklärung →</a></p>
     </article>
