@@ -64,6 +64,14 @@ const EINTRAEGE = [
   },
   {
     typ: "tool",
+    titel: "Was passiert beim Aufruf einer Webseite?",
+    beschreibung: "Schritt für Schritt vom Browser über Schulnetz und Internet bis zum Webserver – mit DNS, TCP, TLS und HTTP",
+    url: "webseitenaufruf.html",
+    fach: "ITS",
+    neu: true
+  },
+  {
+    typ: "tool",
     titel: "PDF-Editor",
     beschreibung: "PDFs zusammenfügen, teilen, ordnen, schützen, unterschreiben und schwärzen – alles im Browser",
     url: "pdf-editor.html",

@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webseitenaufruf · Unterricht</title>
+  <meta name="description" content="Schritt für Schritt: Was passiert zwischen Computer, Schulnetz, Internet und Webserver, wenn man eine Webseite aufruft?">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    /* ---------- Werkzeug-spezifische Farben ---------- */
+    :root {
+      --p-lan: #475569;
+      --p-dns: #7c3aed;
+      --p-tcp: #2563eb;
+      --p-tls: #b45309;
+      --p-http: var(--accent);
+      --l-lan: #64748b;
+      --l-glas: #d97706;
+      --hl: #e11d48;
+      --zone: color-mix(in srgb, var(--surface-2) 70%, transparent);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --p-lan: #64748b;
+        --p-dns: #8b5cf6;
+        --p-tcp: #3b82f6;
+        --p-tls: #d97706;
+        --p-http: #0d9488;
+        --l-lan: #94a3b8;
+        --l-glas: #fbbf24;
+        --hl: #fb7185;
+      }
+    }
+    :root[data-theme="dark"] {
+      --p-lan: #64748b;
+      --p-dns: #8b5cf6;
+      --p-tcp: #3b82f6;
+      --p-tls: #d97706;
+      --p-http: #0d9488;
+      --l-lan: #94a3b8;
+      --l-glas: #fbbf24;
+      --hl: #fb7185;
+    }
+
+    /* ---------- Layout ---------- */
+    .wa-section { margin-top: 24px; display: grid; gap: 16px; }
+    .wa-leiste { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+    .wa-leiste .flabel { margin-right: 4px; }
+    .wa-leiste .rechts { margin-left: auto; display: flex; gap: 8px; }
+    .wa-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 980px) {
+      .wa-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
+    }
+    .small { font-size: .88rem; }
+    .muted { color: var(--muted); }
+    .panel-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+    .panel-kopf .small { font-size: .8rem; color: var(--muted); font-family: var(--font-mono); }
+
+    /* ---------- Browserfenster ---------- */
+    .browser {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--surface-2);
+      display: grid;
+    }
+    .b-tabs { display: flex; align-items: flex-end; gap: 6px; padding: 8px 10px 0; }
+    .b-punkte { display: flex; gap: 6px; margin: 0 6px 10px 2px; }
+    .b-punkte i { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+    .b-tab {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface);
+      border-radius: 8px 8px 0 0;
+      padding: 7px 14px;
+      font-size: .8rem;
+      max-width: 70%;
+      min-width: 0;
+    }
+    .b-tab span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .b-tab .fav { flex: none; width: 14px; height: 14px; }
+    .spinner {
+      flex: none; width: 12px; height: 12px; border-radius: 50%;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      animation: dreh .8s linear infinite;
+    }
+    @keyframes dreh { to { transform: rotate(360deg); } }
+    .b-leiste { display: flex; align-items: center; gap: 8px; background: var(--surface); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .b-nav { color: var(--muted); font-size: .95rem; letter-spacing: 4px; flex: none; }
+    .b-adresse {
+      flex: 1; min-width: 0;
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface-2);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-family: var(--font-mono);
+      font-size: .82rem;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .b-adresse .schloss { flex: none; width: 13px; height: 13px; color: var(--ok); }
+    .b-adresse .platzhalter { color: var(--muted); }
+    .b-adresse .https { color: var(--muted); }
+    .cursor { display: inline-block; width: 1px; height: 1em; background: var(--text); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .b-inhalt { position: relative; height: 320px; overflow: auto; background: #fff; color: #111; }
+    .b-leer { height: 100%; display: grid; place-items: center; color: #8a9593; font: .9rem var(--font-sans); text-align: center; padding: 20px; }
+    .b-status {
+      position: absolute; left: 0; bottom: 0;
+      background: #f1f3f4; color: #333;
+      border: 1px solid #d6d9dc; border-left: 0; border-bottom: 0;
+      border-radius: 0 8px 0 0;
+      font: .75rem var(--font-sans);
+      padding: 3px 10px;
+    }
+
+    /* Beispielseite – ohne CSS wie im Browser-Standard */
+    .seite.roh, .seite.roh * { all: revert; }
+    .seite.roh { display: block; background: #fff; color: #000; font: 16px/1.25 "Times New Roman", Times, serif; padding: 8px; }
+    .seite.roh .s-logo-img { display: none; }
+    .seite.roh .s-logo-alt { display: inline; }
+    /* … und mit style.css */
+    .seite.styled { font: 15px/1.5 system-ui, sans-serif; color: #1e293b; background: #f8fafc; min-height: 100%; }
+    .seite.styled .s-kopf { display: flex; align-items: center; gap: 12px; background: #1d4ed8; color: #fff; padding: 12px 16px; }
+    .seite.styled .s-logo { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,.18); display: grid; place-items: center; flex: none; }
+    .seite.styled .s-logo-img { width: 26px; height: 26px; display: block; }
+    .seite.styled .s-logo-img[hidden] { display: none; }
+    .seite.styled .s-logo-alt { display: none; }
+    .seite.styled .s-name { font-weight: 700; font-size: 1.05rem; margin: 0; }
+    .seite.styled nav ul { display: flex; gap: 14px; list-style: none; margin: 0 0 0 auto; padding: 0; font-size: .85rem; }
+    .seite.styled nav a { color: #dbeafe; text-decoration: none; }
+    .seite.styled main { padding: 16px; }
+    .seite.styled h1 { font-size: 1.35rem; margin: 0 0 6px; color: #0f172a; }
+    .seite.styled p { margin: 0 0 12px; }
+    .seite.styled h2 { font-size: .95rem; margin: 0 0 8px; color: #475569; text-transform: uppercase; letter-spacing: .05em; }
+    .seite.styled .s-news { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); list-style: none; padding: 0; margin: 0; }
+    .seite.styled .s-news li { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
+    .seite.styled .s-news b { display: block; color: #1d4ed8; }
+    .seite.styled .s-news span { font-size: .85rem; color: #64748b; }
+
+    /* Entwicklertools */
+    .devtools { background: var(--surface); border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: .72rem; }
+    .devtools .dt-kopf { display: flex; gap: 12px; padding: 5px 10px; color: var(--muted); border-bottom: 1px solid var(--border); }
+    .devtools .dt-kopf b { color: var(--text); font-weight: 600; border-bottom: 2px solid var(--accent); padding-bottom: 3px; }
+    .devtools table { width: 100%; border-collapse: collapse; }
+    .devtools th, .devtools td { text-align: left; padding: 3px 10px; white-space: nowrap; }
+    .devtools th { color: var(--muted); font-weight: 400; }
+    .devtools td.ok { color: var(--ok); }
+    .devtools .dt-leer td { color: var(--muted); font-style: italic; }
+    .devtools .dt-scroll { height: 92px; overflow: auto; }
+
+    .pc-info { margin-top: 10px; font-family: var(--font-mono); font-size: .76rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    .pc-info b { color: var(--text); font-weight: 600; }
+
+    /* ---------- Netzwerk ---------- */
+    .netz { position: relative; width: 100%; aspect-ratio: 1000 / 460; border-radius: 10px; background: var(--bg); overflow: hidden; }
+    .netz svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .zone { fill: var(--zone); stroke: var(--border); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+    .zone-label { font: 600 calc(11px * var(--k, 1)) var(--font-mono); fill: var(--muted); }
+    .link { fill: none; stroke-width: 2.4; vector-effect: non-scaling-stroke; stroke-linecap: round; opacity: .8; }
+    .link.lan { stroke: var(--l-lan); }
+    .link.glas { stroke: var(--l-glas); }
+    .link.inet { stroke: var(--muted); stroke-dasharray: 5 5; opacity: .6; }
+    .link.aktiv { stroke: var(--hl); opacity: 1; stroke-width: 4; }
+
+    .knoten { cursor: pointer; }
+    .knoten .sk { transform: scale(var(--k, 1)); }
+    .knoten .ico-bg { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+    .knoten .ico { fill: none; stroke: var(--text); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .knoten.pc .ico-bg { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+    .knoten .name { font: 600 12px var(--font-sans); fill: var(--text); text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 3.5px; stroke-linejoin: round; }
+    .knoten .sub { font: 10.5px var(--font-mono); fill: var(--muted); text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
+    .knoten text.links { text-anchor: end; }
+    .knoten:hover .ico-bg, .knoten.gewaehlt .ico-bg { stroke: var(--hl); stroke-width: 2.5; }
+    .knoten.puls .ico-bg { animation: puls .6s ease-out; }
+    @keyframes puls { 0% { stroke: var(--hl); stroke-width: 6; } 100% { stroke-width: 1.5; } }
+    .knoten:focus { outline: none; }
+    .knoten:focus-visible .ico-bg { stroke: var(--hl); stroke-width: 3; }
+    @media (max-width: 640px) {
+      .knoten .sub { display: none; }
+    }
+
+    .paket { pointer-events: none; }
+    .paket .sk { transform: scale(var(--k, 1)); }
+    .paket rect { stroke: #fff; stroke-width: 1.5; }
+    .paket text { font: 700 11px var(--font-mono); fill: #fff; text-anchor: middle; }
+    .p-DHCP rect, .p-ARP rect, .z-DHCP, .z-ARP { fill: var(--p-lan); background: var(--p-lan); }
+    .p-DNS rect, .z-DNS { fill: var(--p-dns); background: var(--p-dns); }
+    .p-TCP rect, .z-TCP { fill: var(--p-tcp); background: var(--p-tcp); }
+    .p-TLS rect, .z-TLS { fill: var(--p-tls); background: var(--p-tls); }
+    .p-HTTP rect, .z-HTTP { fill: var(--p-http); background: var(--p-http); }
+
+    .blase {
+      position: absolute;
+      transform: translate(-50%, calc(-100% - 30px));
+      max-width: 230px;
+      width: max-content;
+      background: var(--text);
+      color: var(--bg);
+      font-size: .76rem;
+      line-height: 1.35;
+      padding: 6px 10px;
+      border-radius: 8px;
+      pointer-events: none;
+      box-shadow: var(--shadow);
+      z-index: 2;
+    }
+    .blase::after { content: ""; position: absolute; left: 50%; bottom: -5px; margin-left: -5px; border: 5px solid transparent; border-bottom: 0; border-top-color: var(--text); }
+    .blase.links { transform: translate(-85%, calc(-100% - 30px)); }
+    .blase.links::after { left: 85%; }
+    .blase.rechts { transform: translate(-15%, calc(-100% - 30px)); }
+    .blase.rechts::after { left: 15%; }
+
+    .netz-unten { display: grid; gap: 8px; margin-top: 10px; }
+    .legende { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+    .legende span { display: inline-flex; align-items: center; gap: 6px; }
+    .legende i { width: 22px; height: 12px; border-radius: 4px; display: inline-block; }
+    .legende i.l-lan, .legende i.l-glas, .legende i.l-inet { height: 3px; border-radius: 2px; }
+    .l-lan { background: var(--l-lan); }
+    .l-glas { background: var(--l-glas); }
+    .l-inet { background: repeating-linear-gradient(90deg, var(--muted) 0 5px, transparent 5px 9px); }
+    .knoten-info { font-size: .86rem; color: var(--muted); min-height: 2.6em; }
+    .knoten-info b { color: var(--text); }
+    .aktuell { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px; display: grid; gap: 8px; }
+    .aktuell-box { display: grid; gap: 8px; max-height: 340px; overflow: auto; font-family: var(--font-mono); font-size: .78rem; }
+    .aktuell-box > p.small { font-family: var(--font-sans); }
+    .aktuell-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); }
+    .aktuell-info { margin: 0; font-weight: 600; color: var(--text); }
+
+    /* ---------- Schritt ---------- */
+    .schritt-box { display: grid; gap: 12px; }
+    .schritte { display: flex; flex-wrap: wrap; gap: 6px; }
+    .schritte button {
+      font: 600 .75rem var(--font-mono);
+      min-width: 30px; height: 30px; padding: 0 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .schritte button:hover { border-color: var(--accent); color: var(--text); }
+    .schritte button.erledigt { background: var(--accent-soft); color: var(--accent-strong); border-color: transparent; }
+    .schritte button[aria-current="step"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+    .schritt-box h2 { margin: 0; font-size: 1.25rem; }
+    .schritt-text { display: grid; gap: 8px; max-width: 75ch; }
+    .schritt-text p, .schritt-text ul { margin: 0; }
+    .schritt-text ul { padding-left: 1.2em; }
+    .schritt-text code { font-family: var(--font-mono); font-size: .88em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+    .schritt-knoepfe { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .schritt-knoepfe .rechts { margin-left: auto; display: flex; gap: 8px; }
+
+    /* ---------- Mitschnitt ---------- */
+    .log-wrap { max-height: 360px; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+    .log { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: .78rem; }
+    .log th { position: sticky; top: 0; background: var(--surface-2); text-align: left; font-weight: 600; color: var(--muted); padding: 7px 10px; white-space: nowrap; z-index: 1; }
+    .log td { padding: 6px 10px; border-top: 1px solid var(--border); vertical-align: top; }
+    .log td.nr, .log td.zeit { color: var(--muted); white-space: nowrap; }
+    .log td small { display: block; color: var(--muted); font-size: .9em; }
+    .log tr.zeile { cursor: pointer; }
+    .log tr.zeile:hover td { background: color-mix(in srgb, var(--accent-soft) 50%, transparent); }
+    .log tr.zeile.offen td { background: var(--accent-soft); }
+    .log tr.neu td { animation: neu 1.2s ease-out; }
+    @keyframes neu { from { background: color-mix(in srgb, var(--hl) 22%, transparent); } }
+    .proto { display: inline-block; color: #fff; font-weight: 700; font-size: .9em; padding: 1px 7px; border-radius: 5px; }
+    .log .leer td { color: var(--muted); font-style: italic; text-align: center; padding: 18px; }
+    .details td { background: var(--bg); padding: 12px; }
+    .schichten { display: grid; gap: 8px; }
+    .schicht { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; background: var(--surface); padding: 8px 12px; }
+    .schicht h4 { margin: 0 0 4px; font: 700 .78rem var(--font-mono); color: var(--accent-strong); text-transform: uppercase; letter-spacing: .04em; }
+    .schicht h4 span { font-weight: 400; color: var(--muted); text-transform: none; letter-spacing: 0; }
+    .schicht dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 0; }
+    .schicht dt { color: var(--muted); }
+    .schicht dd { margin: 0; overflow-wrap: anywhere; }
+    .schicht pre { margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; background: var(--surface-2); border-radius: 6px; padding: 8px 10px; }
+    .schicht .hinweis { margin: 6px 0 0; font-family: var(--font-sans); font-size: .82rem; color: var(--muted); }
+    .schicht.s-l2 { border-left-color: var(--p-lan); }
+    .schicht.s-l3 { border-left-color: var(--p-tcp); }
+    .schicht.s-l4 { border-left-color: var(--p-dns); }
+    .schicht.s-l7 { border-left-color: var(--p-http); }
+    .schicht.s-tls { border-left-color: var(--p-tls); }
+
+    .quelle { font-size: .78rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">webseitenaufruf</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">tool · netzwerktechnik</p>
+      <h1>Was passiert beim Aufruf einer Webseite?</h1>
+      <p>Du tippst eine Adresse ein und drückst Enter – eine Zehntelsekunde später ist die Seite da. Hier siehst du Schritt für Schritt, was dazwischen passiert: links auf dem Computer, rechts im Netz.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="container wa-section">
+      <div class="wa-leiste">
+        <span class="flabel">detailstufe</span>
+        <div class="chips" id="stufen" role="group" aria-label="Detailstufe"></div>
+        <div class="rechts">
+          <button class="btn btn-ghost" id="btnTempo" type="button">tempo: normal</button>
+        </div>
+      </div>
+
+      <div class="wa-grid">
+        <div class="panel">
+          <div class="panel-kopf"><span class="flabel">dein computer</span><span class="small">Browser</span></div>
+          <div class="browser" id="browser"></div>
+          <div class="pc-info" id="pcInfo"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-kopf"><span class="flabel">im netz</span><span class="small" id="netzHinweis">Klicke auf ein Gerät für Infos</span></div>
+          <div class="netz" id="netz" role="img" aria-label="Netzwerk vom Computer bis zum Webserver"></div>
+          <div class="netz-unten">
+            <div class="legende" id="legende"></div>
+            <div class="knoten-info" id="knotenInfo" aria-live="polite"></div>
+          </div>
+          <div class="aktuell">
+            <span class="flabel">letztes paket</span>
+            <div class="aktuell-box" id="paketAktuell"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel schritt-box" aria-live="polite">
+        <div class="schritte" id="schritte" role="group" aria-label="Schritte"></div>
+        <div>
+          <span class="flabel" id="schrittNr"></span>
+          <h2 id="schrittTitel"></h2>
+        </div>
+        <div class="schritt-text" id="schrittText"></div>
+        <div class="schritt-knoepfe">
+          <button class="btn btn-ghost" id="btnZurueck" type="button">‹ zurück</button>
+          <button class="btn" id="btnWeiter" type="button">weiter ›</button>
+          <div class="rechts">
+            <button class="btn btn-ghost" id="btnNochmal" type="button">↻ schritt wiederholen</button>
+            <button class="btn btn-ghost" id="btnAuto" type="button" aria-pressed="false">▶ automatisch</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-kopf"><span class="flabel">alle pakete</span><span class="small">Klicke auf eine Zeile, um hineinzuschauen</span></div>
+        <div class="log-wrap" id="logWrap">
+          <table class="log">
+            <thead><tr><th>Nr.</th><th>Zeit</th><th>Von</th><th>Nach</th><th>Protokoll</th><th>Inhalt</th></tr></thead>
+            <tbody id="log"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="quelle">
+        Vereinfachte Darstellung zur Veranschaulichung. Die Webseite www.beispiel-schule.de ist erfunden, alle IP- und MAC-Adressen sind Beispiele
+        (Adressbereiche für Dokumentation). Zeiten sind typische Größenordnungen. Wie das Netz im Großen aussieht, zeigt die <a href="netzkarte.html">Netzkarte</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/webseitenaufruf.js"></script>
+</body>
+</html>
