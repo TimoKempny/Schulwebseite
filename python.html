@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python-Merkhilfe · Unterricht</title>
+  <meta name="description" content="Die wichtigsten Python-Befehle und Funktionen zum Nachschlagen – von print() bis zu Funktionen und Dateien.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+    <div class="brand">
+      <a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">Python Merkhilfe</span>
+	 </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">merkhilfe · Python · SAE</p>
+      <h1>Python-Merkhilfe</h1>
+      <p>Die wichtigsten Befehle und Funktionen zum Nachschlagen – von print() bis zu Funktionen und Dateien.</p>
+      <a class="ref-switch" href="python-editor.html">→ direkt ausprobieren im Python-Editor</a>
+    </div>
+  </header>
+
+  <div class="ref-bar">
+    <div class="container toolbar">
+      <label class="search">
+        <span class="visually-hidden">In der Merkhilfe suchen</span>
+        <input id="ref-suche" type="search" placeholder="suchen – z. B. input, for, append" autocomplete="off">
+      </label>
+      <nav class="chips" aria-label="Abschnitte">
+        <a class="chip" href="#ein-ausgabe">Ein- &amp; Ausgabe</a>
+        <a class="chip" href="#datentypen">Datentypen</a>
+        <a class="chip" href="#operatoren">Operatoren</a>
+        <a class="chip" href="#strings">Strings</a>
+        <a class="chip" href="#verzweigungen">Verzweigungen</a>
+        <a class="chip" href="#schleifen">Schleifen</a>
+        <a class="chip" href="#listen">Listen</a>
+        <a class="chip" href="#dicts">Dictionaries</a>
+        <a class="chip" href="#funktionen">Funktionen</a>
+        <a class="chip" href="#builtins">Nützliche Funktionen</a>
+        <a class="chip" href="#fehler">Fehlerbehandlung</a>
+        <a class="chip" href="#module">Module</a>
+        <a class="chip" href="#dateien">Dateien</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="ref">
+    <div class="container">
+<section class="ref-section" id="ein-ausgabe">
+<div class="section-head"><h2>Ein- &amp; Ausgabe</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>print("Hallo Welt")</code></td><td data-label="Beschreibung">Gibt Text auf dem Bildschirm aus.</td></tr>
+<tr><td class="k"><code>print("Summe:", a + b)</code></td><td data-label="Beschreibung">Mehrere Werte mit Komma trennen – Python setzt automatisch ein Leerzeichen dazwischen.</td></tr>
+<tr><td class="k"><code>print(f"Du bist {alter} Jahre alt")</code></td><td data-label="Beschreibung">f-String (<b class="mn">f</b>ormatierter String): Variablen in <code>{}</code> werden direkt eingesetzt.</td></tr>
+<tr><td class="k"><code>print(f"{preis:.2f} €")</code></td><td data-label="Beschreibung">Zahl mit genau 2 Nachkommastellen ausgeben.</td></tr>
+<tr><td class="k"><code>print("a", end="")</code><br><code>print("a", "b", sep="-")</code></td><td data-label="Beschreibung"><code>end</code>: was am Ende steht (Standard: Zeilenumbruch).<br><code>sep</code>: Trennzeichen zwischen den Werten (Standard: Leerzeichen).</td></tr>
+<tr><td class="k"><code>name = input("Name: ")</code></td><td data-label="Beschreibung">Liest eine Eingabe von der Tastatur. Das Ergebnis ist <b>immer ein String</b>!</td></tr>
+<tr><td class="k"><code>zahl = int(input("Zahl: "))</code><br><code>wert = float(input("Wert: "))</code></td><td data-label="Beschreibung">Eingabe direkt in eine Ganzzahl (<code>int</code>) bzw. Kommazahl (<code>float</code>) umwandeln.</td></tr>
+<tr><td class="k"><code># Kommentar</code></td><td data-label="Beschreibung">Alles nach <code>#</code> wird von Python ignoriert.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="datentypen">
+<div class="section-head"><h2>Variablen &amp; Datentypen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Typ</th><th scope="col">Beispiel</th><th scope="col">Erklärung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>int</code></td><td data-label="Beispiel"><code>alter = 17</code></td><td data-label="Erklärung">Ganzzahl (<b class="mn">int</b>eger)</td></tr>
+<tr><td class="k"><code>float</code></td><td data-label="Beispiel"><code>preis = 4.99</code></td><td data-label="Erklärung">Kommazahl (Gleitkommazahl) – mit <b>Punkt</b>, nicht Komma!</td></tr>
+<tr><td class="k"><code>str</code></td><td data-label="Beispiel"><code>name = "Anna"</code></td><td data-label="Erklärung">Text (<b class="mn">str</b>ing) in <code>"..."</code> oder <code>'...'</code></td></tr>
+<tr><td class="k"><code>bool</code></td><td data-label="Beispiel"><code>fertig = True</code></td><td data-label="Erklärung">Wahrheitswert: <code>True</code> oder <code>False</code> (groß geschrieben!)</td></tr>
+<tr><td class="k"><code>list</code></td><td data-label="Beispiel"><code>noten = [1, 3, 2]</code></td><td data-label="Erklärung">Liste – geordnet, veränderbar</td></tr>
+<tr><td class="k"><code>dict</code></td><td data-label="Beispiel"><code>p = {"name": "Ben"}</code></td><td data-label="Erklärung">Dictionary – Schlüssel-Wert-Paare</td></tr>
+<tr><td class="k"><code>None</code></td><td data-label="Beispiel"><code>ergebnis = None</code></td><td data-label="Erklärung">„Kein Wert“</td></tr>
+<tr><td class="k"><code>type(x)</code></td><td data-label="Beispiel"><code>type(4.99)</code></td><td data-label="Erklärung">Liefert den Datentyp, hier <code>&lt;class 'float'&gt;</code>.</td></tr>
+<tr><td class="k"><code>int()</code> <code>float()</code> <code>str()</code></td><td data-label="Beispiel"><code>str(17) + " Jahre"</code></td><td data-label="Erklärung">Typumwandlung. <code>int("3.5")</code> gibt einen Fehler, <code>int(3.9)</code> schneidet ab → <code>3</code>.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="operatoren">
+<div class="section-head"><h2>Operatoren</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Operator</th><th scope="col">Beispiel</th><th scope="col">Erklärung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>+ - * /</code></td><td data-label="Beispiel"><code>7 / 2</code> → <code>3.5</code></td><td data-label="Erklärung">Grundrechenarten. <code>/</code> liefert immer einen <code>float</code>.</td></tr>
+<tr><td class="k"><code>//</code></td><td data-label="Beispiel"><code>7 // 2</code> → <code>3</code></td><td data-label="Erklärung">Ganzzahldivision (Nachkommastellen fallen weg)</td></tr>
+<tr><td class="k"><code>%</code></td><td data-label="Beispiel"><code>7 % 2</code> → <code>1</code></td><td data-label="Erklärung">Modulo: Rest der Division. <code>x % 2 == 0</code> → x ist gerade.</td></tr>
+<tr><td class="k"><code>**</code></td><td data-label="Beispiel"><code>2 ** 3</code> → <code>8</code></td><td data-label="Erklärung">Potenz</td></tr>
+<tr><td class="k"><code>+= -= *= /=</code></td><td data-label="Beispiel"><code>summe += 5</code></td><td data-label="Erklärung">Kurzform für <code>summe = summe + 5</code></td></tr>
+<tr><td class="k"><code>== !=</code></td><td data-label="Beispiel"><code>a == b</code></td><td data-label="Erklärung">Gleich / ungleich. Achtung: <code>=</code> ist Zuweisung, <code>==</code> ist Vergleich!</td></tr>
+<tr><td class="k"><code>&lt; &gt; &lt;= &gt;=</code></td><td data-label="Beispiel"><code>0 &lt;= x &lt; 10</code></td><td data-label="Erklärung">Kleiner, größer, … – Vergleiche lassen sich verketten.</td></tr>
+<tr><td class="k"><code>and or not</code></td><td data-label="Beispiel"><code>x &gt; 0 and x &lt; 10</code></td><td data-label="Erklärung">Logisches UND, ODER, NICHT</td></tr>
+<tr><td class="k"><code>in</code></td><td data-label="Beispiel"><code>"a" in "Hallo"</code></td><td data-label="Erklärung">Prüft, ob etwas in einem String/einer Liste enthalten ist.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="strings">
+<div class="section-head"><h2>Strings</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>len(s)</code></td><td data-label="Beschreibung">Anzahl der Zeichen (<b class="mn">len</b>gth)</td></tr>
+<tr><td class="k"><code>s[0]</code><br><code>s[-1]</code></td><td data-label="Beschreibung">Erstes Zeichen (Zählung beginnt bei 0) / letztes Zeichen</td></tr>
+<tr><td class="k"><code>s[1:4]</code></td><td data-label="Beschreibung">Ausschnitt (Slicing): Zeichen 1 bis 3 – das Ende ist <b>nicht</b> mehr dabei.</td></tr>
+<tr><td class="k"><code>s + t</code><br><code>s * 3</code></td><td data-label="Beschreibung">Strings verbinden / Strings wiederholen</td></tr>
+<tr><td class="k"><code>s.upper()</code><br><code>s.lower()</code></td><td data-label="Beschreibung">Alles in Groß- bzw. Kleinbuchstaben</td></tr>
+<tr><td class="k"><code>s.strip()</code></td><td data-label="Beschreibung">Leerzeichen und Zeilenumbrüche am Anfang und Ende entfernen</td></tr>
+<tr><td class="k"><code>s.replace("a", "e")</code></td><td data-label="Beschreibung">Ersetzt alle <code>"a"</code> durch <code>"e"</code></td></tr>
+<tr><td class="k"><code>s.split(";")</code></td><td data-label="Beschreibung">Zerlegt den String an <code>;</code> in eine Liste. Ohne Argument: an Leerzeichen.</td></tr>
+<tr><td class="k"><code>";".join(liste)</code></td><td data-label="Beschreibung">Gegenstück zu <code>split</code>: verbindet Listenelemente (Strings) mit <code>;</code></td></tr>
+<tr><td class="k"><code>s.find("x")</code><br><code>s.count("x")</code></td><td data-label="Beschreibung">Position des ersten <code>"x"</code> (<code>-1</code>, wenn nicht gefunden) / Anzahl der <code>"x"</code></td></tr>
+<tr><td class="k"><code>s.isdigit()</code></td><td data-label="Beschreibung"><code>True</code>, wenn der String nur aus Ziffern besteht – praktisch vor <code>int()</code>.</td></tr>
+<tr><td class="k"><code>s.startswith("Ha")</code></td><td data-label="Beschreibung"><code>True</code>, wenn der String mit <code>"Ha"</code> beginnt (analog: <code>endswith</code>)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="verzweigungen">
+<div class="section-head"><h2>Verzweigungen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>if note &lt;= 4:
+    print("bestanden")
+elif note == 5:
+    print("Nachprüfung")
+else:
+    print("nicht bestanden")</code></pre></td><td data-label="Beschreibung">Verzweigung. <code>elif</code> (<b class="mn">el</b>se <b class="mn">if</b>) und <code>else</code> sind optional, <code>elif</code> darf mehrfach vorkommen.<br>Wichtig: Doppelpunkt am Zeilenende und <b>Einrückung</b> (4 Leerzeichen) für den Block!</td></tr>
+<tr><td class="k"><pre><code>match befehl:
+    case "start":
+        starten()
+    case "stop":
+        stoppen()
+    case _:
+        print("unbekannt")</code></pre></td><td data-label="Beschreibung">Mehrfachauswahl (ab Python 3.10), ähnlich <code>switch</code> in C. <code>case _</code> fängt alle übrigen Fälle ab.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="schleifen">
+<div class="section-head"><h2>Schleifen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>for i in range(5):
+    print(i)</code></pre></td><td data-label="Beschreibung">Zählschleife: <code>i</code> läuft von 0 bis 4.</td></tr>
+<tr><td class="k"><code>range(2, 10)</code><br><code>range(10, 0, -2)</code></td><td data-label="Beschreibung"><code>range(start, ende, schritt)</code> – das Ende ist <b>nicht</b> enthalten.<br>Beispiele: 2…9 bzw. 10, 8, 6, 4, 2</td></tr>
+<tr><td class="k"><pre><code>for name in namen:
+    print(name)</code></pre></td><td data-label="Beschreibung">Läuft über alle Elemente einer Liste (oder alle Zeichen eines Strings).</td></tr>
+<tr><td class="k"><pre><code>while zahl &lt; 0:
+    zahl = int(input("Zahl: "))</code></pre></td><td data-label="Beschreibung">Kopfgesteuerte Schleife: läuft, solange die Bedingung <code>True</code> ist.</td></tr>
+<tr><td class="k"><code>break</code></td><td data-label="Beschreibung">Schleife sofort verlassen</td></tr>
+<tr><td class="k"><code>continue</code></td><td data-label="Beschreibung">Rest des aktuellen Durchlaufs überspringen, mit dem nächsten weitermachen</td></tr>
+<tr><td class="k"><pre><code>while True:
+    eingabe = input("&gt; ")
+    if eingabe == "q":
+        break</code></pre></td><td data-label="Beschreibung">Endlosschleife mit Abbruch – Ersatz für eine fußgesteuerte Schleife (gibt es in Python nicht).</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="listen">
+<div class="section-head"><h2>Listen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>zahlen = [4, 8, 15]</code><br><code>leer = []</code></td><td data-label="Beschreibung">Liste anlegen</td></tr>
+<tr><td class="k"><code>zahlen[0]</code><br><code>zahlen[0] = 5</code></td><td data-label="Beschreibung">Element lesen / ändern (Index beginnt bei 0)</td></tr>
+<tr><td class="k"><code>zahlen.append(16)</code></td><td data-label="Beschreibung">Element hinten anhängen</td></tr>
+<tr><td class="k"><code>zahlen.insert(0, 1)</code></td><td data-label="Beschreibung">Element an Position 0 einfügen</td></tr>
+<tr><td class="k"><code>zahlen.remove(8)</code></td><td data-label="Beschreibung">Erstes Element mit dem Wert 8 entfernen</td></tr>
+<tr><td class="k"><code>zahlen.pop()</code><br><code>zahlen.pop(0)</code></td><td data-label="Beschreibung">Letztes Element (bzw. das an Position 0) entfernen und zurückgeben</td></tr>
+<tr><td class="k"><code>zahlen.sort()</code><br><code>zahlen.reverse()</code></td><td data-label="Beschreibung">Liste sortieren / umdrehen (verändert die Liste selbst)</td></tr>
+<tr><td class="k"><code>zahlen.index(15)</code></td><td data-label="Beschreibung">Position des Werts 15</td></tr>
+<tr><td class="k"><code>len(zahlen)</code></td><td data-label="Beschreibung">Anzahl der Elemente</td></tr>
+<tr><td class="k"><pre><code>for i, z in enumerate(zahlen):
+    print(i, z)</code></pre></td><td data-label="Beschreibung">Über eine Liste laufen und dabei Index <b>und</b> Wert bekommen</td></tr>
+<tr><td class="k"><code>[x * 2 for x in zahlen]</code></td><td data-label="Beschreibung">List Comprehension: neue Liste in einer Zeile erzeugen</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="dicts">
+<div class="section-head"><h2>Dictionaries</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>p = {"name": "Ben", "alter": 17}</code></td><td data-label="Beschreibung">Dictionary (Wörterbuch) anlegen: Schlüssel → Wert</td></tr>
+<tr><td class="k"><code>p["name"]</code></td><td data-label="Beschreibung">Wert zum Schlüssel lesen (Fehler, wenn der Schlüssel fehlt)</td></tr>
+<tr><td class="k"><code>p.get("ort", "?")</code></td><td data-label="Beschreibung">Wert lesen, <code>"?"</code> als Ersatz, falls der Schlüssel fehlt</td></tr>
+<tr><td class="k"><code>p["ort"] = "Stuttgart"</code></td><td data-label="Beschreibung">Eintrag hinzufügen oder ändern</td></tr>
+<tr><td class="k"><code>del p["alter"]</code></td><td data-label="Beschreibung">Eintrag löschen</td></tr>
+<tr><td class="k"><code>"name" in p</code></td><td data-label="Beschreibung">Prüft, ob der Schlüssel vorhanden ist</td></tr>
+<tr><td class="k"><pre><code>for k, v in p.items():
+    print(k, v)</code></pre></td><td data-label="Beschreibung">Über alle Paare laufen. Nur Schlüssel: <code>p.keys()</code>, nur Werte: <code>p.values()</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="funktionen">
+<div class="section-head"><h2>Funktionen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>def begruessen(name):
+    print("Hallo", name)
+
+begruessen("Anna")</code></pre></td><td data-label="Beschreibung">Funktion definieren (<b class="mn">def</b>ine) und aufrufen. <code>name</code> ist ein Parameter.</td></tr>
+<tr><td class="k"><pre><code>def quadrat(x):
+    return x * x
+
+ergebnis = quadrat(4)</code></pre></td><td data-label="Beschreibung"><code>return</code> gibt einen Wert zurück und beendet die Funktion.</td></tr>
+<tr><td class="k"><pre><code>def potenz(basis, exp=2):
+    return basis ** exp</code></pre></td><td data-label="Beschreibung">Parameter mit Standardwert: <code>potenz(3)</code> → 9, <code>potenz(3, 3)</code> → 27</td></tr>
+<tr><td class="k"><pre><code>def min_max(liste):
+    return min(liste), max(liste)
+
+lo, hi = min_max([3, 1, 7])</code></pre></td><td data-label="Beschreibung">Mehrere Rückgabewerte (als Tupel) – direkt auf mehrere Variablen verteilen</td></tr>
+</tbody></table></div>
+<p class="ref-note">Variablen, die in einer Funktion angelegt werden, sind <b>lokal</b> – außerhalb der Funktion gibt es sie nicht.</p>
+</section>
+
+<section class="ref-section" id="builtins">
+<div class="section-head"><h2>Nützliche eingebaute Funktionen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Funktion</th><th scope="col">Beispiel</th><th scope="col">Erklärung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>abs(x)</code></td><td data-label="Beispiel"><code>abs(-5)</code> → <code>5</code></td><td data-label="Erklärung">Betrag</td></tr>
+<tr><td class="k"><code>round(x, n)</code></td><td data-label="Beispiel"><code>round(3.14159, 2)</code> → <code>3.14</code></td><td data-label="Erklärung">Runden auf n Nachkommastellen</td></tr>
+<tr><td class="k"><code>min()</code> <code>max()</code></td><td data-label="Beispiel"><code>max([3, 9, 4])</code> → <code>9</code></td><td data-label="Erklärung">Kleinster / größter Wert</td></tr>
+<tr><td class="k"><code>sum()</code></td><td data-label="Beispiel"><code>sum([1, 2, 3])</code> → <code>6</code></td><td data-label="Erklärung">Summe aller Elemente</td></tr>
+<tr><td class="k"><code>sorted()</code></td><td data-label="Beispiel"><code>sorted(liste, reverse=True)</code></td><td data-label="Erklärung">Gibt eine <b>neue</b> sortierte Liste zurück (Original bleibt)</td></tr>
+<tr><td class="k"><code>ord()</code> <code>chr()</code></td><td data-label="Beispiel"><code>ord("A")</code> → <code>65</code>, <code>chr(65)</code> → <code>"A"</code></td><td data-label="Erklärung">Zeichen ↔ Zeichencode (ASCII/Unicode)</td></tr>
+<tr><td class="k"><code>bin()</code> <code>hex()</code></td><td data-label="Beispiel"><code>bin(10)</code> → <code>"0b1010"</code></td><td data-label="Erklärung">Zahl als Binär- bzw. Hexadezimal-String. Zurück: <code>int("1010", 2)</code></td></tr>
+<tr><td class="k"><code>zip()</code></td><td data-label="Beispiel"><code>for n, p in zip(namen, punkte):</code></td><td data-label="Erklärung">Mehrere Listen gleichzeitig durchlaufen</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="fehler">
+<div class="section-head"><h2>Fehlerbehandlung</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>try:
+    zahl = int(input("Zahl: "))
+except ValueError:
+    print("Das war keine Zahl!")</code></pre></td><td data-label="Beschreibung">Fehler abfangen: Tritt im <code>try</code>-Block ein Fehler auf, wird der passende <code>except</code>-Block ausgeführt, statt dass das Programm abstürzt.</td></tr>
+<tr><td class="k"><code>ValueError</code></td><td data-label="Beschreibung">Falscher Wert, z. B. <code>int("abc")</code></td></tr>
+<tr><td class="k"><code>ZeroDivisionError</code></td><td data-label="Beschreibung">Division durch 0</td></tr>
+<tr><td class="k"><code>IndexError</code></td><td data-label="Beschreibung">Listenindex existiert nicht, z. B. <code>liste[10]</code> bei 3 Elementen</td></tr>
+<tr><td class="k"><code>KeyError</code></td><td data-label="Beschreibung">Schlüssel fehlt im Dictionary</td></tr>
+<tr><td class="k"><code>TypeError</code></td><td data-label="Beschreibung">Falscher Datentyp, z. B. <code>"Alter: " + 17</code></td></tr>
+<tr><td class="k"><code>NameError</code></td><td data-label="Beschreibung">Variable oder Funktion unbekannt – oft ein Tippfehler</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="module">
+<div class="section-head"><h2>Module</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>import math</code><br><code>from math import sqrt</code></td><td data-label="Beschreibung">Modul einbinden (ganz oben im Programm). Bei <code>import math</code> schreibt man <code>math.sqrt()</code>, bei <code>from … import</code> nur <code>sqrt()</code>.</td></tr>
+<tr><td class="k"><code>math.sqrt(16)</code></td><td data-label="Beschreibung">Quadratwurzel (<b class="mn">sq</b>uare <b class="mn">r</b>oo<b class="mn">t</b>) → <code>4.0</code></td></tr>
+<tr><td class="k"><code>math.pi</code></td><td data-label="Beschreibung">Kreiszahl π</td></tr>
+<tr><td class="k"><code>math.floor(x)</code><br><code>math.ceil(x)</code></td><td data-label="Beschreibung">Abrunden / Aufrunden auf eine Ganzzahl</td></tr>
+<tr><td class="k"><code>random.randint(1, 6)</code></td><td data-label="Beschreibung">Zufällige Ganzzahl von 1 bis 6 (beide Grenzen enthalten) – braucht <code>import random</code></td></tr>
+<tr><td class="k"><code>random.choice(liste)</code></td><td data-label="Beschreibung">Zufälliges Element aus einer Liste</td></tr>
+<tr><td class="k"><code>random.shuffle(liste)</code></td><td data-label="Beschreibung">Liste zufällig mischen</td></tr>
+<tr><td class="k"><code>time.sleep(1)</code></td><td data-label="Beschreibung">1 Sekunde warten – braucht <code>import time</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="dateien">
+<div class="section-head"><h2>Dateien</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>with open("daten.txt", "r") as f:
+    for zeile in f:
+        print(zeile.strip())</code></pre></td><td data-label="Beschreibung">Datei zeilenweise lesen. <code>with</code> schließt die Datei am Ende automatisch.</td></tr>
+<tr><td class="k"><pre><code>with open("daten.txt", "w") as f:
+    f.write("Hallo\n")</code></pre></td><td data-label="Beschreibung">In eine Datei schreiben</td></tr>
+<tr><td class="k"><code>"r"</code> <code>"w"</code> <code>"a"</code></td><td data-label="Beschreibung">Modus: lesen (<b class="mn">r</b>ead), schreiben – überschreibt! (<b class="mn">w</b>rite), anhängen (<b class="mn">a</b>ppend)</td></tr>
+<tr><td class="k"><code>f.read()</code><br><code>f.readlines()</code></td><td data-label="Beschreibung">Ganze Datei als einen String / als Liste von Zeilen</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="beispiel">
+<div class="section-head"><h2>Beispielprogramm</h2></div>
+<div class="ref-code ref-item"><pre><code>import random
+
+geheim = random.randint(1, 100)
+versuche = 0
+
+while True:
+    try:
+        tipp = int(input("Dein Tipp (1-100): "))
+    except ValueError:
+        print("Bitte eine ganze Zahl eingeben.")
+        continue
+
+    versuche += 1
+    if tipp &lt; geheim:
+        print("Zu klein!")
+    elif tipp &gt; geheim:
+        print("Zu groß!")
+    else:
+        print(f"Richtig! Du hast {versuche} Versuche gebraucht.")
+        break</code></pre></div>
+</section>
+
+      <p class="empty" id="leer" hidden>&gt; keine Treffer</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/merkhilfe.js"></script>
+</body>
+</html>

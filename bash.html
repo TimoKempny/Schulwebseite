@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bash-Merkhilfe · Unterricht</title>
+  <meta name="description" content="Die wichtigsten Befehle für die Bash unter Debian Linux zum Nachschlagen – von ls bis apt, Rechten und Netzwerk.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+    <div class="brand">
+      <a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">Bash Merkhilfe</span>
+	 </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">merkhilfe · Linux · Debian</p>
+      <h1>Bash-Merkhilfe</h1>
+      <p>Die wichtigsten Befehle für die Kommandozeile unter Debian Linux – Dateien, Rechte, Pakete, Prozesse und Netzwerk.</p>
+    </div>
+  </header>
+
+  <div class="ref-bar">
+    <div class="container toolbar">
+      <label class="search">
+        <span class="visually-hidden">In der Merkhilfe suchen</span>
+        <input id="ref-suche" type="search" placeholder="suchen – z. B. chmod, apt, ip" autocomplete="off">
+      </label>
+      <nav class="chips" aria-label="Abschnitte">
+        <a class="chip" href="#grundlagen">Grundlagen</a>
+        <a class="chip" href="#navigation">Navigation</a>
+        <a class="chip" href="#dateien">Dateien &amp; Ordner</a>
+        <a class="chip" href="#anzeigen">Inhalte anzeigen</a>
+        <a class="chip" href="#suchen">Suchen</a>
+        <a class="chip" href="#umleitung">Umleitung &amp; Pipes</a>
+        <a class="chip" href="#rechte">Rechte</a>
+        <a class="chip" href="#benutzer">Benutzer</a>
+        <a class="chip" href="#pakete">Pakete (apt)</a>
+        <a class="chip" href="#prozesse">Prozesse</a>
+        <a class="chip" href="#dienste">Dienste</a>
+        <a class="chip" href="#system">System</a>
+        <a class="chip" href="#netzwerk">Netzwerk</a>
+        <a class="chip" href="#archive">Archive</a>
+        <a class="chip" href="#skripte">Skripte</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="ref">
+    <div class="container">
+<section class="ref-section" id="grundlagen">
+<div class="section-head"><h2>Grundlagen &amp; Tastenkürzel</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl / Taste</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>befehl -option argument</code></td><td data-label="Beschreibung">Aufbau eines Befehls, z. B. <code>ls -l /home</code>. Optionen lassen sich kombinieren: <code>ls -la</code></td></tr>
+<tr><td class="k"><code>man ls</code></td><td data-label="Beschreibung">Handbuch (<b class="mn">man</b>ual) zu einem Befehl. Beenden mit <code>q</code>, suchen mit <code>/wort</code>.</td></tr>
+<tr><td class="k"><code>ls --help</code></td><td data-label="Beschreibung">Kurzhilfe zu einem Befehl</td></tr>
+<tr><td class="k"><code>Tab</code></td><td data-label="Beschreibung">Befehle und Dateinamen automatisch vervollständigen – 2× Tab zeigt alle Möglichkeiten.</td></tr>
+<tr><td class="k"><code>↑</code> <code>↓</code></td><td data-label="Beschreibung">Durch die zuletzt eingegebenen Befehle blättern</td></tr>
+<tr><td class="k"><code>Strg+C</code></td><td data-label="Beschreibung">Laufenden Befehl abbrechen</td></tr>
+<tr><td class="k"><code>Strg+R</code></td><td data-label="Beschreibung">Rückwärts in der Befehls-Historie suchen</td></tr>
+<tr><td class="k"><code>Strg+L</code> / <code>clear</code></td><td data-label="Beschreibung">Bildschirm leeren</td></tr>
+<tr><td class="k"><code>Strg+D</code> / <code>exit</code></td><td data-label="Beschreibung">Terminal bzw. Sitzung beenden</td></tr>
+<tr><td class="k"><code>history</code></td><td data-label="Beschreibung">Liste der letzten Befehle. <code>!!</code> wiederholt den letzten Befehl, z. B. <code>sudo !!</code></td></tr>
+<tr><td class="k"><code>user@pc:~$</code><br><code>root@pc:~#</code></td><td data-label="Beschreibung">Prompt: <code>$</code> = normaler Benutzer, <code>#</code> = Administrator (root). <code>~</code> = eigenes Home-Verzeichnis.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="navigation">
+<div class="section-head"><h2>Navigation</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>pwd</code></td><td data-label="Beschreibung">Aktuelles Verzeichnis anzeigen (<b class="mn">p</b>rint <b class="mn">w</b>orking <b class="mn">d</b>irectory)</td></tr>
+<tr><td class="k"><code>ls</code></td><td data-label="Beschreibung">Inhalt des Verzeichnisses auflisten (<b class="mn">l</b>i<b class="mn">s</b>t)</td></tr>
+<tr><td class="k"><code>ls -l</code><br><code>ls -la</code></td><td data-label="Beschreibung">Ausführliche Liste mit Rechten, Besitzer, Größe, Datum / zusätzlich versteckte Dateien (beginnen mit <code>.</code>)</td></tr>
+<tr><td class="k"><code>ls -lh</code></td><td data-label="Beschreibung">Größen lesbar anzeigen (<b class="mn">h</b>uman readable: K, M, G)</td></tr>
+<tr><td class="k"><code>cd ordner</code></td><td data-label="Beschreibung">In einen Ordner wechseln (<b class="mn">c</b>hange <b class="mn">d</b>irectory)</td></tr>
+<tr><td class="k"><code>cd ..</code></td><td data-label="Beschreibung">Eine Ebene nach oben</td></tr>
+<tr><td class="k"><code>cd</code> / <code>cd ~</code></td><td data-label="Beschreibung">Ins eigene Home-Verzeichnis (<code>/home/benutzer</code>)</td></tr>
+<tr><td class="k"><code>cd -</code></td><td data-label="Beschreibung">Zurück ins vorherige Verzeichnis</td></tr>
+<tr><td class="k"><code>cd /etc</code></td><td data-label="Beschreibung">Absoluter Pfad – beginnt bei der Wurzel <code>/</code>. Ohne <code>/</code> am Anfang ist ein Pfad relativ zum aktuellen Ordner.</td></tr>
+<tr><td class="k"><code>tree</code></td><td data-label="Beschreibung">Verzeichnisbaum anzeigen (ggf. erst <code>sudo apt install tree</code>)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="verzeichnisse">
+<div class="section-head"><h2>Wichtige Verzeichnisse</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Pfad</th><th scope="col">Inhalt</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>/</code></td><td data-label="Inhalt">Wurzelverzeichnis (root) – hier beginnt alles</td></tr>
+<tr><td class="k"><code>/home</code></td><td data-label="Inhalt">Home-Verzeichnisse der Benutzer</td></tr>
+<tr><td class="k"><code>/root</code></td><td data-label="Inhalt">Home-Verzeichnis des Administrators</td></tr>
+<tr><td class="k"><code>/etc</code></td><td data-label="Inhalt">Konfigurationsdateien</td></tr>
+<tr><td class="k"><code>/var/log</code></td><td data-label="Inhalt">Logdateien</td></tr>
+<tr><td class="k"><code>/bin</code> <code>/usr/bin</code></td><td data-label="Inhalt">Programme (<b class="mn">bin</b>aries)</td></tr>
+<tr><td class="k"><code>/tmp</code></td><td data-label="Inhalt">Temporäre Dateien – wird beim Neustart geleert</td></tr>
+<tr><td class="k"><code>/dev</code></td><td data-label="Inhalt">Geräte (<b class="mn">dev</b>ices), z. B. Festplatten <code>/dev/sda</code></td></tr>
+<tr><td class="k"><code>/mnt</code> <code>/media</code></td><td data-label="Inhalt">Einhängepunkte für Laufwerke und USB-Sticks</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="dateien">
+<div class="section-head"><h2>Dateien &amp; Ordner</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>mkdir ordner</code></td><td data-label="Beschreibung">Ordner anlegen (<b class="mn">m</b>a<b class="mn">k</b>e <b class="mn">dir</b>ectory)</td></tr>
+<tr><td class="k"><code>mkdir -p a/b/c</code></td><td data-label="Beschreibung">Ordner samt Unterordnern anlegen (<b class="mn">p</b>arents)</td></tr>
+<tr><td class="k"><code>touch datei.txt</code></td><td data-label="Beschreibung">Leere Datei anlegen (oder Änderungsdatum aktualisieren)</td></tr>
+<tr><td class="k"><code>cp quelle ziel</code></td><td data-label="Beschreibung">Datei kopieren (<b class="mn">c</b>o<b class="mn">p</b>y)</td></tr>
+<tr><td class="k"><code>cp -r ordner kopie</code></td><td data-label="Beschreibung">Ordner mit Inhalt kopieren (<b class="mn">r</b>ekursiv)</td></tr>
+<tr><td class="k"><code>mv alt neu</code></td><td data-label="Beschreibung">Verschieben oder umbenennen (<b class="mn">m</b>o<b class="mn">v</b>e)</td></tr>
+<tr><td class="k"><code>rm datei</code></td><td data-label="Beschreibung">Datei löschen (<b class="mn">r</b>e<b class="mn">m</b>ove) – <b>ohne Papierkorb</b>!</td></tr>
+<tr><td class="k"><code>rm -r ordner</code></td><td data-label="Beschreibung">Ordner mit Inhalt löschen. <code>-i</code> fragt vor jedem Löschen nach.</td></tr>
+<tr><td class="k"><code>rmdir ordner</code></td><td data-label="Beschreibung">Leeren Ordner löschen</td></tr>
+<tr><td class="k"><code>ln -s ziel link</code></td><td data-label="Beschreibung">Symbolischen Link (Verknüpfung) anlegen</td></tr>
+<tr><td class="k"><code>*</code> <code>?</code></td><td data-label="Beschreibung">Platzhalter: <code>*</code> = beliebig viele Zeichen, <code>?</code> = genau ein Zeichen. Beispiel: <code>rm *.tmp</code></td></tr>
+<tr><td class="k"><code>"mein ordner"</code></td><td data-label="Beschreibung">Namen mit Leerzeichen in Anführungszeichen setzen (oder <code>mein\ ordner</code>)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="anzeigen">
+<div class="section-head"><h2>Inhalte anzeigen &amp; bearbeiten</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>cat datei</code></td><td data-label="Beschreibung">Ganze Datei ausgeben (con<b class="mn">cat</b>enate)</td></tr>
+<tr><td class="k"><code>less datei</code></td><td data-label="Beschreibung">Datei seitenweise ansehen. Blättern mit Pfeiltasten/Leertaste, suchen mit <code>/</code>, beenden mit <code>q</code>.</td></tr>
+<tr><td class="k"><code>head -n 5 datei</code><br><code>tail -n 5 datei</code></td><td data-label="Beschreibung">Erste / letzte 5 Zeilen anzeigen</td></tr>
+<tr><td class="k"><code>tail -f /var/log/syslog</code></td><td data-label="Beschreibung">Datei live mitverfolgen (<b class="mn">f</b>ollow) – ideal für Logs. Beenden mit <code>Strg+C</code>.</td></tr>
+<tr><td class="k"><code>nano datei</code></td><td data-label="Beschreibung">Einfacher Texteditor. <code>Strg+O</code> speichern, <code>Strg+X</code> beenden, <code>Strg+W</code> suchen.</td></tr>
+<tr><td class="k"><code>wc -l datei</code></td><td data-label="Beschreibung">Zeilen zählen (<b class="mn">w</b>ord <b class="mn">c</b>ount). <code>-w</code> Wörter, <code>-c</code> Bytes</td></tr>
+<tr><td class="k"><code>sort datei</code><br><code>uniq</code></td><td data-label="Beschreibung">Zeilen sortieren / doppelte (aufeinanderfolgende) Zeilen entfernen</td></tr>
+<tr><td class="k"><code>diff a.txt b.txt</code></td><td data-label="Beschreibung">Unterschiede zwischen zwei Dateien anzeigen</td></tr>
+<tr><td class="k"><code>echo "Text"</code></td><td data-label="Beschreibung">Text ausgeben</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="suchen">
+<div class="section-head"><h2>Suchen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>grep "wort" datei</code></td><td data-label="Beschreibung">Zeilen ausgeben, die „wort“ enthalten</td></tr>
+<tr><td class="k"><code>grep -i</code> <code>-n</code> <code>-v</code></td><td data-label="Beschreibung"><code>-i</code> Groß-/Kleinschreibung egal, <code>-n</code> mit Zeilennummer, <code>-v</code> Zeilen <b>ohne</b> das Wort</td></tr>
+<tr><td class="k"><code>grep -r "wort" ordner</code></td><td data-label="Beschreibung">Rekursiv in allen Dateien eines Ordners suchen</td></tr>
+<tr><td class="k"><code>find . -name "*.txt"</code></td><td data-label="Beschreibung">Ab dem aktuellen Ordner (<code>.</code>) alle Dateien mit Endung <code>.txt</code> finden</td></tr>
+<tr><td class="k"><code>find / -size +100M</code></td><td data-label="Beschreibung">Dateien größer als 100 MB finden</td></tr>
+<tr><td class="k"><code>which python3</code></td><td data-label="Beschreibung">Zeigt, wo ein Programm liegt</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="umleitung">
+<div class="section-head"><h2>Umleitung &amp; Pipes</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>befehl &gt; datei</code></td><td data-label="Beschreibung">Ausgabe in eine Datei schreiben – <b>überschreibt</b> den Inhalt</td></tr>
+<tr><td class="k"><code>befehl &gt;&gt; datei</code></td><td data-label="Beschreibung">Ausgabe an eine Datei anhängen</td></tr>
+<tr><td class="k"><code>befehl &lt; datei</code></td><td data-label="Beschreibung">Eingabe aus einer Datei lesen</td></tr>
+<tr><td class="k"><code>befehl 2&gt; fehler.log</code></td><td data-label="Beschreibung">Nur Fehlermeldungen umleiten. <code>2&gt;/dev/null</code> verwirft sie.</td></tr>
+<tr><td class="k"><code>befehl &amp;&gt; alles.log</code></td><td data-label="Beschreibung">Ausgabe und Fehlermeldungen in dieselbe Datei</td></tr>
+<tr><td class="k"><code>befehl1 | befehl2</code></td><td data-label="Beschreibung">Pipe: Ausgabe von befehl1 wird Eingabe von befehl2. Beispiel: <code>ls -l | grep ".txt"</code></td></tr>
+<tr><td class="k"><code>befehl1 &amp;&amp; befehl2</code></td><td data-label="Beschreibung">befehl2 nur ausführen, wenn befehl1 erfolgreich war</td></tr>
+<tr><td class="k"><code>befehl1 ; befehl2</code></td><td data-label="Beschreibung">Befehle nacheinander ausführen, egal ob erfolgreich</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="rechte">
+<div class="section-head"><h2>Rechte</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>-rwxr-xr--</code></td><td data-label="Beschreibung">Anzeige bei <code>ls -l</code>: Typ (<code>-</code> Datei, <code>d</code> Ordner), dann je 3 Zeichen für <b>Besitzer</b>, <b>Gruppe</b>, <b>Andere</b>.<br><code>r</code> = lesen (<b class="mn">r</b>ead), <code>w</code> = schreiben (<b class="mn">w</b>rite), <code>x</code> = ausführen (e<b class="mn">x</b>ecute)</td></tr>
+<tr><td class="k"><code>chmod 754 datei</code></td><td data-label="Beschreibung">Rechte als Zahl setzen (<b class="mn">ch</b>ange <b class="mn">mod</b>e): r = 4, w = 2, x = 1, aufaddiert.<br>754 = Besitzer rwx (7), Gruppe r-x (5), Andere r-- (4)</td></tr>
+<tr><td class="k"><code>chmod u+x skript.sh</code></td><td data-label="Beschreibung">Recht hinzufügen/entfernen: <code>u</code> Besitzer (<b class="mn">u</b>ser), <code>g</code> Gruppe, <code>o</code> Andere (<b class="mn">o</b>thers), <code>a</code> alle; <code>+</code> / <code>-</code></td></tr>
+<tr><td class="k"><code>chown user:gruppe datei</code></td><td data-label="Beschreibung">Besitzer und Gruppe ändern (<b class="mn">ch</b>ange <b class="mn">own</b>er) – braucht <code>sudo</code></td></tr>
+<tr><td class="k"><code>chmod -R 755 ordner</code></td><td data-label="Beschreibung">Rechte rekursiv für einen Ordner und alles darin setzen</td></tr>
+<tr><td class="k"><code>sudo befehl</code></td><td data-label="Beschreibung">Befehl mit Administratorrechten ausführen (<b class="mn">s</b>uper<b class="mn">u</b>ser <b class="mn">do</b>)</td></tr>
+<tr><td class="k"><code>su -</code></td><td data-label="Beschreibung">Zum Benutzer root wechseln (braucht das root-Passwort)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="benutzer">
+<div class="section-head"><h2>Benutzer &amp; Gruppen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>whoami</code></td><td data-label="Beschreibung">Zeigt den aktuellen Benutzernamen</td></tr>
+<tr><td class="k"><code>id</code></td><td data-label="Beschreibung">Benutzer-ID, Gruppen-ID und alle Gruppen</td></tr>
+<tr><td class="k"><code>sudo adduser max</code></td><td data-label="Beschreibung">Neuen Benutzer anlegen (Debian: fragt Passwort und Daten interaktiv ab)</td></tr>
+<tr><td class="k"><code>sudo deluser max</code></td><td data-label="Beschreibung">Benutzer löschen. <code>--remove-home</code> löscht auch sein Home-Verzeichnis.</td></tr>
+<tr><td class="k"><code>passwd</code></td><td data-label="Beschreibung">Eigenes Passwort ändern. <code>sudo passwd max</code> ändert das von max.</td></tr>
+<tr><td class="k"><code>sudo adduser max sudo</code></td><td data-label="Beschreibung">Benutzer max zur Gruppe <code>sudo</code> hinzufügen (darf dann <code>sudo</code> benutzen)</td></tr>
+<tr><td class="k"><code>sudo addgroup technik</code></td><td data-label="Beschreibung">Neue Gruppe anlegen</td></tr>
+<tr><td class="k"><code>/etc/passwd</code><br><code>/etc/group</code></td><td data-label="Beschreibung">Dateien mit allen Benutzern bzw. Gruppen</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="pakete">
+<div class="section-head"><h2>Pakete verwalten (apt)</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>sudo apt update</code></td><td data-label="Beschreibung">Paketlisten neu laden – <b>vor</b> jeder Installation ausführen</td></tr>
+<tr><td class="k"><code>sudo apt upgrade</code></td><td data-label="Beschreibung">Alle installierten Pakete aktualisieren</td></tr>
+<tr><td class="k"><code>sudo apt install paket</code></td><td data-label="Beschreibung">Paket installieren, z. B. <code>sudo apt install htop</code>. <code>-y</code> beantwortet Rückfragen mit Ja.</td></tr>
+<tr><td class="k"><code>sudo apt remove paket</code></td><td data-label="Beschreibung">Paket entfernen (Konfiguration bleibt)</td></tr>
+<tr><td class="k"><code>sudo apt purge paket</code></td><td data-label="Beschreibung">Paket samt Konfigurationsdateien entfernen</td></tr>
+<tr><td class="k"><code>sudo apt autoremove</code></td><td data-label="Beschreibung">Nicht mehr benötigte Abhängigkeiten entfernen</td></tr>
+<tr><td class="k"><code>apt search begriff</code></td><td data-label="Beschreibung">Nach Paketen suchen</td></tr>
+<tr><td class="k"><code>apt show paket</code></td><td data-label="Beschreibung">Informationen zu einem Paket anzeigen</td></tr>
+<tr><td class="k"><code>apt list --installed</code></td><td data-label="Beschreibung">Alle installierten Pakete auflisten</td></tr>
+<tr><td class="k"><code>sudo dpkg -i datei.deb</code></td><td data-label="Beschreibung">Heruntergeladene <code>.deb</code>-Datei installieren</td></tr>
+<tr><td class="k"><code>/etc/apt/sources.list</code></td><td data-label="Beschreibung">Liste der Paketquellen (Repositories)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="prozesse">
+<div class="section-head"><h2>Prozesse</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>ps aux</code></td><td data-label="Beschreibung">Alle laufenden Prozesse anzeigen (<b class="mn">p</b>rocess <b class="mn">s</b>tatus)</td></tr>
+<tr><td class="k"><code>top</code> / <code>htop</code></td><td data-label="Beschreibung">Prozesse live mit CPU- und RAM-Auslastung. Beenden mit <code>q</code>.</td></tr>
+<tr><td class="k"><code>kill 1234</code></td><td data-label="Beschreibung">Prozess mit der PID (Prozess-ID) 1234 beenden</td></tr>
+<tr><td class="k"><code>kill -9 1234</code></td><td data-label="Beschreibung">Prozess zwangsweise beenden, wenn er nicht reagiert</td></tr>
+<tr><td class="k"><code>pkill firefox</code></td><td data-label="Beschreibung">Prozesse nach Namen beenden</td></tr>
+<tr><td class="k"><code>befehl &amp;</code></td><td data-label="Beschreibung">Befehl im Hintergrund starten</td></tr>
+<tr><td class="k"><code>jobs</code> <code>fg</code> <code>bg</code></td><td data-label="Beschreibung">Hintergrund-Jobs anzeigen, in den Vordergrund (<b class="mn">f</b>ore<b class="mn">g</b>round) / Hintergrund (<b class="mn">b</b>ack<b class="mn">g</b>round) holen. <code>Strg+Z</code> pausiert einen Befehl.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="dienste">
+<div class="section-head"><h2>Dienste (systemd)</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>systemctl status ssh</code></td><td data-label="Beschreibung">Status eines Dienstes anzeigen (läuft er? Fehler?)</td></tr>
+<tr><td class="k"><code>sudo systemctl start ssh</code><br><code>sudo systemctl stop ssh</code></td><td data-label="Beschreibung">Dienst starten / stoppen</td></tr>
+<tr><td class="k"><code>sudo systemctl restart ssh</code></td><td data-label="Beschreibung">Dienst neu starten – z. B. nach Änderung der Konfiguration</td></tr>
+<tr><td class="k"><code>sudo systemctl enable ssh</code><br><code>sudo systemctl disable ssh</code></td><td data-label="Beschreibung">Dienst beim Systemstart automatisch starten / nicht mehr starten</td></tr>
+<tr><td class="k"><code>journalctl -u ssh</code></td><td data-label="Beschreibung">Logmeldungen eines Dienstes anzeigen. <code>-f</code> live mitverfolgen, <code>-b</code> nur seit letztem Start</td></tr>
+<tr><td class="k"><code>sudo reboot</code><br><code>sudo poweroff</code></td><td data-label="Beschreibung">Neu starten / herunterfahren</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="system">
+<div class="section-head"><h2>Systeminformationen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>uname -a</code></td><td data-label="Beschreibung">Kernel-Version und Systeminfos</td></tr>
+<tr><td class="k"><code>cat /etc/os-release</code></td><td data-label="Beschreibung">Debian-Version anzeigen</td></tr>
+<tr><td class="k"><code>hostname</code></td><td data-label="Beschreibung">Name des Rechners</td></tr>
+<tr><td class="k"><code>uptime</code></td><td data-label="Beschreibung">Wie lange läuft der Rechner schon? Mit Systemlast.</td></tr>
+<tr><td class="k"><code>df -h</code></td><td data-label="Beschreibung">Freier Speicherplatz auf allen Laufwerken (<b class="mn">d</b>isk <b class="mn">f</b>ree)</td></tr>
+<tr><td class="k"><code>du -sh ordner</code></td><td data-label="Beschreibung">Größe eines Ordners (<b class="mn">d</b>isk <b class="mn">u</b>sage)</td></tr>
+<tr><td class="k"><code>free -h</code></td><td data-label="Beschreibung">Arbeitsspeicher (RAM) – belegt und frei</td></tr>
+<tr><td class="k"><code>lsblk</code></td><td data-label="Beschreibung">Festplatten und Partitionen auflisten (<b class="mn">l</b>i<b class="mn">s</b>t <b class="mn">bl</b>oc<b class="mn">k</b> devices)</td></tr>
+<tr><td class="k"><code>lscpu</code> <code>lsusb</code> <code>lspci</code></td><td data-label="Beschreibung">Infos zu Prozessor, USB-Geräten, PCI-Geräten</td></tr>
+<tr><td class="k"><code>date</code></td><td data-label="Beschreibung">Datum und Uhrzeit</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="netzwerk">
+<div class="section-head"><h2>Netzwerk</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>ip a</code></td><td data-label="Beschreibung">Netzwerkschnittstellen mit IP-Adressen anzeigen (<b class="mn">a</b>ddress)</td></tr>
+<tr><td class="k"><code>ip r</code></td><td data-label="Beschreibung">Routing-Tabelle, inkl. Standard-Gateway (<b class="mn">r</b>oute)</td></tr>
+<tr><td class="k"><code>ping 8.8.8.8</code></td><td data-label="Beschreibung">Erreichbarkeit prüfen. Läuft endlos – <code>-c 4</code> schickt nur 4 Pakete.</td></tr>
+<tr><td class="k"><code>traceroute ziel</code></td><td data-label="Beschreibung">Weg der Pakete über alle Router anzeigen</td></tr>
+<tr><td class="k"><code>nslookup ziel</code><br><code>dig ziel</code></td><td data-label="Beschreibung">DNS abfragen: zu welcher IP gehört ein Name?</td></tr>
+<tr><td class="k"><code>ss -tulpn</code></td><td data-label="Beschreibung">Offene Ports und lauschende Dienste anzeigen (<b class="mn">t</b>cp, <b class="mn">u</b>dp, <b class="mn">l</b>istening, <b class="mn">p</b>rozess, <b class="mn">n</b>umerisch)</td></tr>
+<tr><td class="k"><code>ssh user@192.168.1.10</code></td><td data-label="Beschreibung">Verschlüsselt auf einem anderen Rechner anmelden (<b class="mn">s</b>ecure <b class="mn">sh</b>ell)</td></tr>
+<tr><td class="k"><code>scp datei user@host:/pfad</code></td><td data-label="Beschreibung">Datei per SSH auf einen anderen Rechner kopieren (<b class="mn">s</b>ecure <b class="mn">c</b>o<b class="mn">p</b>y)</td></tr>
+<tr><td class="k"><code>wget url</code><br><code>curl url</code></td><td data-label="Beschreibung">Datei herunterladen / Webseite abrufen und ausgeben</td></tr>
+<tr><td class="k"><code>/etc/network/interfaces</code></td><td data-label="Beschreibung">Netzwerk-Konfiguration unter Debian (z. B. feste IP-Adresse)</td></tr>
+<tr><td class="k"><code>/etc/hosts</code><br><code>/etc/resolv.conf</code></td><td data-label="Beschreibung">Lokale Namensauflösung / eingetragene DNS-Server</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="archive">
+<div class="section-head"><h2>Archive</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>tar -czf archiv.tar.gz ordner</code></td><td data-label="Beschreibung">Ordner packen und komprimieren: <b class="mn">c</b>reate, g<b class="mn">z</b>ip, <b class="mn">f</b>ile</td></tr>
+<tr><td class="k"><code>tar -xzf archiv.tar.gz</code></td><td data-label="Beschreibung">Archiv entpacken (e<b class="mn">x</b>tract)</td></tr>
+<tr><td class="k"><code>tar -tzf archiv.tar.gz</code></td><td data-label="Beschreibung">Inhalt anzeigen, ohne zu entpacken (lis<b class="mn">t</b>)</td></tr>
+<tr><td class="k"><code>zip -r archiv.zip ordner</code><br><code>unzip archiv.zip</code></td><td data-label="Beschreibung">ZIP-Archiv erstellen / entpacken</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="skripte">
+<div class="section-head"><h2>Variablen &amp; Skripte</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>name="Anna"</code></td><td data-label="Beschreibung">Variable setzen – <b>keine</b> Leerzeichen um das <code>=</code>!</td></tr>
+<tr><td class="k"><code>echo "Hallo $name"</code></td><td data-label="Beschreibung">Variable mit <code>$</code> verwenden. In <code>'...'</code> wird <code>$name</code> <b>nicht</b> ersetzt.</td></tr>
+<tr><td class="k"><code>heute=$(date +%F)</code></td><td data-label="Beschreibung">Ausgabe eines Befehls in einer Variable speichern</td></tr>
+<tr><td class="k"><code>$((3 + 4))</code></td><td data-label="Beschreibung">Mit ganzen Zahlen rechnen</td></tr>
+<tr><td class="k"><code>read -p "Name: " name</code></td><td data-label="Beschreibung">Eingabe vom Benutzer in die Variable <code>name</code> lesen</td></tr>
+<tr><td class="k"><code>$1</code> <code>$2</code> <code>$#</code></td><td data-label="Beschreibung">Im Skript: erstes, zweites Argument, Anzahl der Argumente</td></tr>
+<tr><td class="k"><code>$?</code></td><td data-label="Beschreibung">Rückgabewert des letzten Befehls: 0 = Erfolg, alles andere = Fehler</td></tr>
+<tr><td class="k"><code>$HOME</code> <code>$USER</code> <code>$PATH</code></td><td data-label="Beschreibung">Wichtige Umgebungsvariablen. Alle anzeigen: <code>env</code></td></tr>
+<tr><td class="k"><pre><code>if [ "$n" -gt 10 ]; then
+    echo "gross"
+else
+    echo "klein"
+fi</code></pre></td><td data-label="Beschreibung">Verzweigung. Leerzeichen innerhalb der <code>[ ]</code> sind Pflicht!<br>Zahlen: <code>-eq</code> <code>-ne</code> <code>-lt</code> <code>-le</code> <code>-gt</code> <code>-ge</code><br>Texte: <code>=</code> <code>!=</code> · Dateien: <code>-f</code> existiert, <code>-d</code> ist Ordner</td></tr>
+<tr><td class="k"><pre><code>for f in *.txt; do
+    echo "$f"
+done</code></pre></td><td data-label="Beschreibung">Schleife über alle <code>.txt</code>-Dateien. Zählen: <code>for i in {1..5}; do … done</code></td></tr>
+<tr><td class="k"><pre><code>while [ "$i" -lt 5 ]; do
+    i=$((i + 1))
+done</code></pre></td><td data-label="Beschreibung">Schleife, solange die Bedingung erfüllt ist</td></tr>
+<tr><td class="k"><code>chmod +x skript.sh</code><br><code>./skript.sh</code></td><td data-label="Beschreibung">Skript ausführbar machen und starten. Alternativ ohne <code>chmod</code>: <code>bash skript.sh</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="beispiel">
+<div class="section-head"><h2>Beispielskript</h2></div>
+<div class="ref-code ref-item"><pre><code>#!/bin/bash
+# backup.sh – sichert einen Ordner als Archiv mit Datum im Namen
+
+quelle="$1"
+ziel="$HOME/backups"
+
+if [ -z "$quelle" ] || [ ! -d "$quelle" ]; then
+    echo "Aufruf: $0 &lt;ordner&gt;"
+    exit 1
+fi
+
+mkdir -p "$ziel"
+datei="$ziel/backup-$(date +%F).tar.gz"
+
+tar -czf "$datei" "$quelle" &amp;&amp; echo "Gesichert nach $datei"</code></pre></div>
+<p class="ref-note">Die erste Zeile <code>#!/bin/bash</code> (Shebang) legt fest, welches Programm das Skript ausführt.</p>
+</section>
+
+      <p class="empty" id="leer" hidden>&gt; keine Treffer</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/merkhilfe.js"></script>
+</body>
+</html>

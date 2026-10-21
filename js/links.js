@@ -138,5 +138,29 @@ const EINTRAEGE = [
     beschreibung: "Merkhilfe für HTML",
     url: "html.html",
     fach: ["Kom1"]
+  },
+  {
+    typ: "materialien",
+    titel: "Python Merkhilfe",
+    beschreibung: "Die wichtigsten Python-Befehle und Funktionen mit kurzer Erklärung",
+    url: "python.html",
+    fach: ["SAE"],
+    neu: true
+  },
+  {
+    typ: "materialien",
+    titel: "C Merkhilfe",
+    beschreibung: "Die wichtigsten C-Befehle und Funktionen mit kurzer Erklärung",
+    url: "c.html",
+    fach: ["Prog"],
+    neu: true
+  },
+  {
+    typ: "materialien",
+    titel: "Bash Merkhilfe",
+    beschreibung: "Die wichtigsten Befehle für die Kommandozeile unter Debian Linux",
+    url: "bash.html",
+    fach: ["ITS"],
+    neu: true
   }
 ];

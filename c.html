@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C-Merkhilfe · Unterricht</title>
+  <meta name="description" content="Die wichtigsten C-Befehle und Funktionen zum Nachschlagen – vom Grundgerüst bis zu Zeigern und Strukturen.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+    <div class="brand">
+      <a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">C Merkhilfe</span>
+	 </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">merkhilfe · C · Prog</p>
+      <h1>C-Merkhilfe</h1>
+      <p>Die wichtigsten Befehle und Funktionen zum Nachschlagen – vom Grundgerüst bis zu Zeigern und Strukturen.</p>
+      <a class="ref-switch" href="c-editor.html">→ direkt ausprobieren im C-Compiler</a>
+    </div>
+  </header>
+
+  <div class="ref-bar">
+    <div class="container toolbar">
+      <label class="search">
+        <span class="visually-hidden">In der Merkhilfe suchen</span>
+        <input id="ref-suche" type="search" placeholder="suchen – z. B. printf, for, strlen" autocomplete="off">
+      </label>
+      <nav class="chips" aria-label="Abschnitte">
+        <a class="chip" href="#grundgeruest">Grundgerüst</a>
+        <a class="chip" href="#datentypen">Datentypen</a>
+        <a class="chip" href="#ausgabe">Ausgabe</a>
+        <a class="chip" href="#eingabe">Eingabe</a>
+        <a class="chip" href="#operatoren">Operatoren</a>
+        <a class="chip" href="#verzweigungen">Verzweigungen</a>
+        <a class="chip" href="#schleifen">Schleifen</a>
+        <a class="chip" href="#arrays">Arrays</a>
+        <a class="chip" href="#strings">Strings</a>
+        <a class="chip" href="#funktionen">Funktionen</a>
+        <a class="chip" href="#zeiger">Zeiger</a>
+        <a class="chip" href="#structs">Strukturen</a>
+        <a class="chip" href="#bibliotheken">Bibliotheken</a>
+        <a class="chip" href="#kompilieren">Kompilieren</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="ref">
+    <div class="container">
+<section class="ref-section" id="grundgeruest">
+<div class="section-head"><h2>Grundgerüst</h2></div>
+<div class="ref-code ref-item"><pre><code>#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    printf("Hallo Welt\n");
+    return 0;
+}</code></pre></div>
+<div class="ref-table-wrap" style="margin-top: 16px"><table class="ref-table">
+<thead><tr><th scope="col">Teil</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>#include &lt;stdio.h&gt;</code></td><td data-label="Beschreibung">Bindet die Bibliothek für Ein-/Ausgabe ein (<b class="mn">st</b>an<b class="mn">d</b>ard <b class="mn">i</b>nput/<b class="mn">o</b>utput).</td></tr>
+<tr><td class="k"><code>int main(void)</code></td><td data-label="Beschreibung">Hauptfunktion – hier startet jedes C-Programm.</td></tr>
+<tr><td class="k"><code>{ ... }</code></td><td data-label="Beschreibung">Geschweifte Klammern fassen Anweisungen zu einem Block zusammen.</td></tr>
+<tr><td class="k"><code>;</code></td><td data-label="Beschreibung">Jede Anweisung endet mit einem Semikolon.</td></tr>
+<tr><td class="k"><code>return 0;</code></td><td data-label="Beschreibung">Beendet <code>main</code>; 0 bedeutet „ohne Fehler beendet“.</td></tr>
+<tr><td class="k"><code>// Kommentar</code><br><code>/* mehrzeilig */</code></td><td data-label="Beschreibung">Kommentare werden vom Compiler ignoriert.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="datentypen">
+<div class="section-head"><h2>Datentypen &amp; Variablen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Typ</th><th scope="col">Beispiel</th><th scope="col">Erklärung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>int</code></td><td data-label="Beispiel"><code>int alter = 17;</code></td><td data-label="Erklärung">Ganzzahl (meist 4 Byte, ca. ±2,1 Mrd.)</td></tr>
+<tr><td class="k"><code>float</code></td><td data-label="Beispiel"><code>float preis = 4.99f;</code></td><td data-label="Erklärung">Kommazahl, einfache Genauigkeit (4 Byte, ca. 7 Stellen)</td></tr>
+<tr><td class="k"><code>double</code></td><td data-label="Beispiel"><code>double pi = 3.14159;</code></td><td data-label="Erklärung">Kommazahl, doppelte Genauigkeit (8 Byte, ca. 15 Stellen)</td></tr>
+<tr><td class="k"><code>char</code></td><td data-label="Beispiel"><code>char z = 'A';</code></td><td data-label="Erklärung">Einzelnes Zeichen (1 Byte) – in <b>einfachen</b> Anführungszeichen</td></tr>
+<tr><td class="k"><code>bool</code></td><td data-label="Beispiel"><code>bool fertig = true;</code></td><td data-label="Erklärung">Wahrheitswert – braucht <code>#include &lt;stdbool.h&gt;</code>. In C gilt: 0 = falsch, alles andere = wahr.</td></tr>
+<tr><td class="k"><code>unsigned</code></td><td data-label="Beispiel"><code>unsigned int n = 5;</code></td><td data-label="Erklärung">Nur positive Werte, dafür doppelt so großer Bereich</td></tr>
+<tr><td class="k"><code>long</code></td><td data-label="Beispiel"><code>long long big = 1e12;</code></td><td data-label="Erklärung">Größere Ganzzahl (<code>long long</code>: 8 Byte)</td></tr>
+<tr><td class="k"><code>const</code></td><td data-label="Beispiel"><code>const int MAX = 100;</code></td><td data-label="Erklärung">Konstante – kann nicht mehr geändert werden</td></tr>
+<tr><td class="k"><code>#define</code></td><td data-label="Beispiel"><code>#define MAX 100</code></td><td data-label="Erklärung">Präprozessor-Konstante: <code>MAX</code> wird vor dem Kompilieren durch 100 ersetzt (kein <code>;</code>!)</td></tr>
+<tr><td class="k"><code>sizeof</code></td><td data-label="Beispiel"><code>sizeof(int)</code></td><td data-label="Erklärung">Größe eines Typs oder einer Variable in Byte</td></tr>
+<tr><td class="k"><code>(typ)</code></td><td data-label="Beispiel"><code>(double)a / b</code></td><td data-label="Erklärung">Typumwandlung (Cast) – z. B. damit <code>a / b</code> keine Ganzzahldivision ist</td></tr>
+</tbody></table></div>
+<p class="ref-note">Variablen haben in C keinen automatischen Startwert – immer initialisieren, z. B. <code>int summe = 0;</code></p>
+</section>
+
+<section class="ref-section" id="ausgabe">
+<div class="section-head"><h2>Ausgabe mit printf</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>printf("Hallo\n");</code></td><td data-label="Beschreibung">Text ausgeben (<b class="mn">print f</b>ormatted). <code>\n</code> = Zeilenumbruch.</td></tr>
+<tr><td class="k"><code>printf("Alter: %d\n", alter);</code></td><td data-label="Beschreibung">Platzhalter im Text werden der Reihe nach durch die Werte ersetzt.</td></tr>
+<tr><td class="k"><code>%d</code> <code>%i</code></td><td data-label="Beschreibung">Ganzzahl <code>int</code> (<b class="mn">d</b>ezimal)</td></tr>
+<tr><td class="k"><code>%f</code> <code>%lf</code></td><td data-label="Beschreibung">Kommazahl <code>float</code> / <code>double</code> (<b class="mn">f</b>loat). Bei <code>printf</code> geht für beide <code>%f</code>.</td></tr>
+<tr><td class="k"><code>%.2f</code></td><td data-label="Beschreibung">Kommazahl mit genau 2 Nachkommastellen</td></tr>
+<tr><td class="k"><code>%5d</code> <code>%-5d</code></td><td data-label="Beschreibung">Mindestens 5 Zeichen breit, rechtsbündig / linksbündig – gut für Tabellen</td></tr>
+<tr><td class="k"><code>%c</code></td><td data-label="Beschreibung">Einzelnes Zeichen (<b class="mn">c</b>har)</td></tr>
+<tr><td class="k"><code>%s</code></td><td data-label="Beschreibung">Zeichenkette (<b class="mn">s</b>tring)</td></tr>
+<tr><td class="k"><code>%x</code> <code>%o</code></td><td data-label="Beschreibung">Ganzzahl hexadezimal / oktal</td></tr>
+<tr><td class="k"><code>%p</code></td><td data-label="Beschreibung">Adresse (<b class="mn">p</b>ointer)</td></tr>
+<tr><td class="k"><code>%%</code></td><td data-label="Beschreibung">Gibt ein Prozentzeichen aus</td></tr>
+<tr><td class="k"><code>\n</code> <code>\t</code> <code>\\</code> <code>\"</code></td><td data-label="Beschreibung">Escape-Sequenzen: Zeilenumbruch, Tabulator, Backslash, Anführungszeichen</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="eingabe">
+<div class="section-head"><h2>Eingabe mit scanf</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>scanf("%d", &amp;zahl);</code></td><td data-label="Beschreibung">Ganzzahl einlesen. Das <code>&amp;</code> (Adresse) vor der Variablen <b>nicht vergessen</b>!</td></tr>
+<tr><td class="k"><code>scanf("%lf", &amp;wert);</code></td><td data-label="Beschreibung"><code>double</code> einlesen – hier ist <code>%lf</code> Pflicht (<code>%f</code> nur für <code>float</code>).</td></tr>
+<tr><td class="k"><code>scanf(" %c", &amp;zeichen);</code></td><td data-label="Beschreibung">Einzelnes Zeichen einlesen. Das Leerzeichen vor <code>%c</code> überspringt den übrig gebliebenen Zeilenumbruch.</td></tr>
+<tr><td class="k"><code>scanf("%19s", name);</code></td><td data-label="Beschreibung">Wort einlesen (bis zum Leerzeichen), höchstens 19 Zeichen. Bei Arrays <b>kein</b> <code>&amp;</code>.</td></tr>
+<tr><td class="k"><code>fgets(zeile, 100, stdin);</code></td><td data-label="Beschreibung">Ganze Zeile inkl. Leerzeichen einlesen (max. 99 Zeichen + <code>\0</code>). Der Zeilenumbruch bleibt im String.</td></tr>
+<tr><td class="k"><pre><code>if (scanf("%d", &amp;n) != 1) {
+    printf("Keine Zahl!\n");
+}</code></pre></td><td data-label="Beschreibung"><code>scanf</code> gibt zurück, wie viele Werte erfolgreich gelesen wurden – damit lassen sich Fehleingaben erkennen.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="operatoren">
+<div class="section-head"><h2>Operatoren</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Operator</th><th scope="col">Beispiel</th><th scope="col">Erklärung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>+ - * /</code></td><td data-label="Beispiel"><code>7 / 2</code> → <code>3</code></td><td data-label="Erklärung">Grundrechenarten. Achtung: <code>int / int</code> ist eine <b>Ganzzahldivision</b>! <code>7.0 / 2</code> → <code>3.5</code></td></tr>
+<tr><td class="k"><code>%</code></td><td data-label="Beispiel"><code>7 % 2</code> → <code>1</code></td><td data-label="Erklärung">Modulo: Rest der Division (nur für Ganzzahlen)</td></tr>
+<tr><td class="k"><code>++ --</code></td><td data-label="Beispiel"><code>i++;</code></td><td data-label="Erklärung">Um 1 erhöhen / verringern</td></tr>
+<tr><td class="k"><code>+= -= *= /=</code></td><td data-label="Beispiel"><code>summe += x;</code></td><td data-label="Erklärung">Kurzform für <code>summe = summe + x;</code></td></tr>
+<tr><td class="k"><code>== !=</code></td><td data-label="Beispiel"><code>if (a == b)</code></td><td data-label="Erklärung">Gleich / ungleich. Achtung: <code>=</code> ist Zuweisung, <code>==</code> ist Vergleich!</td></tr>
+<tr><td class="k"><code>&lt; &gt; &lt;= &gt;=</code></td><td data-label="Beispiel"><code>if (x &gt;= 0)</code></td><td data-label="Erklärung">Kleiner, größer, kleiner gleich, größer gleich</td></tr>
+<tr><td class="k"><code>&amp;&amp; || !</code></td><td data-label="Beispiel"><code>x &gt; 0 &amp;&amp; x &lt; 10</code></td><td data-label="Erklärung">Logisches UND, ODER, NICHT</td></tr>
+<tr><td class="k"><code>&amp; | ^ ~ &lt;&lt; &gt;&gt;</code></td><td data-label="Beispiel"><code>x &lt;&lt; 1</code></td><td data-label="Erklärung">Bitoperatoren: UND, ODER, XOR, NICHT, Verschieben nach links/rechts</td></tr>
+<tr><td class="k"><code>? :</code></td><td data-label="Beispiel"><code>max = a &gt; b ? a : b;</code></td><td data-label="Erklärung">Bedingter Ausdruck: wenn <code>a &gt; b</code>, dann <code>a</code>, sonst <code>b</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="verzweigungen">
+<div class="section-head"><h2>Verzweigungen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>if (note &lt;= 4) {
+    printf("bestanden\n");
+} else if (note == 5) {
+    printf("Nachpruefung\n");
+} else {
+    printf("nicht bestanden\n");
+}</code></pre></td><td data-label="Beschreibung">Verzweigung. Bedingung in runden Klammern, Block in geschweiften Klammern. <code>else if</code> und <code>else</code> sind optional.</td></tr>
+<tr><td class="k"><pre><code>switch (wahl) {
+    case 1:
+        printf("Start\n");
+        break;
+    case 2:
+        printf("Stopp\n");
+        break;
+    default:
+        printf("Unbekannt\n");
+}</code></pre></td><td data-label="Beschreibung">Mehrfachauswahl für ganze Zahlen und Zeichen. Ohne <code>break</code> läuft das Programm in den nächsten <code>case</code> weiter! <code>default</code> fängt alle übrigen Fälle ab.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="schleifen">
+<div class="section-head"><h2>Schleifen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>for (int i = 0; i &lt; 5; i++) {
+    printf("%d\n", i);
+}</code></pre></td><td data-label="Beschreibung">Zählschleife: <code>for (Start; Bedingung; Schritt)</code>. Hier läuft <code>i</code> von 0 bis 4.</td></tr>
+<tr><td class="k"><pre><code>while (zahl &lt; 0) {
+    scanf("%d", &amp;zahl);
+}</code></pre></td><td data-label="Beschreibung">Kopfgesteuerte Schleife: Bedingung wird <b>vor</b> jedem Durchlauf geprüft.</td></tr>
+<tr><td class="k"><pre><code>do {
+    printf("Zahl (1-10): ");
+    scanf("%d", &amp;zahl);
+} while (zahl &lt; 1 || zahl &gt; 10);</code></pre></td><td data-label="Beschreibung">Fußgesteuerte Schleife: läuft <b>mindestens einmal</b> – ideal für Eingabeprüfungen. Semikolon am Ende!</td></tr>
+<tr><td class="k"><code>break;</code></td><td data-label="Beschreibung">Schleife sofort verlassen</td></tr>
+<tr><td class="k"><code>continue;</code></td><td data-label="Beschreibung">Rest des aktuellen Durchlaufs überspringen</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="arrays">
+<div class="section-head"><h2>Arrays</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>int zahlen[5];</code></td><td data-label="Beschreibung">Array mit 5 <code>int</code>-Werten anlegen. Die Größe ist fest.</td></tr>
+<tr><td class="k"><code>int zahlen[] = {4, 8, 15};</code></td><td data-label="Beschreibung">Array anlegen und füllen – Größe ergibt sich automatisch (3).</td></tr>
+<tr><td class="k"><code>int z[5] = {0};</code></td><td data-label="Beschreibung">Alle Elemente mit 0 initialisieren</td></tr>
+<tr><td class="k"><code>zahlen[0] = 7;</code></td><td data-label="Beschreibung">Element ändern. Index geht von 0 bis Größe−1. C prüft die Grenzen <b>nicht</b>!</td></tr>
+<tr><td class="k"><code>sizeof(zahlen) / sizeof(zahlen[0])</code></td><td data-label="Beschreibung">Anzahl der Elemente berechnen (funktioniert nur dort, wo das Array angelegt wurde)</td></tr>
+<tr><td class="k"><pre><code>for (int i = 0; i &lt; 5; i++) {
+    printf("%d ", zahlen[i]);
+}</code></pre></td><td data-label="Beschreibung">Alle Elemente durchlaufen</td></tr>
+<tr><td class="k"><code>int feld[3][4];</code></td><td data-label="Beschreibung">Zweidimensionales Array: 3 Zeilen, 4 Spalten. Zugriff: <code>feld[zeile][spalte]</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="strings">
+<div class="section-head"><h2>Strings (Zeichenketten)</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>char name[20] = "Anna";</code></td><td data-label="Beschreibung">String = <code>char</code>-Array. Am Ende steht automatisch das Endezeichen <code>'\0'</code> – deshalb ein Platz mehr einplanen.</td></tr>
+<tr><td class="k"><code>#include &lt;string.h&gt;</code></td><td data-label="Beschreibung">Nötig für die folgenden Funktionen</td></tr>
+<tr><td class="k"><code>strlen(s)</code></td><td data-label="Beschreibung">Länge ohne <code>'\0'</code> (<b class="mn">str</b>ing <b class="mn">len</b>gth)</td></tr>
+<tr><td class="k"><code>strcpy(ziel, quelle);</code></td><td data-label="Beschreibung">String kopieren (<b class="mn">c</b>o<b class="mn">py</b>). <code>ziel = quelle;</code> funktioniert bei Arrays <b>nicht</b>!</td></tr>
+<tr><td class="k"><code>strcat(ziel, quelle);</code></td><td data-label="Beschreibung">Quelle hinten an Ziel anhängen (con<b class="mn">cat</b>enate). Ziel muss groß genug sein.</td></tr>
+<tr><td class="k"><code>strcmp(a, b)</code></td><td data-label="Beschreibung">Vergleicht zwei Strings (<b class="mn">c</b>o<b class="mn">mp</b>are): 0 = gleich, &lt;0 = a kommt vorher, &gt;0 = a kommt nachher. <code>a == b</code> vergleicht nur Adressen!</td></tr>
+<tr><td class="k"><code>strncpy</code> <code>strncat</code> <code>strncmp</code></td><td data-label="Beschreibung">Sichere Varianten mit maximaler Zeichenanzahl als drittem Parameter</td></tr>
+<tr><td class="k"><code>strchr(s, 'x')</code><br><code>strstr(s, "abc")</code></td><td data-label="Beschreibung">Sucht ein Zeichen / einen Teilstring. Ergebnis: Zeiger auf die Fundstelle oder <code>NULL</code>.</td></tr>
+<tr><td class="k"><code>sprintf(buf, "%d", n);</code></td><td data-label="Beschreibung">Wie <code>printf</code>, schreibt aber in einen String statt auf den Bildschirm</td></tr>
+<tr><td class="k"><code>toupper(c)</code> <code>tolower(c)</code><br><code>isdigit(c)</code> <code>isalpha(c)</code></td><td data-label="Beschreibung">Zeichen umwandeln / prüfen – braucht <code>#include &lt;ctype.h&gt;</code></td></tr>
+<tr><td class="k"><code>atoi(s)</code> <code>atof(s)</code></td><td data-label="Beschreibung">String in <code>int</code> / <code>double</code> umwandeln – braucht <code>#include &lt;stdlib.h&gt;</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="funktionen">
+<div class="section-head"><h2>Funktionen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>int quadrat(int x)
+{
+    return x * x;
+}</code></pre></td><td data-label="Beschreibung">Funktion mit Rückgabetyp <code>int</code> und einem Parameter. <code>return</code> gibt den Wert zurück.</td></tr>
+<tr><td class="k"><pre><code>void begruessen(char name[])
+{
+    printf("Hallo %s\n", name);
+}</code></pre></td><td data-label="Beschreibung"><code>void</code> = Funktion ohne Rückgabewert</td></tr>
+<tr><td class="k"><code>int quadrat(int x);</code></td><td data-label="Beschreibung">Prototyp (Deklaration) – steht vor <code>main</code>, wenn die Funktion erst danach definiert wird.</td></tr>
+<tr><td class="k"><code>int erg = quadrat(4);</code></td><td data-label="Beschreibung">Funktion aufrufen und Ergebnis speichern</td></tr>
+<tr><td class="k"><pre><code>void tausche(int *a, int *b)
+{
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+/* Aufruf: */
+tausche(&amp;x, &amp;y);</code></pre></td><td data-label="Beschreibung">Parameter werden normalerweise <b>kopiert</b> (call by value). Soll die Funktion Variablen des Aufrufers ändern, übergibt man deren Adresse (call by reference).</td></tr>
+<tr><td class="k"><code>int summe(int a[], int n)</code></td><td data-label="Beschreibung">Arrays werden immer als Adresse übergeben – die Länge muss extra mitgegeben werden.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="zeiger">
+<div class="section-head"><h2>Zeiger</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>int *p;</code></td><td data-label="Beschreibung">Zeiger (Pointer) auf einen <code>int</code> anlegen – speichert eine Adresse.</td></tr>
+<tr><td class="k"><code>p = &amp;x;</code></td><td data-label="Beschreibung"><code>&amp;</code> = Adressoperator: <code>p</code> zeigt jetzt auf <code>x</code>.</td></tr>
+<tr><td class="k"><code>*p = 5;</code></td><td data-label="Beschreibung"><code>*</code> = Dereferenzierung: greift auf den Wert zu, auf den <code>p</code> zeigt (hier wird <code>x</code> zu 5).</td></tr>
+<tr><td class="k"><code>int *p = NULL;</code></td><td data-label="Beschreibung">Zeiger, der (noch) nirgendwohin zeigt. Vor dem Benutzen prüfen: <code>if (p != NULL)</code></td></tr>
+<tr><td class="k"><code>p = zahlen;</code><br><code>*(p + 2)</code></td><td data-label="Beschreibung">Ein Arrayname ist die Adresse des ersten Elements. <code>*(p + 2)</code> ist dasselbe wie <code>zahlen[2]</code>.</td></tr>
+<tr><td class="k"><code>int *a = malloc(n * sizeof(int));</code></td><td data-label="Beschreibung">Speicher zur Laufzeit anfordern (<b class="mn">m</b>emory <b class="mn">alloc</b>ation) – braucht <code>&lt;stdlib.h&gt;</code>. Gibt <code>NULL</code> zurück, wenn es nicht klappt.</td></tr>
+<tr><td class="k"><code>free(a);</code></td><td data-label="Beschreibung">Mit <code>malloc</code> angeforderten Speicher wieder freigeben</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="structs">
+<div class="section-head"><h2>Strukturen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>struct Schueler {
+    char name[30];
+    int alter;
+    double schnitt;
+};</code></pre></td><td data-label="Beschreibung">Eigenen Datentyp aus mehreren Feldern definieren. Semikolon am Ende!</td></tr>
+<tr><td class="k"><code>struct Schueler s = {"Ben", 17, 2.3};</code></td><td data-label="Beschreibung">Variable anlegen und initialisieren</td></tr>
+<tr><td class="k"><code>s.alter = 18;</code></td><td data-label="Beschreibung">Auf ein Feld zugreifen mit Punkt</td></tr>
+<tr><td class="k"><code>p-&gt;alter = 18;</code></td><td data-label="Beschreibung">Zugriff über einen Zeiger <code>p</code> auf die Struktur – Kurzform für <code>(*p).alter</code></td></tr>
+<tr><td class="k"><pre><code>typedef struct {
+    int x, y;
+} Punkt;
+
+Punkt p1 = {3, 4};</code></pre></td><td data-label="Beschreibung">Mit <code>typedef</code> einen Namen vergeben – dann entfällt das Wort <code>struct</code> bei der Verwendung.</td></tr>
+<tr><td class="k"><code>struct Schueler klasse[25];</code></td><td data-label="Beschreibung">Array von Strukturen. Zugriff: <code>klasse[0].name</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="bibliotheken">
+<div class="section-head"><h2>Nützliche Bibliotheken</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Funktion</th><th scope="col">Header</th><th scope="col">Erklärung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>sqrt(x)</code></td><td data-label="Header"><code>&lt;math.h&gt;</code></td><td data-label="Erklärung">Quadratwurzel</td></tr>
+<tr><td class="k"><code>pow(b, e)</code></td><td data-label="Header"><code>&lt;math.h&gt;</code></td><td data-label="Erklärung">Potenz b<sup>e</sup> (<b class="mn">pow</b>er) – es gibt keinen <code>**</code>-Operator in C</td></tr>
+<tr><td class="k"><code>fabs(x)</code> <code>abs(n)</code></td><td data-label="Header"><code>&lt;math.h&gt;</code> / <code>&lt;stdlib.h&gt;</code></td><td data-label="Erklärung">Betrag einer Kommazahl / einer Ganzzahl</td></tr>
+<tr><td class="k"><code>round(x)</code> <code>floor(x)</code> <code>ceil(x)</code></td><td data-label="Header"><code>&lt;math.h&gt;</code></td><td data-label="Erklärung">Runden, abrunden, aufrunden</td></tr>
+<tr><td class="k"><code>srand(time(NULL));</code></td><td data-label="Header"><code>&lt;stdlib.h&gt;</code> <code>&lt;time.h&gt;</code></td><td data-label="Erklärung">Zufallsgenerator einmal am Programmanfang starten</td></tr>
+<tr><td class="k"><code>rand() % 6 + 1</code></td><td data-label="Header"><code>&lt;stdlib.h&gt;</code></td><td data-label="Erklärung">Zufallszahl von 1 bis 6</td></tr>
+<tr><td class="k"><code>exit(1);</code></td><td data-label="Header"><code>&lt;stdlib.h&gt;</code></td><td data-label="Erklärung">Programm sofort beenden (Wert ≠ 0 = Fehler)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="kompilieren">
+<div class="section-head"><h2>Kompilieren &amp; Ausführen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Befehl</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>gcc programm.c -o programm</code></td><td data-label="Beschreibung">Quelltext übersetzen. <code>-o</code> (<b class="mn">o</b>utput) gibt den Namen des fertigen Programms an.</td></tr>
+<tr><td class="k"><code>./programm</code></td><td data-label="Beschreibung">Programm unter Linux ausführen (unter Windows: <code>programm.exe</code>)</td></tr>
+<tr><td class="k"><code>gcc -Wall -Wextra programm.c -o programm</code></td><td data-label="Beschreibung">Alle wichtigen Warnungen anzeigen – sehr empfehlenswert!</td></tr>
+<tr><td class="k"><code>gcc programm.c -o programm -lm</code></td><td data-label="Beschreibung">Mit Mathe-Bibliothek linken – nötig bei <code>&lt;math.h&gt;</code> unter Linux</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="ref-section" id="beispiel">
+<div class="section-head"><h2>Beispielprogramm</h2></div>
+<div class="ref-code ref-item"><pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+
+int main(void)
+{
+    int geheim, tipp = 0, versuche = 0;
+
+    srand(time(NULL));
+    geheim = rand() % 100 + 1;
+
+    do {
+        printf("Dein Tipp (1-100): ");
+        if (scanf("%d", &amp;tipp) != 1) {
+            printf("Bitte eine ganze Zahl eingeben.\n");
+            while (getchar() != '\n');   /* Eingabepuffer leeren */
+            continue;
+        }
+        versuche++;
+
+        if (tipp &lt; geheim) {
+            printf("Zu klein!\n");
+        } else if (tipp &gt; geheim) {
+            printf("Zu gross!\n");
+        }
+    } while (tipp != geheim);
+
+    printf("Richtig! Du hast %d Versuche gebraucht.\n", versuche);
+    return 0;
+}</code></pre></div>
+</section>
+
+      <p class="empty" id="leer" hidden>&gt; keine Treffer</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/merkhilfe.js"></script>
+</body>
+</html>
