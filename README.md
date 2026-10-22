@@ -1,8 +1,8 @@
-# Schulwebseite
+# Schulwebsite
 
 Webseite von Timo Kempny, veröffentlicht über GitHub Pages.
 
-**Live:** https://timokempny.github.io/Schulwebseite/
+**Live:** https://timokempny.github.io/Schulwebsite/
 
 ## Inhalt
 
@@ -10,7 +10,7 @@ Webseite von Timo Kempny, veröffentlicht über GitHub Pages.
 
 ## Aufbau
 
-Schulwebseite/
+Schulwebsite/
 
 ├── index.html 	Startseite
 
@@ -26,8 +26,8 @@ Schulwebseite/
 Repo einmalig klonen:
 
 ```bash
-git clone git@github.com:TimoKempny/Schulwebseite.git
-cd Schulwebseite
+git clone git@github.com:TimoKempny/Schulwebsite.git
+cd Schulwebsite
 ```
 
 Änderungen veröffentlichen:
