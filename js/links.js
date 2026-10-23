@@ -28,7 +28,7 @@ const EINTRAEGE = [
   {
     typ: "tool",
     titel: "Struktogramme erstellen",
-    beschreibung: "Tool, um per Drag & Drop Struktogramme zu erstellen",
+    beschreibung: "Tool, um per Drag & Drop Struktogramme zu erstellen – auch automatisch aus Python- oder C-Code",
     url: "struktogramm.html",
     fach: ["Informatik"]
   },

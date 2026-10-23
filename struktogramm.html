@@ -13,6 +13,7 @@
   } catch (e) {}
 </script>
 <script src="js/jspdf.umd.min.js"></script>
+<script src="js/code2struktogramm.js"></script>
    <link rel="icon" href="favicon.svg" type="image/svg+xml">
    <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
@@ -149,6 +150,24 @@ body.dragging,body.dragging *{cursor:grabbing!important}
 .dlg img{max-width:100%;border:1px solid var(--line);background:#fff}
 .dlg .tb{justify-self:end;border:1px solid var(--line)}
 
+/* Dialog: Struktogramm aus Code */
+.dlg.imp{width:min(760px,100%)}
+.imp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.imp-bar label{display:flex;align-items:center;gap:6px;font:12.5px/1.2 var(--f-mono);color:var(--muted)}
+.imp-bar .sel,.imp-prog .sel{border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.imp-bar .tb,.imp-actions .tb:not(.primary){border:1px solid var(--line)}
+.imp-bar input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;margin:0}
+#impCode{width:100%;min-height:240px;max-height:46vh;resize:vertical;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);
+  font:13px/1.5 var(--f-mono);padding:10px 12px;tab-size:4;white-space:pre;overflow:auto}
+#impCode:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.imp-prog{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font:12.5px/1.3 var(--f-mono);color:var(--muted)}
+.imp-prog b{color:var(--accent);font-weight:600}
+.imp-hints{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+.imp-hints li{padding-left:16px;position:relative}
+.imp-hints li::before{content:"!";position:absolute;left:3px;font:700 12px/1.4 var(--f-mono);color:#b45309}
+.imp-actions{display:flex;justify-content:flex-end;gap:8px}
+.dlg .imp-actions .tb{justify-self:auto}
+
 .foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 4px;font:12px/1 var(--f-mono);color:var(--muted)}
 .foot nav a{color:var(--muted);text-decoration:none;margin-left:14px}
 .foot nav a:hover{color:var(--accent)}
@@ -207,10 +226,11 @@ body.dragging,body.dragging *{cursor:grabbing!important}
         <button class="tb primary" id="pdfBtn">PDF</button>
       </div>
       <div class="grp">
-        <button class="tb" id="openBtn" title="Struktogramm-Datei (.json) öffnen">Öffnen</button>
+        <button class="tb" id="codeBtn" title="Struktogramm aus Python- oder C-Code erstellen">Aus Code</button>
+        <button class="tb" id="openBtn" title="Struktogramm (.json) oder Programm (.py, .c) öffnen">Öffnen</button>
         <button class="tb" id="saveBtn" title="Als .json speichern, um später weiterzuarbeiten">Speichern</button>
         <button class="tb" id="newBtn" title="Leeres Struktogramm (rückgängig machbar)">Neu</button>
-        <input type="file" id="fileIn" accept=".json,application/json" hidden>
+        <input type="file" id="fileIn" accept=".json,application/json,.py,.c,.h" hidden>
       </div>
       <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
     </div>
@@ -225,6 +245,7 @@ body.dragging,body.dragging *{cursor:grabbing!important}
         <li>Text anklicken zum Bearbeiten. <kbd>Enter</kbd> bestätigt, <kbd>Esc</kbd> bricht ab, <kbd>Shift</kbd>+<kbd>Enter</kbd> neue Zeile.</li>
         <li>Blöcke auf dem Blatt ziehen, um sie zu verschieben.</li>
         <li>Über einem Block erscheinen Löschen und Duplizieren.</li>
+        <li><b>Aus Code</b> erstellt das Struktogramm aus einem Python- oder C-Programm.</li>
         <li><kbd>Strg</kbd>+<kbd>Z</kbd> rückgängig</li>
       </ul>
       <div class="din">Darstellung nach Nassi-Shneiderman (DIN 66261)</div>
@@ -261,6 +282,35 @@ body.dragging,body.dragging *{cursor:grabbing!important}
     <p id="mText"></p>
     <img id="mImg" alt="Exportiertes Struktogramm">
     <button class="tb" id="mClose">Schließen</button>
+  </div>
+</div>
+<div class="modal" id="impModal" hidden>
+  <div class="dlg imp" role="dialog" aria-modal="true" aria-labelledby="impTitle">
+    <h3 id="impTitle">Struktogramm aus Code erstellen</h3>
+    <p>Python- oder C-Programm einfügen oder als Datei öffnen. Verzweigungen, Schleifen und Fallauswahlen werden erkannt, jede Funktion wird ein eigenes Struktogramm.</p>
+    <div class="imp-bar">
+      <label>Sprache
+        <select class="sel" id="impLang">
+          <option value="auto">automatisch</option>
+          <option value="python">Python</option>
+          <option value="c">C</option>
+        </select>
+      </label>
+      <label title="x = 5 wird zu x ← 5, print/printf zu Ausgabe, input/scanf zu Eingabe, != zu ≠ …"><input type="checkbox" id="impPseudo" checked> als Pseudocode (← · Ausgabe · Eingabe · ≠)</label>
+      <button class="tb" id="impFile" type="button">Datei öffnen …</button>
+      <input type="file" id="impFileIn" accept=".py,.c,.h,.txt,text/plain" hidden>
+    </div>
+    <textarea id="impCode" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-label="Programmcode"
+      placeholder="zahl = int(input(&quot;Zahl: &quot;))&#10;if zahl % 2 == 0:&#10;    print(&quot;gerade&quot;)&#10;else:&#10;    print(&quot;ungerade&quot;)"></textarea>
+    <div class="imp-prog" id="impProgRow" hidden>
+      <span id="impLangInfo"></span>
+      <label>Struktogramm für <select class="sel" id="impProg" aria-label="Funktion auswählen"></select></label>
+    </div>
+    <ul class="imp-hints" id="impHints"></ul>
+    <div class="imp-actions">
+      <button class="tb" id="impCancel" type="button">Abbrechen</button>
+      <button class="tb primary" id="impOk" type="button" disabled>Struktogramm erstellen</button>
+    </div>
   </div>
 </div>
 
@@ -839,6 +889,11 @@ $('openBtn').onclick = () => $('fileIn').click();
 $('fileIn').addEventListener('change', e => {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   const rd = new FileReader();
+  if (/\.(py|c|h)$/i.test(f.name)) {
+    // Programmdatei: im Code-Dialog öffnen
+    rd.onload = () => oeffneImport(String(rd.result), /\.py$/i.test(f.name) ? 'python' : 'c');
+    rd.readAsText(f); e.target.value = ''; return;
+  }
   rd.onload = () => {
     try {
       const d = JSON.parse(rd.result);
@@ -856,6 +911,104 @@ $('fileIn').addEventListener('change', e => {
 });
 $('mClose').onclick = () => { $('modal').hidden = true; };
 $('modal').addEventListener('click', e => { if (e.target.id === 'modal') $('modal').hidden = true; });
+
+/* ---------- Struktogramm aus Code ---------- */
+const IMP = STORE + '.import';
+const impModal = $('impModal'), impCode = $('impCode'), impProg = $('impProg');
+let impErgebnis = null, impT = null;
+function impLaden(k, d) { try { const v = localStorage.getItem(IMP + '.' + k); return v === null ? d : v; } catch (e) { return d; } }
+function impMerken(k, v) { try { localStorage.setItem(IMP + '.' + k, v); } catch (e) {} }
+function bloeckeZaehlen(arr) { let n = 0; walk(arr, () => n++); return n; }
+
+function impAnalysieren() {
+  const code = impCode.value;
+  impMerken('code', code);
+  const row = $('impProgRow'), hints = $('impHints');
+  hints.innerHTML = ''; impErgebnis = null;
+  if (!code.trim() || !window.CodeZuStruktogramm) { row.hidden = true; $('impOk').disabled = true; return; }
+  let r;
+  try { r = window.CodeZuStruktogramm.umwandeln(code, { sprache: $('impLang').value, pseudo: $('impPseudo').checked }); }
+  catch (err) {
+    row.hidden = true; $('impOk').disabled = true;
+    const li = document.createElement('li'); li.textContent = 'Der Code konnte nicht gelesen werden. Prüfe Klammern und Einrückung.'; hints.appendChild(li);
+    return;
+  }
+  impErgebnis = r;
+  const vorher = impProg.value;
+  impProg.innerHTML = '';
+  r.programme.forEach((p, i) => {
+    const o = document.createElement('option');
+    o.value = String(i); o.textContent = p.name + ' – ' + bloeckeZaehlen(p.root) + ' Blöcke';
+    o.dataset.name = p.name; impProg.appendChild(o);
+  });
+  // Auswahl behalten; sonst nicht das Hauptprogramm nehmen, wenn es nur eine Funktion aufruft
+  const gleich = [...impProg.options].find(o => o.dataset.name === vorher);
+  if (gleich) impProg.value = gleich.value;
+  else {
+    const h = r.programme[0];
+    impProg.value = (h && r.programme.length > 1 && h.root.length === 1 && h.root[0].type === 'call') ? '1' : '0';
+  }
+  impProg.dataset.gewaehlt = impProg.selectedOptions[0] ? impProg.selectedOptions[0].dataset.name : '';
+  $('impLangInfo').innerHTML = 'erkannt: <b>' + (r.sprache === 'c' ? 'C' : 'Python') + '</b>';
+  row.hidden = false;
+  r.hinweise.slice(0, 8).forEach(h => { const li = document.createElement('li'); li.textContent = h; hints.appendChild(li); });
+  if (r.hinweise.length > 8) { const li = document.createElement('li'); li.textContent = '… und ' + (r.hinweise.length - 8) + ' weitere Hinweise'; hints.appendChild(li); }
+  const p = r.programme[+impProg.value];
+  $('impOk').disabled = !p || !p.root.length;
+}
+function impSpaeter() { clearTimeout(impT); impT = setTimeout(impAnalysieren, 250); }
+
+function oeffneImport(code, sprache) {
+  if (code != null) impCode.value = code.replace(/\r\n?/g, '\n');
+  else impCode.value = impLaden('code', '');
+  if (sprache) $('impLang').value = sprache;
+  impModal.hidden = false;
+  impAnalysieren();
+  impCode.focus();
+}
+function schliesseImport() { impModal.hidden = true; }
+
+$('codeBtn').onclick = () => oeffneImport(null, null);
+$('impLang').value = impLaden('sprache', 'auto');
+$('impPseudo').checked = impLaden('pseudo', '1') === '1';
+$('impLang').addEventListener('change', e => { impMerken('sprache', e.target.value); impAnalysieren(); });
+$('impPseudo').addEventListener('change', e => { impMerken('pseudo', e.target.checked ? '1' : '0'); impAnalysieren(); });
+impProg.addEventListener('change', () => {
+  impProg.dataset.gewaehlt = impProg.selectedOptions[0].dataset.name;
+  const p = impErgebnis && impErgebnis.programme[+impProg.value];
+  $('impOk').disabled = !p || !p.root.length;
+});
+impCode.addEventListener('input', impSpaeter);
+impCode.addEventListener('keydown', e => {
+  // Tab rückt ein statt den Fokus zu wechseln
+  if (e.key === 'Tab' && !e.shiftKey && !e.ctrlKey) { e.preventDefault(); document.execCommand('insertText', false, '    '); }
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $('impOk').click(); }
+});
+$('impFile').onclick = () => $('impFileIn').click();
+$('impFileIn').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  f.text().then(t => {
+    impCode.value = t.replace(/\r\n?/g, '\n');
+    if (/\.py$/i.test(f.name)) $('impLang').value = 'python';
+    else if (/\.[ch]$/i.test(f.name)) $('impLang').value = 'c';
+    impAnalysieren();
+  });
+  e.target.value = '';
+});
+$('impCancel').onclick = schliesseImport;
+impModal.addEventListener('click', e => { if (e.target === impModal) schliesseImport(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !impModal.hidden) schliesseImport(); });
+$('impOk').onclick = () => {
+  if (!impErgebnis) return;
+  const p = impErgebnis.programme[+impProg.value];
+  if (!p || !p.root.length) return;
+  pushUndo();
+  S.root = sanitize(p.root);
+  S.name = p.name; $('docName').value = S.name;
+  hoverId = null; commit(); schliesseImport();
+  const weitere = impErgebnis.programme.length - 1;
+  toast('Struktogramm für ' + p.name + ' erstellt.' + (weitere > 0 ? ' Weitere Funktionen über „Aus Code“.' : '') + ' Strg+Z holt das alte zurück.');
+};
 
 /* ---------- Start ---------- */
 render();
