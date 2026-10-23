@@ -149,6 +149,14 @@ const EINTRAEGE = [
   },
   {
     typ: "materialien",
+    titel: "Mermaid Merkhilfe",
+    beschreibung: "Die wichtigste Syntax für Fluss-, Sequenz-, Klassen-, Zustands- und ER-Diagramme",
+    url: "mermaid.html",
+    fach: ["Informatik"],
+    neu: true
+  },
+  {
+    typ: "materialien",
     titel: "Python Merkhilfe",
     beschreibung: "Die wichtigsten Python-Befehle und Funktionen mit kurzer Erklärung",
     url: "python.html",

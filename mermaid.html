@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mermaid-Merkhilfe · Unterricht</title>
+  <meta name="description" content="Die wichtigste Mermaid-Syntax auf einen Blick: Flussdiagramm, Sequenzdiagramm, Klassendiagramm, Zustandsdiagramm, ER-Diagramm, Gantt und mehr.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+    <div class="brand">
+      <a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">Mermaid Merkhilfe</span>
+	 </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+    <div class="container hero">
+      <p class="kicker">merkhilfe · Diagramme als Text</p>
+      <h1>Mermaid-Merkhilfe</h1>
+      <p>Die wichtigste Syntax für Fluss-, Sequenz-, Klassen-, Zustands- und ER-Diagramme. Ausprobieren im <a href="mermaid-editor.html">Diagramm-Editor</a>.</p>
+    </div>
+  </header>
+
+  <div class="ref-bar">
+    <div class="container toolbar">
+      <label class="search">
+        <span class="visually-hidden">In der Merkhilfe suchen</span>
+        <input id="ref-suche" type="search" placeholder="suchen – z. B. Pfeil, Raute, Vererbung" autocomplete="off">
+      </label>
+      <nav class="chips" aria-label="Abschnitte">
+        <a class="chip" href="#grundlagen">Grundlagen</a>
+        <a class="chip" href="#fluss">Flussdiagramm</a>
+        <a class="chip" href="#sequenz">Sequenzdiagramm</a>
+        <a class="chip" href="#klassen">Klassendiagramm</a>
+        <a class="chip" href="#zustand">Zustandsdiagramm</a>
+        <a class="chip" href="#er">ER-Diagramm</a>
+        <a class="chip" href="#weitere">Gantt, Kreis, Mindmap</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="ref">
+    <div class="container">
+<section class="ref-section" id="grundlagen">
+<div class="section-head"><h2>Grundlagen</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Code</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>flowchart TD</code></td><td data-label="Beschreibung">Die <b>erste Zeile</b> legt die Diagrammart fest: <code>flowchart</code>, <code>sequenceDiagram</code>, <code>classDiagram</code>, <code>stateDiagram-v2</code>, <code>erDiagram</code>, <code>gantt</code>, <code>pie</code>, <code>mindmap</code>, <code>C4Context</code></td></tr>
+<tr><td class="k"><code>%% Kommentar</code></td><td data-label="Beschreibung">Kommentar bis zum Zeilenende, wird nicht gezeichnet</td></tr>
+<tr><td class="k"><pre><code>---
+title: Mein Diagramm
+---
+flowchart TD</code></pre></td><td data-label="Beschreibung">Überschrift über dem Diagramm (Kopfbereich ganz oben, zwischen <code>---</code>)</td></tr>
+<tr><td class="k"><code>A["Text (mit Klammern)"]</code></td><td data-label="Beschreibung">Texte mit Sonderzeichen wie <code>( ) [ ] { } :</code> in <b>Anführungszeichen</b> setzen. Umlaute gehen ohne.</td></tr>
+<tr><td class="k"><code>A["Zeile 1&lt;br&gt;Zeile 2"]</code></td><td data-label="Beschreibung">Zeilenumbruch im Text</td></tr>
+<tr><td class="k"><code>%%{init: {"theme": "forest"}}%%</code></td><td data-label="Beschreibung">Farbstil für ein Diagramm festlegen: <code>default</code>, <code>neutral</code>, <code>forest</code>, <code>dark</code>, <code>base</code></td></tr>
+</tbody></table></div>
+<p class="ref-note">Einrückung ist (außer bei der Mindmap) egal, macht den Code aber lesbarer. Groß-/Kleinschreibung der Schlüsselwörter beachten.</p>
+</section>
+
+<section class="ref-section" id="fluss">
+<div class="section-head"><h2>Flussdiagramm</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Code</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>flowchart TD</code><br><code>flowchart LR</code></td><td data-label="Beschreibung">Richtung: <b class="mn">T</b>op→<b class="mn">D</b>own (auch <code>TB</code>), <b class="mn">L</b>eft→<b class="mn">R</b>ight, <code>BT</code>, <code>RL</code></td></tr>
+<tr><td class="k"><code>A[Rechteck]</code></td><td data-label="Beschreibung">Knoten mit ID <code>A</code> und Text. Ohne Klammern (<code>A</code>) steht die ID selbst im Kasten.</td></tr>
+<tr><td class="k"><code>B(abgerundet)</code><br><code>C([Start / Ende])</code></td><td data-label="Beschreibung">Abgerundetes Rechteck · „Stadion“ für Start und Ende (PAP)</td></tr>
+<tr><td class="k"><code>D{Bedingung?}</code></td><td data-label="Beschreibung">Raute – Verzweigung</td></tr>
+<tr><td class="k"><code>E[/Ein- oder Ausgabe/]</code></td><td data-label="Beschreibung">Parallelogramm – Ein-/Ausgabe (PAP)</td></tr>
+<tr><td class="k"><code>F[[Unterprogramm]]</code></td><td data-label="Beschreibung">Rechteck mit doppelten Seiten – Unterprogramm</td></tr>
+<tr><td class="k"><code>G((Kreis))</code><br><code>H[(Datenbank)]</code></td><td data-label="Beschreibung">Kreis · Zylinder (Datenbank)</td></tr>
+<tr><td class="k"><code>A --&gt; B</code></td><td data-label="Beschreibung">Pfeil von A nach B</td></tr>
+<tr><td class="k"><code>A --- B</code><br><code>A -.-&gt; B</code><br><code>A ==&gt; B</code></td><td data-label="Beschreibung">Linie ohne Spitze · gestrichelter Pfeil · dicker Pfeil</td></tr>
+<tr><td class="k"><code>A --&gt;|ja| B</code><br><code>A -- ja --&gt; B</code></td><td data-label="Beschreibung">Pfeil mit Beschriftung (zwei gleichwertige Schreibweisen)</td></tr>
+<tr><td class="k"><code>A --&gt; B --&gt; C</code><br><code>A --&gt; B &amp; C</code></td><td data-label="Beschreibung">Kette · ein Knoten auf mehrere</td></tr>
+<tr><td class="k"><pre><code>subgraph Schulnetz
+    PC --&gt; Router
+end</code></pre></td><td data-label="Beschreibung">Gruppe mit Rahmen und Titel</td></tr>
+<tr><td class="k"><code>style A fill:#fde68a,stroke:#b45309</code></td><td data-label="Beschreibung">Einzelnen Knoten einfärben (Füllung, Rand)</td></tr>
+</tbody></table></div>
+<p class="ref-note"><a href="mermaid-editor.html#pako:eNplkDFvwjAQhf_KyRNIIJZOqFBVomsX2OIMl_hCUiUXFM5CVZL_zjkOMODB9nvvezrLvclbR2YLpqjbW15iJ3A6WAZdV1G1SI7hSJewXu-BKj5jRsnmtxWaFGXEmzQW5nQiL52ngrifwM8dfHyNEZqDAA1_OEBGOocdcfLtr6G-fVnpe4V1yABc5aW8CpN8qz11fLreFsmP7uky5rH1yCybFZiGugYrFz6kD5Q1UlJDVg1rHBXoa7HG8hhg9NIe_znXUPSJ6viLQ6FDhecOm9ke70yrdfg" title="Beispiel im Diagramm-Editor öffnen">Beispiel im Diagramm-Editor öffnen →</a></p>
+</section>
+
+<section class="ref-section" id="sequenz">
+<div class="section-head"><h2>Sequenzdiagramm</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Code</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>participant B as Browser</code><br><code>actor S as Schüler</code></td><td data-label="Beschreibung">Teilnehmer als Kasten bzw. Strichmännchen, mit Kurzname <code>B</code>. Die Reihenfolge der Zeilen bestimmt die Reihenfolge der Spalten.</td></tr>
+<tr><td class="k"><code>A-&gt;&gt;B: Anfrage</code></td><td data-label="Beschreibung">Nachricht: durchgezogene Linie mit Pfeilspitze</td></tr>
+<tr><td class="k"><code>B--&gt;&gt;A: Antwort</code></td><td data-label="Beschreibung">Antwort: gestrichelte Linie</td></tr>
+<tr><td class="k"><code>A-)B: asynchron</code><br><code>A-xB: verloren</code></td><td data-label="Beschreibung">Offene Pfeilspitze (asynchron) · Kreuz am Ende</td></tr>
+<tr><td class="k"><code>A-&gt;&gt;+B: Anfrage</code><br><code>B--&gt;&gt;-A: Antwort</code></td><td data-label="Beschreibung">Aktivierungsbalken bei B ein (<code>+</code>) und aus (<code>-</code>)</td></tr>
+<tr><td class="k"><code>Note right of A: Text</code><br><code>Note over A,B: Text</code></td><td data-label="Beschreibung">Notiz neben einem bzw. über mehreren Teilnehmern (<code>left of</code> geht auch)</td></tr>
+<tr><td class="k"><pre><code>loop alle 5 s
+    A-&gt;&gt;B: Ping
+end</code></pre></td><td data-label="Beschreibung">Wiederholung</td></tr>
+<tr><td class="k"><pre><code>alt Passwort richtig
+    B--&gt;&gt;A: OK
+else falsch
+    B--&gt;&gt;A: Fehler
+end</code></pre></td><td data-label="Beschreibung">Alternative (wenn … sonst). <code>opt … end</code> = optionaler Teil ohne <code>else</code></td></tr>
+<tr><td class="k"><code>autonumber</code></td><td data-label="Beschreibung">Nachrichten automatisch nummerieren (Zeile direkt nach <code>sequenceDiagram</code>)</td></tr>
+</tbody></table></div>
+<p class="ref-note"><a href="mermaid-editor.html#pako:eNp90U1PxCAQBuC_MuG6Vhuzpx42sXHVRI0HNumFC4VpS1KmlYJfm_3vQkpvRm7MwzuB4czUpJFVwBZ8D0gK743snbSCIC4Z_ETBtujyXvnJAQe5AFeDCGXZqXHDWTpvlJkleajTkdpNn8tf2iRtsI34sTkvDoe6gjvtcFkQ0FCPLdKKdcRdU8Hj8QQ3hjR-XQ_ejis2RdQiZm_LEt6eYQdPp9eXfOHRA0fjEXrsQgzmhmvTmONVdkk_aPrNcYx3IKMG_0_wAYf4eNiX-xwiLYhdAbPorDQ6jfWcSDA_oEURC4Jp7GQYvWCCLulwmjH_JhXRu4CxEmYt_fYRuXz5BRU4hLs" title="Beispiel im Diagramm-Editor öffnen">Beispiel im Diagramm-Editor öffnen →</a></p>
+</section>
+
+<section class="ref-section" id="klassen">
+<div class="section-head"><h2>Klassendiagramm (UML)</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Code</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>class Auto {
+    -String kennzeichen
+    +int baujahr
+    +fahren(int km) void
+}</code></pre></td><td data-label="Beschreibung">Klasse mit Attributen und Methoden. Rückgabetyp steht <b>hinter</b> der Klammer.</td></tr>
+<tr><td class="k"><code>+</code> <code>-</code> <code>#</code> <code>~</code></td><td data-label="Beschreibung">Sichtbarkeit: <code>+</code> public, <code>-</code> private, <code>#</code> protected, <code>~</code> package</td></tr>
+<tr><td class="k"><code>+getAnzahl()$ int</code><br><code>+zeichnen()* void</code></td><td data-label="Beschreibung"><code>$</code> = statisch (unterstrichen) · <code>*</code> = abstrakt (kursiv)</td></tr>
+<tr><td class="k"><code>&lt;&lt;interface&gt;&gt; Form</code><br><code>&lt;&lt;abstract&gt;&gt;</code></td><td data-label="Beschreibung">Stereotyp, als eigene Zeile oder innerhalb der Klasse</td></tr>
+<tr><td class="k"><code>Fahrzeug &lt;|-- Auto</code></td><td data-label="Beschreibung"><b>Vererbung</b> – Auto erbt von Fahrzeug (Spitze zeigt zur Oberklasse)</td></tr>
+<tr><td class="k"><code>Form &lt;|.. Kreis</code></td><td data-label="Beschreibung"><b>Realisierung</b> – Kreis implementiert das Interface Form</td></tr>
+<tr><td class="k"><code>Haus *-- Raum</code></td><td data-label="Beschreibung"><b>Komposition</b> (gefüllte Raute) – Raum existiert nicht ohne Haus</td></tr>
+<tr><td class="k"><code>Klasse o-- Schueler</code></td><td data-label="Beschreibung"><b>Aggregation</b> (leere Raute) – Teil kann auch allein existieren</td></tr>
+<tr><td class="k"><code>Person --&gt; Auto</code><br><code>A ..&gt; B</code></td><td data-label="Beschreibung"><b>Assoziation</b> (gerichtet) · <b>Abhängigkeit</b> (gestrichelt). <code>--</code> = ungerichtete Assoziation</td></tr>
+<tr><td class="k"><code>Person "1" --&gt; "0..*" Auto : besitzt</code></td><td data-label="Beschreibung">Multiplizitäten in Anführungszeichen, Beschriftung nach dem Doppelpunkt</td></tr>
+</tbody></table></div>
+<p class="ref-note"><a href="mermaid-editor.html#pako:eNp1kcFqwzAMhl_F-LSmc9muJQQGY7fBoFdf3ERNTBs52HKh6fLuU5ywJrDpZH-S_l-27rJ0Fci9kOXFhPBuTe1Nq1FwJCI-TON7iLW4T3SMPDfHQN6UVBQPqg7kLdbiDIg92LIBfCS3J9YBfLJI4txuMnF1tprSw9LuLZJbWqmxgSL4lVgTO9ba_Cfy6cj5pcp2VOnCH6Vf4IPDVe38DDQtrBp-fyL_VioNOvE0csYo2U5sltXyVUuhVMGnl90u40uq3osjBEs9aZTPQrbgW2OrcQ1pEC2pAXZnoGUFJxMvpKXGYSw2LHC4YclJ8hGYxK4yBPPuZjz8AG3LjrY" title="Beispiel im Diagramm-Editor öffnen">Beispiel im Diagramm-Editor öffnen →</a></p>
+</section>
+
+<section class="ref-section" id="zustand">
+<div class="section-head"><h2>Zustandsdiagramm</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Code</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>stateDiagram-v2</code></td><td data-label="Beschreibung">Erste Zeile (die neuere Version <code>-v2</code> verwenden)</td></tr>
+<tr><td class="k"><code>[*] --&gt; Aus</code><br><code>Aus --&gt; [*]</code></td><td data-label="Beschreibung">Startzustand · Endzustand</td></tr>
+<tr><td class="k"><code>Aus --&gt; An : Schalter drücken</code></td><td data-label="Beschreibung">Übergang mit Ereignis</td></tr>
+<tr><td class="k"><code>state "Warte auf Eingabe" as W</code></td><td data-label="Beschreibung">Zustand mit langem Namen und Kurzname</td></tr>
+<tr><td class="k"><pre><code>state An {
+    [*] --&gt; Hell
+    Hell --&gt; Dunkel
+}</code></pre></td><td data-label="Beschreibung">Zusammengesetzter Zustand mit Unterzuständen</td></tr>
+<tr><td class="k"><code>state pruefen &lt;&lt;choice&gt;&gt;</code></td><td data-label="Beschreibung">Verzweigung (Raute) innerhalb des Zustandsdiagramms</td></tr>
+<tr><td class="k"><code>note right of An : Text</code></td><td data-label="Beschreibung">Notiz neben einem Zustand</td></tr>
+</tbody></table></div>
+<p class="ref-note"><a href="mermaid-editor.html#pako:eNp9kE8LwjAMxb9K6VEcDI87CMJA7x6th9Bmbth20qWCjH130_1h6sFe2vzy0vdIL3VrUBZCdgSEZQO3AC577pQXfC6bq8iyvTjEbgL8mIAXhTjrGixhECaomOeV1nf0s84vc_91o2tS91P9aXpCa1eaqhEf0TTOEf9b8o1hlSydZfhHMnxFSy4cjULrIHYVJC-5FZLlDhqTVjJmUpJqdKgYKGmwgmhJSeWHJIZI7fnlNTcpRGQSH2bd44yHN12nau4" title="Beispiel im Diagramm-Editor öffnen">Beispiel im Diagramm-Editor öffnen →</a></p>
+</section>
+
+<section class="ref-section" id="er">
+<div class="section-head"><h2>ER-Diagramm</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Code</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><code>KUNDE ||--o{ BESTELLUNG : gibt_auf</code></td><td data-label="Beschreibung">Beziehung mit Kardinalität an beiden Enden und Beschriftung. Ein Kunde gibt null bis viele Bestellungen auf, jede Bestellung gehört zu genau einem Kunden.</td></tr>
+<tr><td class="k"><code>||</code></td><td data-label="Beschreibung">genau eins (1)</td></tr>
+<tr><td class="k"><code>|o</code> &nbsp;<code>o|</code></td><td data-label="Beschreibung">null oder eins (0..1)</td></tr>
+<tr><td class="k"><code>}|</code> &nbsp;<code>|{</code></td><td data-label="Beschreibung">eins oder mehr (1..*)</td></tr>
+<tr><td class="k"><code>}o</code> &nbsp;<code>o{</code></td><td data-label="Beschreibung">null oder mehr (0..*)</td></tr>
+<tr><td class="k"><code>--</code> &nbsp;<code>..</code></td><td data-label="Beschreibung">Durchgezogen = identifizierende Beziehung · gestrichelt = nicht identifizierend</td></tr>
+<tr><td class="k"><pre><code>KUNDE {
+    int kundenNr PK
+    string name
+    int ortId FK
+}</code></pre></td><td data-label="Beschreibung">Attribute: <b>Typ Name</b>, dahinter optional <code>PK</code> (Primärschlüssel), <code>FK</code> (Fremdschlüssel), <code>UK</code> (eindeutig)</td></tr>
+</tbody></table></div>
+<p class="ref-note">Notation: Krähenfuß. Beschriftungen mit Leerzeichen in Anführungszeichen setzen: <code>: "gibt auf"</code>. <a href="mermaid-editor.html#pako:eNp1UMFuwjAM_RXL5_ED3DbRTVWrgtZyyyUQUyKaBAVn0tT235cssCGm-WApfi_P73nEvVOES0DyKy17L42wEKvaNqsCpmmxcCO8FG1X1PW2eYMlCOz1jkGGg8DMvYPTh2mEzbotu3LdRDpZPkoaOFOf37uyKuqb8B1P4MkZw_DhPGh7k842xvxIpS3DKVhFtvGwqX6BC3tte7DSUB7Of8w9yOzowjQMDzpKMqUWzD9LX6sffXwCNOSN1Cqd8FtfIB8pesAUSdFBhpg9ppkTWQZ27afdR5B9oDgJ57TwevrreP4C-Hx5Xg" title="Beispiel im Diagramm-Editor öffnen">Beispiel im Diagramm-Editor öffnen →</a></p>
+</section>
+
+<section class="ref-section" id="weitere">
+<div class="section-head"><h2>Gantt, Kreisdiagramm, Mindmap</h2></div>
+<div class="ref-table-wrap"><table class="ref-table">
+<thead><tr><th scope="col">Code</th><th scope="col">Beschreibung</th></tr></thead>
+<tbody>
+<tr><td class="k"><pre><code>gantt
+    dateFormat YYYY-MM-DD
+    section Planung
+        Ideen sammeln :a1, 2026-11-02, 3d
+        Entwurf       :a2, after a1, 2d
+    section Umsetzung
+        Programmieren :crit, b1, after a2, 5d
+        Abgabe        :milestone, after b1, 0d</code></pre></td><td data-label="Beschreibung"><b>Gantt</b>: Aufgabe <code>Name :id, Start, Dauer</code>. Start als Datum oder <code>after id</code>, Dauer z. B. <code>3d</code>, <code>1w</code>. Markierungen vor der ID: <code>done</code>, <code>active</code>, <code>crit</code> (rot), <code>milestone</code></td></tr>
+<tr><td class="k"><pre><code>pie title Lieblingsfach
+    "Informatik" : 14
+    "Englisch" : 6</code></pre></td><td data-label="Beschreibung"><b>Kreisdiagramm</b>: Bezeichnung in Anführungszeichen, Doppelpunkt, Wert. Prozente rechnet Mermaid selbst aus.</td></tr>
+<tr><td class="k"><pre><code>mindmap
+  root((Netzwerke))
+    Adressen
+      IPv4
+      MAC
+    Protokolle
+      HTTP
+      DNS</code></pre></td><td data-label="Beschreibung"><b>Mindmap</b>: Die <b>Einrückung</b> bestimmt die Ebene. Formen wie im Flussdiagramm: <code>((Kreis))</code>, <code>[Rechteck]</code>, <code>(rund)</code></td></tr>
+</tbody></table></div>
+<p class="ref-note">Weitere Diagrammarten (Zeitstrahl, Git-Graph, C4, Quadranten …) und alle Details: <a href="https://mermaid.js.org/intro/syntax-reference.html" target="_blank" rel="noopener">offizielle Mermaid-Dokumentation ↗</a></p>
+</section>
+
+      <p class="empty" id="leer" hidden>&gt; keine Treffer</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/merkhilfe.js"></script>
+</body>
+</html>
