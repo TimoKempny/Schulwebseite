@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagramm-Editor (Mermaid) · Unterricht</title>
+  <meta name="description" content="Diagramme als Text schreiben und live ansehen: Flussdiagramme, UML, ER-Modelle, Gantt, C4 und mehr – mit Mermaid, direkt im Browser.">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "hell") document.documentElement.setAttribute("data-theme", "light");
+      if (t === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    :root { --mark-err: rgba(185, 28, 28, .12); --sel: rgba(15, 118, 110, .22); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) { --mark-err: rgba(248, 113, 113, .14); --sel: rgba(45, 212, 191, .25); }
+    }
+    :root[data-theme="dark"] { --mark-err: rgba(248, 113, 113, .14); --sel: rgba(45, 212, 191, .25); }
+
+    main.ide-main { padding-bottom: 24px; }
+    .ide-wrap { padding-top: 14px; max-width: none; padding-left: 16px; padding-right: 16px; }
+
+    /* ---------- Werkzeugleiste ---------- */
+    .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .bar .spacer { flex: 1; }
+    .pick {
+      display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding-left: 10px;
+    }
+    .pick:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .pick span { font-family: var(--font-mono); font-size: .8rem; color: var(--accent); }
+    .pick select {
+      font: inherit; font-family: var(--font-mono); font-size: .82rem; color: var(--text);
+      border: 0; background: transparent; padding: 8px 10px 8px 6px; cursor: pointer;
+    }
+    .pick select:focus { outline: none; }
+    .pick option { background: var(--surface); color: var(--text); }
+
+    /* ---------- Arbeitsbereich ---------- */
+    .ide { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 960px) {
+      .ide { grid-template-columns: minmax(0, calc(var(--split, 40%) - 7px)) 14px minmax(0, 1fr); gap: 0; height: calc(100vh - 130px); min-height: 460px; }
+    }
+    .splitter { display: none; }
+    @media (min-width: 960px) {
+      .splitter { display: flex; justify-content: center; cursor: col-resize; touch-action: none; outline: none; }
+      .splitter::before { content: ""; width: 4px; height: 48px; margin: auto; border-radius: 4px; background: var(--border); transition: background .15s; }
+      .splitter:hover::before, .splitter:focus-visible::before, .splitter.drag::before { background: var(--accent); height: 80px; }
+      body.splitting { cursor: col-resize; user-select: none; }
+    }
+    .pane {
+      display: flex; flex-direction: column; min-height: 0; min-width: 0;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+    }
+    .pane-head {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: .8rem; color: var(--muted); background: var(--surface-2);
+    }
+    .pane-head b { color: var(--text); font-weight: 600; }
+    .pane-head .grow { flex: 1; }
+    .linkish { border: 0; background: none; font: inherit; color: var(--muted); cursor: pointer; padding: 2px 6px; border-radius: 6px; }
+    .linkish:hover { color: var(--accent); }
+
+    /* ---------- Editor ---------- */
+    .ed-scroll { position: relative; flex: 1; overflow: auto; min-height: 320px; }
+    @media (min-width: 960px) { .ed-scroll { min-height: 0; } }
+    .ed-inner { display: grid; grid-template-columns: auto minmax(0, 1fr); min-height: 100%; min-width: max-content; }
+    .gutter, .ed-inner textarea { font-family: var(--font-mono); font-size: 14px; line-height: 22px; tab-size: 4; -moz-tab-size: 4; }
+    .gutter {
+      position: sticky; left: 0; z-index: 2; background: var(--surface-2); color: var(--muted);
+      text-align: right; padding: 12px 10px 12px 12px; user-select: none; border-right: 1px solid var(--border);
+    }
+    .gutter div { height: 22px; }
+    .gutter .e { color: var(--bad); font-weight: 700; background: var(--mark-err); margin: 0 -10px 0 -12px; padding: 0 10px 0 12px; }
+    .ed-inner textarea {
+      display: block; width: 100%; min-height: 100%; margin: 0; border: 0; outline: none; resize: none; overflow: hidden;
+      padding: 12px 24px 12px 14px; white-space: pre; overflow-wrap: normal; background: var(--surface); color: var(--text);
+    }
+    .ed-inner textarea::selection { background: var(--sel); }
+    .ed-foot { padding: 6px 12px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: .72rem; color: var(--muted); display: flex; gap: 4px 14px; flex-wrap: wrap; }
+    .ed-foot kbd { font-family: var(--font-mono); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--text); background: var(--surface); }
+    .ed-foot a { color: var(--accent); }
+
+    /* ---------- Vorschau ---------- */
+    .status { font-family: var(--font-mono); font-size: .72rem; border-radius: 999px; padding: 2px 9px; border: 1px solid var(--border); }
+    .status.ok { color: var(--ok); border-color: var(--ok); }
+    .status.err { color: var(--bad); border-color: var(--bad); }
+    .status.wait { color: var(--muted); }
+    .zoom { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--surface); }
+    .zoom button { border: 0; background: transparent; color: var(--muted); font-family: var(--font-mono); font-size: .8rem; padding: 3px 9px; cursor: pointer; }
+    .zoom button:hover { color: var(--text); background: var(--accent-soft); }
+    .zoom span { font-family: var(--font-mono); font-size: .72rem; color: var(--muted); min-width: 3.4em; text-align: center; }
+    .view {
+      position: relative; flex: 1; min-height: 380px; overflow: hidden; cursor: grab; touch-action: none;
+      background-color: var(--surface);
+      background-image: radial-gradient(var(--border) 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+    @media (min-width: 960px) { .view { min-height: 0; } }
+    .view.drag { cursor: grabbing; }
+    .stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+    .stage svg { display: block; max-width: none !important; }
+    .stage.stale { opacity: .35; filter: grayscale(1); }
+    .err-box {
+      position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 3;
+      background: var(--surface); border: 1px solid var(--bad); border-left-width: 4px; border-radius: 10px; box-shadow: var(--shadow);
+      padding: 10px 12px; font-family: var(--font-mono); font-size: .8rem; color: var(--text); max-height: 45%; overflow: auto; cursor: default;
+    }
+    .err-box b { color: var(--bad); }
+    .err-box pre { margin: 6px 0 0; white-space: pre-wrap; color: var(--muted); font: inherit; }
+    .placeholder { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: .85rem; color: var(--muted); text-align: center; padding: 20px; }
+
+    /* ---------- Dialog: mermaid.live-Link laden ---------- */
+    dialog {
+      border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text);
+      box-shadow: var(--shadow); padding: 18px; width: min(560px, calc(100% - 32px));
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, .35); }
+    dialog h2 { margin: 0 0 6px; font-size: 1.05rem; }
+    dialog p { margin: 0 0 12px; color: var(--muted); font-size: .9rem; }
+    dialog .inp { width: 100%; }
+    dialog .row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+    .dlg-err { color: var(--bad); font-family: var(--font-mono); font-size: .8rem; min-height: 1.2em; margin-top: 8px; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+      transition: opacity .18s, transform .18s; background: #142120; color: #e4eeec; font: .82rem/1.4 var(--font-mono);
+      padding: 9px 14px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0, 0, 0, .2); z-index: 50; max-width: calc(100% - 32px);
+    }
+    .toast::before { content: "> "; color: #2dd4bf; }
+    .toast.on { opacity: 1; transform: translate(-50%, 0); }
+    @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container topbar">
+      <div class="brand"><a href="index.html" title="Zur Übersicht">~/<span>unterricht</span></a><span class="sep">/</span><span class="here">diagramm-editor</span></div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Farbschema wechseln">theme: auto</button>
+    </div>
+  </header>
+
+  <main class="ide-main">
+    <div class="container ide-wrap">
+      <div class="bar">
+        <label class="pick" title="Beispiel laden">
+          <span>beispiel</span>
+          <select id="example" aria-label="Beispiel laden">
+            <option value="">– auswählen –</option>
+          </select>
+        </label>
+        <button class="btn btn-ghost" id="newBtn" type="button" title="Leeren Editor (Strg+Z holt den alten Code zurück)">Neu</button>
+        <button class="btn btn-ghost" id="openBtn" type="button" title=".mmd-Datei öffnen">Öffnen</button>
+        <button class="btn btn-ghost" id="saveBtn" type="button" title="Code als .mmd-Datei herunterladen (Strg + S)">Speichern</button>
+        <input type="file" id="fileIn" accept=".mmd,.mermaid,.md,.txt,text/plain" hidden>
+        <span class="spacer"></span>
+        <label class="pick" title="Farbstil des Diagramms">
+          <span>stil</span>
+          <select id="look" aria-label="Farbstil des Diagramms">
+            <option value="auto">passend zur Seite</option>
+            <option value="default">Standard</option>
+            <option value="neutral">Neutral (Druck)</option>
+            <option value="forest">Wald</option>
+            <option value="dark">Dunkel</option>
+          </select>
+        </label>
+        <button class="btn btn-ghost" id="importBtn" type="button" title="Einen Link aus mermaid.live einfügen">Link laden</button>
+        <button class="btn btn-ghost" id="shareBtn" type="button" title="Link zu diesem Diagramm kopieren">Link kopieren</button>
+        <button class="btn" id="svgBtn" type="button" title="Diagramm als SVG (Vektorgrafik) herunterladen">SVG</button>
+        <button class="btn" id="pngBtn" type="button" title="Diagramm als PNG-Bild herunterladen">PNG</button>
+      </div>
+
+      <div class="ide" id="ide">
+        <section class="pane" aria-label="Mermaid-Code">
+          <div class="pane-head"><b># code</b><span class="grow"></span><span id="caretPos">Z 1, S 1</span></div>
+          <div class="ed-scroll" id="edScroll">
+            <div class="ed-inner">
+              <div class="gutter" id="gutter" aria-hidden="true"></div>
+              <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="Mermaid-Code"></textarea>
+            </div>
+          </div>
+          <div class="ed-foot">
+            <span><kbd>Strg</kbd>+<kbd>S</kbd> speichern</span>
+            <span><kbd>Tab</kbd> einrücken</span>
+            <span>Vorschau: Mausrad zoomen, ziehen verschieben, Doppelklick einpassen</span>
+            <span><a href="https://mermaid.js.org/intro/syntax-reference.html" target="_blank" rel="noopener">Mermaid-Syntax ↗</a></span>
+          </div>
+        </section>
+
+        <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="Breite von Code und Vorschau" tabindex="0" title="Ziehen zum Anpassen, Doppelklick = 40/60"></div>
+
+        <section class="pane" aria-label="Vorschau">
+          <div class="pane-head">
+            <b># vorschau</b><span class="status wait" id="status">lädt …</span><span class="grow"></span>
+            <span class="zoom" role="group" aria-label="Zoom">
+              <button type="button" id="zoomOut" aria-label="Verkleinern">−</button>
+              <span id="zoomVal">100 %</span>
+              <button type="button" id="zoomIn" aria-label="Vergrößern">+</button>
+            </span>
+            <button class="linkish" id="fitBtn" type="button" title="Diagramm einpassen">einpassen</button>
+          </div>
+          <div class="view" id="view">
+            <div class="stage" id="stage"></div>
+            <div class="placeholder" id="placeholder">Diagramm-Bibliothek wird geladen …</div>
+            <div class="err-box" id="errBox" role="alert" hidden></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="mono">© 2026</span>
+      <nav>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <dialog id="importDlg">
+    <form method="dialog" id="importForm">
+      <h2>Link aus mermaid.live laden</h2>
+      <p>Füge einen Link ein, z. B. <code>https://mermaid.live/edit#pako:…</code>. Auch Links, die mit „Link kopieren“ hier erstellt wurden, funktionieren.</p>
+      <input class="inp" id="importUrl" type="url" placeholder="https://mermaid.live/edit#pako:…" autocomplete="off" spellcheck="false" aria-label="Link">
+      <div class="dlg-err" id="importErr" role="alert"></div>
+      <div class="row">
+        <button class="btn btn-ghost" value="cancel" formnovalidate>Abbrechen</button>
+        <button class="btn" id="importOk" value="ok">Laden</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/app.js"></script>
+  <script src="js/mermaid/mermaid.min.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var $ = function (id) { return document.getElementById(id); };
+    var ta = $("src"), gutter = $("gutter"), view = $("view"), stage = $("stage"), errBox = $("errBox");
+    var statusEl = $("status"), placeholder = $("placeholder");
+    var STORE = "mermaid-editor";
+
+    /* ---------- Beispiele ---------- */
+    var BEISPIELE = [
+      { titel: "Flussdiagramm", code:
+"flowchart TD\n    start([Start]) --> eingabe[/Zahl eingeben/]\n    eingabe --> pruefen{Zahl % 2 == 0?}\n    pruefen -- ja --> gerade[Ausgabe: gerade]\n    pruefen -- nein --> ungerade[Ausgabe: ungerade]\n    gerade --> ende([Ende])\n    ungerade --> ende\n" },
+      { titel: "Sequenzdiagramm", code:
+"sequenceDiagram\n    actor S as Schüler\n    participant B as Browser\n    participant D as DNS-Server\n    participant W as Webserver\n\n    S->>B: www.steinbeis.schule eingeben\n    B->>D: Welche IP hat www.steinbeis.schule?\n    D-->>B: 203.0.113.10\n    B->>W: GET / (HTTPS)\n    W-->>B: 200 OK + HTML\n    B-->>S: Seite anzeigen\n" },
+      { titel: "Klassendiagramm (UML)", code:
+"classDiagram\n    class Fahrzeug {\n        <<abstract>>\n        -String kennzeichen\n        -int baujahr\n        +fahren() void\n        +getAlter() int\n    }\n    class Auto {\n        -int tueren\n        +hupen() void\n    }\n    class Fahrrad {\n        -int gaenge\n        +klingeln() void\n    }\n    class Person {\n        +String name\n    }\n    Fahrzeug <|-- Auto\n    Fahrzeug <|-- Fahrrad\n    Person \"1\" --> \"0..*\" Fahrzeug : besitzt\n" },
+      { titel: "Zustandsdiagramm", code:
+"stateDiagram-v2\n    [*] --> Rot\n    Rot --> RotGelb : nach 30 s\n    RotGelb --> Gruen : nach 2 s\n    Gruen --> Gelb : nach 25 s\n    Gelb --> Rot : nach 3 s\n    Gruen --> Gelb : Fußgänger drückt\n" },
+      { titel: "ER-Diagramm", code:
+"erDiagram\n    KLASSE ||--o{ SCHUELER : hat\n    SCHUELER }o--o{ KURS : belegt\n    LEHRKRAFT ||--o{ KURS : unterrichtet\n\n    KLASSE {\n        string bezeichnung PK\n        int jahrgang\n    }\n    SCHUELER {\n        int schuelerNr PK\n        string name\n        string klasse FK\n    }\n    KURS {\n        int kursNr PK\n        string fach\n    }\n    LEHRKRAFT {\n        string kuerzel PK\n        string name\n    }\n" },
+      { titel: "Gantt (Projektplan)", code:
+"gantt\n    title Projekt: Schulwebseite\n    dateFormat YYYY-MM-DD\n    section Planung\n        Anforderungen sammeln :done, a1, 2026-11-02, 5d\n        Seitenstruktur        :a2, after a1, 3d\n    section Umsetzung\n        HTML-Grundgerüst      :b1, after a2, 4d\n        CSS-Gestaltung        :b2, after b1, 5d\n    section Abschluss\n        Testen                :c1, after b2, 3d\n        Präsentation          :milestone, after c1, 0d\n" },
+      { titel: "Mindmap", code:
+"mindmap\n  root((Informatik))\n    Programmierung\n      Python\n      C\n      Struktogramme\n    Netzwerke\n      IPv4\n      DNS\n      HTTP\n    Daten\n      Binär\n      Hexadezimal\n      Datenbanken\n" },
+      { titel: "Kreisdiagramm", code:
+"pie title Lieblingsprogrammiersprache der Klasse\n    \"Python\" : 12\n    \"C\" : 5\n    \"JavaScript\" : 7\n    \"Java\" : 3\n" },
+      { titel: "C4-Kontextdiagramm", code:
+"C4Context\n    title System Context diagram for Internet Banking System\n    Enterprise_Boundary(b0, \"BankBoundary0\") {\n        Person(customerA, \"Banking Customer A\", \"A customer of the bank, with personal bank accounts.\")\n        Person(customerB, \"Banking Customer B\")\n        Person_Ext(customerC, \"Banking Customer C\", \"desc\")\n\n        Person(customerD, \"Banking Customer D\", \"A customer of the bank, <br/> with personal bank accounts.\")\n\n        System(SystemAA, \"Internet Banking System\", \"Allows customers to view information about their bank accounts, and make payments.\")\n\n        Enterprise_Boundary(b1, \"BankBoundary\") {\n            SystemDb_Ext(SystemE, \"Mainframe Banking System\", \"Stores all of the core banking information about customers, accounts, transactions, etc.\")\n\n            System_Boundary(b2, \"BankBoundary2\") {\n                System(SystemA, \"Banking System A\")\n                System(SystemB, \"Banking System B\", \"A system of the bank, with personal bank accounts. next line.\")\n            }\n\n            System_Ext(SystemC, \"E-mail system\", \"The internal Microsoft Exchange e-mail system.\")\n            SystemDb(SystemD, \"Banking System D Database\", \"A system of the bank, with personal bank accounts.\")\n\n            Boundary(b3, \"BankBoundary3\", \"boundary\") {\n                SystemQueue(SystemF, \"Banking System F Queue\", \"A system of the bank.\")\n                SystemQueue_Ext(SystemG, \"Banking System G Queue\", \"A system of the bank, with personal bank accounts.\")\n            }\n        }\n    }\n\n    BiRel(customerA, SystemAA, \"Uses\")\n    BiRel(SystemAA, SystemE, \"Uses\")\n    Rel(SystemAA, SystemC, \"Sends e-mails\", \"SMTP\")\n    Rel(SystemC, customerA, \"Sends e-mails to\")\n" }
+    ];
+    BEISPIELE.forEach(function (b, i) {
+      var o = document.createElement("option"); o.value = String(i); o.textContent = b.titel; $("example").appendChild(o);
+    });
+
+    /* ---------- Hilfen ---------- */
+    var toastT;
+    function toast(msg) { var t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("on"); }, 2400); }
+    function load(key, def) { try { var v = localStorage.getItem(STORE + "." + key); return v === null ? def : v; } catch (e) { return def; } }
+    function save(key, v) { try { localStorage.setItem(STORE + "." + key, v); } catch (e) {} }
+    function download(name, blob) {
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    }
+    function istDunkel() {
+      var t = document.documentElement.getAttribute("data-theme");
+      if (t) return t === "dark";
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    /* ---------- Editor ---------- */
+    var fehlerZeile = 0;
+    function paintGutter() {
+      var n = ta.value.split("\n").length, html = "";
+      for (var i = 1; i <= n; i++) html += '<div' + (i === fehlerZeile ? ' class="e"' : "") + ">" + i + "</div>";
+      gutter.innerHTML = html;
+      // Textarea wächst mit dem Inhalt, gescrollt wird der Rahmen
+      ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px";
+    }
+    function caret() {
+      var vor = ta.value.slice(0, ta.selectionStart).split("\n");
+      $("caretPos").textContent = "Z " + vor.length + ", S " + (vor[vor.length - 1].length + 1);
+    }
+    // Text so ersetzen, dass Strg+Z ihn zurückholen kann
+    function setCode(text) {
+      ta.focus(); ta.select();
+      if (!document.execCommand("insertText", false, text)) ta.value = text;
+      ta.setSelectionRange(0, 0); ta.scrollTop = 0; $("edScroll").scrollTop = 0;
+      onInput();
+    }
+    var renderT;
+    function onInput() {
+      paintGutter(); caret(); save("code", ta.value);
+      clearTimeout(renderT); renderT = setTimeout(render, 280);
+    }
+    ta.addEventListener("input", onInput);
+    ta.addEventListener("click", caret);
+    ta.addEventListener("keyup", caret);
+    ta.addEventListener("keydown", function (e) {
+      if (e.key === "Tab" && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        document.execCommand("insertText", false, "    ");
+      }
+    });
+    document.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); $("saveBtn").click(); }
+    });
+
+    /* ---------- Darstellung ---------- */
+    var zaehler = 0, aktuellesSvg = "", fertig = false;
+    function mermaidStil() {
+      var look = $("look").value;
+      if (look !== "auto") return look;
+      return istDunkel() ? "dark" : "default";
+    }
+    function konfigurieren() {
+      window.mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: mermaidStil(),
+        fontFamily: getComputedStyle(document.documentElement).getPropertyValue("--font-sans") || "sans-serif",
+        // Beschriftungen als SVG-Text statt HTML, damit der PNG-Export funktioniert
+        htmlLabels: false,
+        flowchart: { htmlLabels: false }
+      });
+    }
+
+    function zeileAusFehler(err) {
+      if (err && err.hash) {
+        if (err.hash.loc && err.hash.loc.first_line) return err.hash.loc.first_line;
+        if (typeof err.hash.line === "number") return err.hash.line + 1;
+      }
+      var m = /line[: ]+(\d+)/i.exec(String(err && (err.message || err.str) || ""));
+      return m ? parseInt(m[1], 10) : 0;
+    }
+
+    function render() {
+      if (!fertig) return;
+      var code = ta.value;
+      if (!code.trim()) {
+        stage.innerHTML = ""; aktuellesSvg = ""; errBox.hidden = true; fehlerZeile = 0; paintGutter();
+        placeholder.textContent = "Schreib links Mermaid-Code oder wähle oben ein Beispiel.";
+        placeholder.hidden = false; setStatus("leer", "wait");
+        return;
+      }
+      var id = "mmd" + (++zaehler);
+      konfigurieren();
+      window.mermaid.render(id, code).then(function (res) {
+        if (id !== "mmd" + zaehler) return;  // inzwischen neuer Code
+        var erstes = !aktuellesSvg;
+        stage.innerHTML = res.svg;
+        stage.classList.remove("stale");
+        if (res.bindFunctions) res.bindFunctions(stage);
+        aktuellesSvg = res.svg;
+        var svg = stage.querySelector("svg");
+        zuschneiden(svg);
+        var g = groesse(svg);
+        svg.setAttribute("width", g.w); svg.setAttribute("height", g.h); svg.style.maxWidth = "none";
+        errBox.hidden = true; placeholder.hidden = true; fehlerZeile = 0; paintGutter();
+        setStatus("ok", "ok");
+        if (erstes || neuEinpassen) { einpassen(); neuEinpassen = false; }
+      }).catch(function (err) {
+        if (id !== "mmd" + zaehler) return;
+        var reste = document.getElementById("d" + id); if (reste) reste.remove();
+        fehlerZeile = zeileAusFehler(err); paintGutter();
+        var text = String((err && (err.message || err.str)) || err);
+        errBox.innerHTML = "";
+        var kopf = document.createElement("div");
+        kopf.innerHTML = "<b>Fehler" + (fehlerZeile ? " in Zeile " + fehlerZeile : "") + ":</b> Das Diagramm konnte nicht gezeichnet werden. Unten steht die Meldung von Mermaid.";
+        var pre = document.createElement("pre"); pre.textContent = text;
+        errBox.appendChild(kopf); errBox.appendChild(pre); errBox.hidden = false;
+        if (aktuellesSvg) stage.classList.add("stale");
+        placeholder.hidden = !!aktuellesSvg;
+        if (!aktuellesSvg) placeholder.textContent = "";
+        setStatus("Fehler", "err");
+      });
+    }
+    function setStatus(text, cls) { statusEl.textContent = text; statusEl.className = "status " + cls; }
+
+    // Zeichenfläche auf den Inhalt zuschneiden (C4 und andere legen viel leeren Rand an)
+    function zuschneiden(svg) {
+      try {
+        var bb = svg.getBBox(), rand = 16;
+        if (bb.width > 0 && bb.height > 0) {
+          svg.setAttribute("viewBox", [bb.x - rand, bb.y - rand, bb.width + 2 * rand, bb.height + 2 * rand].join(" "));
+        }
+      } catch (e) { /* ohne Zuschnitt weiter */ }
+    }
+
+    function groesse(svg) {
+      var vb = svg && svg.viewBox && svg.viewBox.baseVal;
+      if (vb && vb.width) return { w: Math.ceil(vb.width), h: Math.ceil(vb.height) };
+      var r = svg.getBoundingClientRect(); return { w: Math.ceil(r.width), h: Math.ceil(r.height) };
+    }
+
+    /* ---------- Zoomen und Verschieben ---------- */
+    var zoom = 1, px = 0, py = 0, neuEinpassen = false;
+    function anwenden() {
+      stage.style.transform = "translate(" + px + "px," + py + "px) scale(" + zoom + ")";
+      $("zoomVal").textContent = Math.round(zoom * 100) + " %";
+    }
+    function einpassen() {
+      var svg = stage.querySelector("svg"); if (!svg) return;
+      var g = groesse(svg), r = view.getBoundingClientRect(), rand = 24;
+      zoom = Math.min((r.width - 2 * rand) / g.w, (r.height - 2 * rand) / g.h, 2);
+      zoom = Math.max(zoom, 0.1);
+      px = (r.width - g.w * zoom) / 2; py = (r.height - g.h * zoom) / 2;
+      anwenden();
+    }
+    function zoomUm(faktor, cx, cy) {
+      var r = view.getBoundingClientRect();
+      if (cx === undefined) { cx = r.width / 2; cy = r.height / 2; }
+      var neu = Math.min(8, Math.max(0.1, zoom * faktor));
+      px = cx - (cx - px) * (neu / zoom); py = cy - (cy - py) * (neu / zoom); zoom = neu;
+      anwenden();
+    }
+    view.addEventListener("wheel", function (e) {
+      if (!stage.firstChild) return;
+      e.preventDefault();
+      var r = view.getBoundingClientRect();
+      zoomUm(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - r.left, e.clientY - r.top);
+    }, { passive: false });
+    var ziehen = null;
+    view.addEventListener("pointerdown", function (e) {
+      if (e.target.closest(".err-box") || e.button !== 0) return;
+      ziehen = { x: e.clientX - px, y: e.clientY - py };
+      view.setPointerCapture(e.pointerId); view.classList.add("drag");
+    });
+    view.addEventListener("pointermove", function (e) {
+      if (!ziehen) return;
+      px = e.clientX - ziehen.x; py = e.clientY - ziehen.y; anwenden();
+    });
+    function ziehenEnde() { ziehen = null; view.classList.remove("drag"); }
+    view.addEventListener("pointerup", ziehenEnde);
+    view.addEventListener("pointercancel", ziehenEnde);
+    view.addEventListener("dblclick", function (e) { if (!e.target.closest(".err-box")) einpassen(); });
+    $("zoomIn").addEventListener("click", function () { zoomUm(1.25); });
+    $("zoomOut").addEventListener("click", function () { zoomUm(1 / 1.25); });
+    $("fitBtn").addEventListener("click", einpassen);
+    window.addEventListener("resize", function () { clearTimeout(window._fitT); window._fitT = setTimeout(einpassen, 150); });
+
+    /* ---------- Werkzeugleiste ---------- */
+    $("example").addEventListener("change", function () {
+      var b = BEISPIELE[this.value]; if (!b) return;
+      neuEinpassen = true; setCode(b.code); this.value = "";
+      toast("Beispiel geladen: " + b.titel + " (Strg+Z holt den alten Code zurück)");
+    });
+    $("newBtn").addEventListener("click", function () { neuEinpassen = true; setCode(""); });
+    $("openBtn").addEventListener("click", function () { $("fileIn").click(); });
+    $("fileIn").addEventListener("change", function () {
+      var f = this.files[0]; if (!f) return;
+      f.text().then(function (t) { neuEinpassen = true; setCode(t.replace(/\r\n/g, "\n")); toast(f.name + " geöffnet"); });
+      this.value = "";
+    });
+    $("saveBtn").addEventListener("click", function () {
+      download("diagramm.mmd", new Blob([ta.value], { type: "text/plain;charset=utf-8" }));
+      toast("diagramm.mmd gespeichert");
+    });
+    $("look").value = load("look", "auto");
+    $("look").addEventListener("change", function () { save("look", this.value); render(); });
+
+    // Seitenfarben gewechselt: Diagramm im passenden Stil neu zeichnen
+    new MutationObserver(function () { if ($("look").value === "auto") render(); })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () { if ($("look").value === "auto") render(); });
+
+    /* ---------- Export ---------- */
+    function exportSvgText() {
+      var svg = stage.querySelector("svg"); if (!svg || !aktuellesSvg) return null;
+      var kopie = svg.cloneNode(true), g = groesse(svg);
+      kopie.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      kopie.setAttribute("width", g.w); kopie.setAttribute("height", g.h);
+      kopie.removeAttribute("style");
+      return { text: new XMLSerializer().serializeToString(kopie), w: g.w, h: g.h };
+    }
+    function hintergrund() {
+      var stil = mermaidStil();
+      return stil === "dark" ? "#1f2020" : "#ffffff";
+    }
+    $("svgBtn").addEventListener("click", function () {
+      var s = exportSvgText(); if (!s) { toast("Erst ein fehlerfreies Diagramm erstellen"); return; }
+      download("diagramm.svg", new Blob([s.text], { type: "image/svg+xml" }));
+      toast("diagramm.svg gespeichert");
+    });
+    $("pngBtn").addEventListener("click", function () {
+      var s = exportSvgText(); if (!s) { toast("Erst ein fehlerfreies Diagramm erstellen"); return; }
+      var skala = 2, img = new Image();
+      img.onload = function () {
+        var c = document.createElement("canvas");
+        c.width = Math.ceil(s.w * skala); c.height = Math.ceil(s.h * skala);
+        var ctx = c.getContext("2d");
+        ctx.fillStyle = hintergrund(); ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        try {
+          c.toBlob(function (blob) { download("diagramm.png", blob); toast("diagramm.png gespeichert"); }, "image/png");
+        } catch (e) { toast("PNG-Export nicht möglich – bitte SVG verwenden"); }
+      };
+      img.onerror = function () { toast("PNG-Export nicht möglich – bitte SVG verwenden"); };
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(s.text);
+    });
+
+    /* ---------- Links (kompatibel mit mermaid.live: #pako:…) ---------- */
+    function b64urlZuBytes(s) {
+      s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "=";
+      var bin = atob(s), out = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    }
+    function bytesZuB64url(bytes) {
+      var bin = ""; for (var i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    }
+    function durchStream(bytes, stream) {
+      return new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer().then(function (b) { return new Uint8Array(b); });
+    }
+    // Liefert den Mermaid-Code aus einem Link oder Hash (pako:… oder base64:…)
+    function codeAusLink(link) {
+      var m = /#?(pako|base64):([A-Za-z0-9_\-+/=]+)/.exec(link || "");
+      if (!m) return Promise.reject(new Error("Im Link steht kein Diagramm (#pako:… fehlt)."));
+      var bytes = b64urlZuBytes(m[2]);
+      var json = m[1] === "pako"
+        ? durchStream(bytes, new DecompressionStream("deflate")).then(function (b) { return new TextDecoder().decode(b); })
+        : Promise.resolve(new TextDecoder().decode(bytes));
+      return json.then(function (t) {
+        var d = JSON.parse(t);
+        if (typeof d.code !== "string") throw new Error("Der Link enthält keinen Diagramm-Code.");
+        return d.code;
+      });
+    }
+    function linkZuCode(code) {
+      var json = JSON.stringify({ code: code, mermaid: JSON.stringify({ theme: "default" }, null, 2), autoSync: true, updateDiagram: true });
+      return durchStream(new TextEncoder().encode(json), new CompressionStream("deflate")).then(function (b) { return "pako:" + bytesZuB64url(b); });
+    }
+
+    $("shareBtn").addEventListener("click", function () {
+      linkZuCode(ta.value).then(function (hash) {
+        var url = location.href.split("#")[0] + "#" + hash;
+        history.replaceState(null, "", "#" + hash);
+        return navigator.clipboard.writeText(url).then(function () { toast("Link kopiert – er funktioniert auch auf mermaid.live"); });
+      }).catch(function () { toast("Kopieren nicht möglich – der Link steht jetzt in der Adresszeile"); });
+    });
+    var dlg = $("importDlg");
+    $("importBtn").addEventListener("click", function () { $("importErr").textContent = ""; $("importUrl").value = ""; dlg.showModal(); });
+    $("importForm").addEventListener("submit", function (e) {
+      if (e.submitter && e.submitter.value === "cancel") return;
+      e.preventDefault();
+      codeAusLink($("importUrl").value.trim()).then(function (code) {
+        dlg.close(); neuEinpassen = true; setCode(code); toast("Diagramm aus dem Link geladen");
+      }).catch(function (err) { $("importErr").textContent = err.message || "Der Link konnte nicht gelesen werden."; });
+    });
+
+    /* ---------- Trenner Code | Vorschau ---------- */
+    var ide = $("ide"), splitter = $("splitter");
+    function setSplit(pct) {
+      pct = Math.min(75, Math.max(20, Math.round(pct)));
+      ide.style.setProperty("--split", pct + "%");
+      splitter.setAttribute("aria-valuenow", pct);
+      save("split", String(pct));
+    }
+    splitter.addEventListener("pointerdown", function (e) {
+      e.preventDefault(); splitter.setPointerCapture(e.pointerId);
+      splitter.classList.add("drag"); document.body.classList.add("splitting");
+    });
+    splitter.addEventListener("pointermove", function (e) {
+      if (!splitter.hasPointerCapture(e.pointerId)) return;
+      var r = ide.getBoundingClientRect(); setSplit((e.clientX - r.left) / r.width * 100);
+    });
+    function splitEnde() { splitter.classList.remove("drag"); document.body.classList.remove("splitting"); einpassen(); }
+    splitter.addEventListener("pointerup", splitEnde);
+    splitter.addEventListener("pointercancel", splitEnde);
+    splitter.addEventListener("dblclick", function () { setSplit(40); einpassen(); });
+    splitter.addEventListener("keydown", function (e) {
+      var v = parseFloat(load("split", "40"));
+      if (e.key === "ArrowLeft") { e.preventDefault(); setSplit(v - 2); einpassen(); }
+      if (e.key === "ArrowRight") { e.preventDefault(); setSplit(v + 2); einpassen(); }
+    });
+    setSplit(parseFloat(load("split", "40")));
+
+    /* ---------- Start ---------- */
+    function start(code) {
+      ta.value = code; paintGutter(); caret(); save("code", code);
+      if (!window.mermaid) {
+        placeholder.textContent = "Die Diagramm-Bibliothek konnte nicht geladen werden. Bitte Seite neu laden.";
+        setStatus("Fehler", "err"); return;
+      }
+      fertig = true; render();
+    }
+    if (/#(pako|base64):/.test(location.hash)) {
+      codeAusLink(location.hash).then(start).catch(function () {
+        toast("Der Link enthält kein lesbares Diagramm"); start(load("code", BEISPIELE[0].code));
+      });
+    } else {
+      start(load("code", BEISPIELE[0].code));
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -34,6 +34,14 @@ const EINTRAEGE = [
   },
   {
     typ: "tool",
+    titel: "Diagramm-Editor (Mermaid)",
+    beschreibung: "Flussdiagramme, UML, ER-Modelle, Gantt und C4 als Text schreiben und live ansehen – Export als SVG und PNG",
+    url: "mermaid-editor.html",
+    fach: ["Informatik"],
+    neu: true
+  },
+  {
+    typ: "tool",
     titel: "RGB & Hex Colorpicker",
     beschreibung: "Farbe raussuchen und Hexcode und RGB bekommen",
     url: "farbwaehler.html",
